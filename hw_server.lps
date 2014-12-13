@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="9"/>
+    <BuildModes Active="Default"/>
+    <Units Count="8">
+      <Unit0>
+        <Filename Value="hw_server.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="hw_server"/>
+        <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="55" Y="20"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="mainthread.pp"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="mainthread"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="25" Y="51"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="msg_qeue.pp"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="msg_qeue"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="50"/>
+        <CursorPos X="9" Y="49"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="mainthread.pas"/>
+        <UnitName Value="mainthread"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="1" Y="1"/>
+        <UsageCount Value="20"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="C:\lazarus\fpc\2.6.4\source\packages\fcl-base\src\custapp.pp"/>
+        <UnitName Value="CustApp"/>
+        <EditorIndex Value="4"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="27"/>
+        <CursorPos X="51" Y="45"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="C:\lazarus\fpc\2.6.4\source\rtl\objpas\sysutils\osutilsh.inc"/>
+        <EditorIndex Value="3"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="16"/>
+        <CursorPos X="26" Y="57"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="C:\lazarus\fpc\2.6.4\source\rtl\morphos\graphics.pas"/>
+        <UnitName Value="graphics"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="2173"/>
+        <CursorPos X="40" Y="2199"/>
+        <UsageCount Value="10"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="C:\lazarus\fpc\2.6.4\source\packages\fcl-json\src\fpjson.pp"/>
+        <UnitName Value="fpjson"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="67"/>
+        <CursorPos X="7" Y="48"/>
+        <UsageCount Value="10"/>
+      </Unit7>
+    </Units>
+    <General>
+      <ActiveWindowIndexAtStart Value="0"/>
+    </General>
+    <JumpHistory Count="29" HistoryIndex="28">
+      <Position1>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="11" Column="21" TopLine="1"/>
+      </Position1>
+      <Position2>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="16" Column="31" TopLine="1"/>
+      </Position2>
+      <Position3>
+        <Filename Value="hw_server.lpr"/>
+        <Caret Line="28" Column="16" TopLine="1"/>
+      </Position3>
+      <Position4>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="21" Column="9" TopLine="1"/>
+      </Position4>
+      <Position5>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="25" Column="36" TopLine="1"/>
+      </Position5>
+      <Position6>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="30" Column="50" TopLine="1"/>
+      </Position6>
+      <Position7>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="20" Column="73" TopLine="4"/>
+      </Position7>
+      <Position8>
+        <Filename Value="C:\lazarus\fpc\2.6.4\source\rtl\objpas\sysutils\osutilsh.inc"/>
+        <Caret Line="57" Column="17" TopLine="16"/>
+      </Position8>
+      <Position9>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="20" Column="73" TopLine="4"/>
+      </Position9>
+      <Position10>
+        <Filename Value="hw_server.lpr"/>
+        <Caret Line="22" Column="58" TopLine="1"/>
+      </Position10>
+      <Position11>
+        <Filename Value="hw_server.lpr"/>
+        <Caret Line="9" Column="12" TopLine="1"/>
+      </Position11>
+      <Position12>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="47" Column="18" TopLine="10"/>
+      </Position12>
+      <Position13>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="42" Column="33" TopLine="28"/>
+      </Position13>
+      <Position14>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="59" Column="21" TopLine="28"/>
+      </Position14>
+      <Position15>
+        <Filename Value="hw_server.lpr"/>
+        <Caret Line="12" Column="5" TopLine="1"/>
+      </Position15>
+      <Position16>
+        <Filename Value="hw_server.lpr"/>
+        <Caret Line="18" Column="3" TopLine="1"/>
+      </Position16>
+      <Position17>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="79" Column="10" TopLine="36"/>
+      </Position17>
+      <Position18>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="45" Column="7" TopLine="1"/>
+      </Position18>
+      <Position19>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="42" Column="36" TopLine="1"/>
+      </Position19>
+      <Position20>
+        <Filename Value="msg_qeue.pp"/>
+        <Caret Line="17" Column="10" TopLine="1"/>
+      </Position20>
+      <Position21>
+        <Filename Value="msg_qeue.pp"/>
+        <Caret Line="32" Column="5" TopLine="1"/>
+      </Position21>
+      <Position22>
+        <Filename Value="msg_qeue.pp"/>
+        <Caret Line="21" Column="1" TopLine="1"/>
+      </Position22>
+      <Position23>
+        <Filename Value="msg_qeue.pp"/>
+        <Caret Line="36" Column="7" TopLine="3"/>
+      </Position23>
+      <Position24>
+        <Filename Value="msg_qeue.pp"/>
+        <Caret Line="42" Column="4" TopLine="3"/>
+      </Position24>
+      <Position25>
+        <Filename Value="msg_qeue.pp"/>
+        <Caret Line="33" Column="49" TopLine="3"/>
+      </Position25>
+      <Position26>
+        <Filename Value="msg_qeue.pp"/>
+        <Caret Line="29" Column="23" TopLine="1"/>
+      </Position26>
+      <Position27>
+        <Filename Value="msg_qeue.pp"/>
+        <Caret Line="32" Column="43" TopLine="1"/>
+      </Position27>
+      <Position28>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="18" Column="1" TopLine="7"/>
+      </Position28>
+      <Position29>
+        <Filename Value="mainthread.pp"/>
+        <Caret Line="21" Column="70" TopLine="1"/>
+      </Position29>
+    </JumpHistory>
+  </ProjectSession>
+  <EditorMacros Count="0"/>
+</CONFIG>
