@@ -1,7 +1,7 @@
 #############
 ## Misc.
 #############
-.gradle
-.idea
-.build
+.gradle/
+.idea/
+.build/
 
