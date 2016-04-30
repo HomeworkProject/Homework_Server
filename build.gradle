@@ -1,0 +1,22 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+//you know what this should be
+version = '0.0.0.1'
+
+//MainClass - run information
+mainClassName = 'de.mlessmann.hwserver.Main'
+
+//Wrapper
+task wrapper(type: Wrapper) {
+	gradleVersion = '2.13'
+}
+
+//Dependencies and repos
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	compile 'org.json:json:20160212'
+}
