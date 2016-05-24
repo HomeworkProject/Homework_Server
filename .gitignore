@@ -4,4 +4,6 @@
 .gradle/
 .idea/
 build/
+*.log
+*.lck
 
