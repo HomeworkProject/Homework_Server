@@ -1,4 +1,5 @@
 {
 	"type": "config",
-	"configVersion": "0.0.1.0"
+	"configVersion": "0.0.1.0",
+	"groups": ["test_1", "test_2"]
 }
