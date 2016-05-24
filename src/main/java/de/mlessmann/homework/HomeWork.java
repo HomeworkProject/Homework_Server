@@ -4,10 +4,6 @@ import de.mlessmann.hwserver.HWServer;
 import org.json.*;
 
 import java.io.*;
-import java.time.LocalDate;
-import java.util.Map;
-import java.util.Optional;
-import java.util.OptionalInt;
 
 /**
  * Created by Life4YourGames on 04.05.16.

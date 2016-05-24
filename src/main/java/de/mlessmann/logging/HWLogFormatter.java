@@ -2,9 +2,7 @@ package de.mlessmann.logging;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 /**
  * Created by Life4YourGames on 29.04.16.

@@ -1,13 +1,11 @@
 package de.mlessmann.network;
 
-import de.mlessmann.homework.HWGroup;
 import de.mlessmann.hwserver.HWServer;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
