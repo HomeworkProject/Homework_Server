@@ -2,50 +2,71 @@ package de.mlessmann.logging;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 /**
  * Created by Life4YourGames on 29.04.16.
+ * @author Life4YourGames
  */
 public class HWLogFormatter extends java.util.logging.Formatter {
 
-    public Boolean isDebug = false;
+    public boolean isDebug = false;
 
-    public String format(LogRecord lrec) {
+    /**
+     * Format a log message
+     * @param lRec LogRecord
+     * @see java.util.logging.Formatter#format
+     * @return String
+     */
+    public String format(LogRecord lRec) {
 
-        if (lrec.getThrown() == null) {
+        if (lRec.getThrown() == null) {
             //No exception -> Standard formatting
-            StringBuffer buff = new StringBuffer();
+            StringBuilder builder = new StringBuilder();
 
-            buff.append(calcDate(lrec.getMillis()));
-            buff.append(" ")
-                    .append(lrec.getLoggerName());
-            buff.append(" ")
-                    .append(lrec.getLevel());
-            buff.append(" ")
-                    .append(lrec.getMessage());
-            buff.append("\n");
+            builder.append(calcDate(lRec.getMillis()));
+            builder.append(" ")
+                    .append(lRec.getLoggerName());
+            builder.append(" ")
+                    .append(lRec.getLevel());
+            builder.append(" ")
+                    .append(lRec.getMessage());
+            builder.append("\n");
+            //if (lRec.getThrown() != null) {
+            //    builder.append(lRec.getThrown().toString());
+            //}
             if (isDebug) {
-                buff.append("--> Sent by:")
-                        .append(lrec.getSourceClassName()).append(" :: ")
-                        .append(lrec.getSourceMethodName());
+                builder.append("--> Sent by:")
+                        .append(lRec.getSourceClassName()).append(" :: ")
+                        .append(lRec.getSourceMethodName())
+                        .append("\n");
             }
-            buff.append("\n");
-
-            return buff.toString();
+            return builder.toString();
 
         } else {
             //Fall back to standard error format
-            return super.formatMessage(lrec);
+            return lRec.getMessage();
+            //return super.formatMessage(lRec);
         }
 
     }
 
-    private String calcDate(long millisecs) {
+    private String calcDate(long milliSecs) {
         SimpleDateFormat date_format = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-        Date rdate = new Date(millisecs);
-        return date_format.format(rdate);
+        Date rDate = new Date(milliSecs);
+        return date_format.format(rDate);
+    }
+
+    /**
+     * Set if debug mode is enabled
+     * @param b Whether or not debugging help is enabled
+     * @return this
+     */
+    public HWLogFormatter setDebug(boolean b){
+        isDebug = b;
+        return this;
     }
 
 }

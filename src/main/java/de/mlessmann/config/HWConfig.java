@@ -1,21 +1,24 @@
 package de.mlessmann.config;
 
 import de.mlessmann.hwserver.HWServer;
+
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.Scanner;
+import java.io.IOException;
 import java.util.logging.Logger;
 import org.json.*;
 
 /**
  * Created by Life4YourGames on 29.04.16.
+ * @author Life4YourGames
  */
 public class HWConfig {
 
     private final HWServer HWSERVER;
     private final Logger LOG;
     private String fileName;
-    private Boolean initialized = false;
+    private boolean initialized = false;
     private JSONObject configObject;
 
     /**
@@ -46,42 +49,34 @@ public class HWConfig {
         }
         initialized = false;
 
-        Scanner scanner = null;
-        FileReader reader;
+        BufferedReader buff;
         StringBuilder content;
 
-        try {
+        try (FileReader fReader = new FileReader(file)) {
             //Read the file
-            reader = new FileReader(file);
 
-            scanner = new Scanner(reader);
-
-            scanner.useDelimiter("[\\n]");
+            buff = new BufferedReader(fReader);
 
             content = new StringBuilder();
-            scanner.forEachRemaining(s -> content.append(s));
+
+            buff.lines().forEach(content::append);
 
         } catch (FileNotFoundException ex) {
 
             LOG.warning("Unable to open file: " + file + ": " + ex.toString());
             return this;
 
-        } /* Would catch any other IOException but IntelliJ cries if I try to ._.
-            catch (IOException ex) {
+        } catch (IOException ex) {
 
             LOG.warning("Unable to read file: " + file + ": " + ex.toString());
             return this;
 
-        } */
-            finally {
-            if (scanner != null)
-                scanner.close();
         }
 
         String stringContent = content.toString();
 
 
-        JSONObject json = null;
+        JSONObject json;
         try {
             json = new JSONObject(stringContent);
 
@@ -118,7 +113,7 @@ public class HWConfig {
     /**
      * Did the last #open() call succeed
      */
-    public Boolean isInitialized() {
+    public boolean isInitialized() {
 
         return initialized;
 

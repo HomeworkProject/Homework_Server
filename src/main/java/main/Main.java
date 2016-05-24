@@ -5,15 +5,32 @@ import de.mlessmann.hwserver.HWServer;
 
 /**
  * Created by Life4YourGames on 29.04.16.
+ * @author Life4YourGames
  */
 public class Main {
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main (String[] args) throws IOException {
 
-        HWServer hwServer = new HWServer();
+        //try {
 
-        hwServer.setArgs(args);
+            HWServer hwServer = new HWServer();
+
+            hwServer.preInitialize();
+
+            hwServer.setArgs(args);
+
+            hwServer.initialize();
+
+            hwServer.start();
+
+        /*} catch (Exception ex) {
+
+            System.out.print(ex.toString());
+            ex.printStackTrace(System.out);
+
+        }*/
+
 
     }
 
