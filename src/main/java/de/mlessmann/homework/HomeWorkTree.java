@@ -72,7 +72,15 @@ public class HomeWorkTree {
 
         } else {
 
-            log.warning("HWTree: " + baseDirectory + " is not a directory.");
+            if (!file.mkdir()) {
+
+                log.warning("Unable to index folder \"" + baseDirectory +"\": Cannot perform mkDir");
+
+            } else {
+
+                this.analyze();
+
+            }
 
         }
 
@@ -444,6 +452,17 @@ public class HomeWorkTree {
         log.finest("HWT#fileExists$" + file.getPath() + ": " + fileName + " -> false");
 
         return false;
+
+    }
+
+    public boolean deleteFile(String name) {
+
+        File fil = new File(file, name);
+
+        //Is not ignored, if deleting fails, exists is still true
+        fil.delete();
+
+        return !fil.exists();
 
     }
 

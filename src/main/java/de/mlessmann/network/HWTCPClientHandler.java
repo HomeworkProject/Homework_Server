@@ -101,8 +101,8 @@ public class HWTCPClientHandler {
             response.put("type", "error");
             response.put("status", Status.BADREQUEST);
             response.put("status_message", Status.SBADREQUEST);
-            response.put("errortype", "JSONException");
-            response.put("errormessage", ex.toString());
+            response.put("error", "JSONException");
+            response.put("error_message", ex.toString());
 
             sendJSON(response);
 
@@ -235,6 +235,17 @@ public class HWTCPClientHandler {
                 performGetHW(json);
                 return;
             }
+            if (command.equals("delhw")) {
+                performDelHW(json);
+                return;
+            }
+
+            JSONObject response = new JSONObject();
+
+            response.put("status", Status.BADREQUEST);
+            response.put("status_message", "Command " + command + " not found!");
+
+            sendJSON(response);
 
         } catch (JSONException ex) {
 
@@ -376,53 +387,205 @@ public class HWTCPClientHandler {
 
     }
 
-    public void performGetHW(JSONObject request) {
+    private void performGetHW(JSONObject request) {
 
-        if (!require(request, "fromdate")) {
-            return;
-        }
-        if (!require(request, "todate")) {
-            return;
+        JSONArray subjects = null;
+        if (request.has("subjects")) {
+            subjects = request.getJSONArray("subjects");
         }
 
-        if (!requireGroup()) {
+        if (!request.has("date")) {
+
+            if (!require(request, "fromdate")) {
+                return;
+            }
+            if (!require(request, "todate")) {
+                return;
+            }
+
+            if (!requireGroup()) {
+                return;
+            }
+
+            try {
+
+                JSONArray fromDate = request.getJSONArray("fromdate");
+
+                JSONArray toDate = request.getJSONArray("todate");
+
+                int fyyyy = fromDate.getInt(0);
+                int fMM = fromDate.getInt(1);
+                int fdd = fromDate.getInt(2);
+
+                int tyyyy = toDate.getInt(0);
+                int tMM = toDate.getInt(1);
+                int tdd = toDate.getInt(2);
+
+                sendState_processing();
+
+                LocalDate dateFrom = LocalDate.of(fyyyy, fMM, fdd);
+                LocalDate dateTo = LocalDate.of(tyyyy, tMM, tdd);
+
+                ArrayList<String> subjectFilter = null;
+                if (subjects != null && subjects.length() > 0) {
+                    subjects.forEach(s -> {
+                        if (s instanceof String) {
+                            subjectFilter.add((String) s);
+                        }
+                    });
+                }
+
+                ArrayList<HomeWork> hws = myGroup.getHWBetween(dateFrom, dateTo, subjectFilter, false);
+
+                JSONObject response = new JSONObject();
+
+                response.put("status", Status.OK);
+                response.put("status_message", Status.SOK);
+
+                JSONArray arr = new JSONArray();
+
+                hws.stream().forEach(hw -> arr.put(hw.getJSON()));
+
+                response.put("type", "hw_array");
+                response.put("parameters", arr);
+
+                sendJSON(response);
+
+            } catch (JSONException ex) {
+
+                JSONObject response = new JSONObject();
+
+                response.put("type", "error");
+                response.put("status", Status.BADREQUEST);
+                response.put("status_message", Status.BADREQUEST);
+                response.put("error", "JSONException");
+                response.put("error_message", ex.toString());
+
+                sendJSON(response);
+
+            } catch (DateTimeException ex) {
+
+                JSONObject response = new JSONObject();
+
+                response.put("type", "error");
+                response.put("status", Status.BADREQUEST);
+                response.put("status_message", Status.SBADREQUEST);
+                response.put("error", "DateTimeException");
+                response.put("error_message", ex.toString());
+
+                sendJSON(response);
+
+            }
+
+        } else {
+
+            try {
+
+                JSONArray datArr = request.getJSONArray("date");
+
+                LocalDate date = LocalDate.of(datArr.getInt(0), datArr.getInt(1), datArr.getInt(2));
+
+                sendState_processing();
+
+                ArrayList<String> subjectFilter = null;
+                if (subjects != null && subjects.length() > 0) {
+                    subjects.forEach(s -> {
+                        if (s instanceof String) {
+                            subjectFilter.add((String) s);
+                        }
+                    });
+                }
+
+                ArrayList<HomeWork> hws = myGroup.getHWOn(date, subjectFilter);
+
+                JSONObject response = new JSONObject();
+
+                response.put("status", Status.OK);
+                response.put("status_message", Status.SOK);
+
+                JSONArray arr = new JSONArray();
+
+                hws.stream().forEach(hw -> arr.put(hw.getJSON()));
+
+                response.put("type", "hw_array");
+                response.put("parameters", arr);
+
+                sendJSON(response);
+
+            } catch (JSONException ex) {
+
+                JSONObject response = new JSONObject();
+
+                response.put("type", "error");
+                response.put("status", Status.BADREQUEST);
+                response.put("status_message", Status.BADREQUEST);
+                response.put("error", "JSONException");
+                response.put("error_message", ex.toString());
+
+                sendJSON(response);
+
+            } catch (DateTimeException ex) {
+
+                JSONObject response = new JSONObject();
+
+                response.put("type", "error");
+                response.put("status", Status.BADREQUEST);
+                response.put("status_message", Status.SBADREQUEST);
+                response.put("error", "DateTimeException");
+                response.put("error_message", ex.toString());
+
+                sendJSON(response);
+
+            }
+
+        }
+
+    }
+
+    private void performDelHW(JSONObject request) {
+
+        if (!require(request, "date") | !require(request, "id") | !requireGroup()) {
+
+            return;
 
         }
 
         try {
 
-            JSONArray fromDate = request.getJSONArray("fromdate");
+            JSONArray date = request.getJSONArray("date");
 
-            JSONArray toDate = request.getJSONArray("todate");
+            String id = request.getString("id");
 
-            int fyyyy = fromDate.getInt(0);
-            int fMM = fromDate.getInt(1);
-            int fdd = fromDate.getInt(2);
+            LocalDate ldate = LocalDate.of(date.getInt(0), date.getInt(1), date.getInt(2));
 
-            int tyyyy = toDate.getInt(0);
-            int tMM = toDate.getInt(1);
-            int tdd = toDate.getInt(2);
+            boolean success = myGroup.delHW(ldate, id);
 
-            sendState_processing();
+            if (!success) {
 
-            LocalDate dateFrom = LocalDate.of(fyyyy, fMM, fdd);
-            LocalDate dateTo = LocalDate.of(tyyyy, tMM, tdd);
+                JSONObject response = new JSONObject();
 
-            ArrayList<HomeWork> hws = myGroup.getHWBetween(dateFrom, dateTo, false);
+                response.put("type", "error");
+                response.put("error", "DelHWError");
+                response.put("error_message", "HomeWork could not be deleted");
+                response.put("status", Status.INTERNALERROR);
+                response.put("status_message", Status.SINTERNALERROR);
 
-            JSONObject response = new JSONObject();
+                sendJSON(response);
 
-            response.put("status", Status.OK);
-            response.put("status_message", Status.SOK);
+                return;
 
-            JSONArray arr = new JSONArray();
+            } else {
 
-            hws.stream().forEach(hw -> arr.put(hw.getJSON()));
+                JSONObject response = new JSONObject();
 
-            response.put("type", "hw_array");
-            response.put("parameters", arr);
+                response.put("status", Status.CREATED);
+                response.put("status_message", Status.SCREATED);
 
-            sendJSON(response);
+                sendJSON(response);
+
+                return;
+
+            }
 
         } catch (JSONException ex) {
 

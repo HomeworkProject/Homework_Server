@@ -63,13 +63,17 @@ public class HomeWork {
 
     }
 
-    private boolean initializeFile() {
+    private boolean initializeFile(boolean createFile) {
 
         file = new File(filePath);
 
         try {
 
             if (!file.isFile()) {
+
+                if (!createFile) {
+                    return false;
+                }
 
                 if (!file.createNewFile()) {
 
@@ -95,7 +99,7 @@ public class HomeWork {
 
     public boolean flush() {
 
-        if (!initializeFile()) {
+        if (!initializeFile(true)) {
 
             return false;
 
@@ -123,7 +127,7 @@ public class HomeWork {
 
         boolean skip = false;
 
-        if (!initializeFile()) {
+        if (!initializeFile(false)) {
 
             skip = true;
 
@@ -145,6 +149,12 @@ public class HomeWork {
                 if (checkValidity(jObj)) {
 
                     contentAsJSON = jObj;
+
+                    if (!contentAsJSON.has("subject")) {
+
+                        contentAsJSON.put("subject", "none");
+
+                    }
 
                     isLoaded = true;
 
@@ -204,10 +214,17 @@ public class HomeWork {
 
             validity = any.getString("type").equalsIgnoreCase("HomeWork")
                     && (any.getJSONObject("short") != null)
-                    && (any.getJSONObject("long") != null)
-                    && (any.getInt("yyyy") >= 2016)
-                    && (any.getInt("MM") > 0) && (any.getInt("MM") <= 12)
-                    && (any.getInt("dd") > 0) && (any.getInt("dd") <= 31);
+                    && (any.getJSONObject("long") != null);
+
+            if (validity) {
+
+                JSONArray date = any.getJSONArray("date");
+
+                validity = date.getInt(0) > 0
+                                    && date.getInt(1) > 0 && date.getInt(1) <= 12
+                                    && date.getInt(2) > 0 && date.getInt(2) <= 31;
+
+            }
 
         } catch (JSONException ex) {
 
