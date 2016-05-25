@@ -2,10 +2,7 @@ package de.mlessmann.config;
 
 import de.mlessmann.hwserver.HWServer;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.logging.Logger;
 import org.json.*;
 
@@ -14,6 +11,8 @@ import org.json.*;
  * @author Life4YourGames
  */
 public class HWConfig {
+
+    public static final String confVersion = "0.0.0.1";
 
     private final HWServer HWSERVER;
     private final Logger LOG;
@@ -108,6 +107,44 @@ public class HWConfig {
         }
 
         return this;
+    }
+
+    public HWConfig createIfNotFound(String file) throws IOException {
+
+        File fil  = new File(file);
+
+        if (!fil.isFile()) {
+
+            fil.createNewFile();
+
+            LOG.fine("Creating default config in: " + fil.getAbsolutePath());
+
+        } else {
+
+            return this;
+
+        }
+
+        configObject = new JSONObject();
+
+        configObject.put("type", "config");
+
+        configObject.put("configVersion", confVersion);
+
+        JSONArray groups = new JSONArray();
+
+        groups.put("default");
+
+        configObject.put("groups", groups);
+
+        try (FileWriter writer = new FileWriter(file)) {
+
+            writer.write(configObject.toString(2));
+
+        }
+
+        return this;
+
     }
 
     /**

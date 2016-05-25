@@ -3,6 +3,7 @@ package de.mlessmann.hwserver;
 import de.mlessmann.config.HWConfig;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
@@ -59,7 +60,7 @@ public class HWServer {
      * Path to the config
      * @see #setArg(String)
      */
-    private String confFile = "config.json";
+    private String confFile = "conf/config.json";
 
     /**
      * Configuration object (using JSON)
@@ -117,7 +118,26 @@ public class HWServer {
 
         LOG.fine("Entering initialization");
 
-        if (!config.open(confFile).isInitialized()) {
+        File confDir = new File("conf");
+
+        if (!confDir.isDirectory()) {
+
+            if (!confDir.mkdir()) {
+
+                LOG.severe("Unable to create dir \"conf\"!");
+
+                throw new IOException("Cannot create directory: "+ confDir.getAbsolutePath());
+
+            } else {
+
+                LOG.fine("Created default conf dir");
+
+            }
+
+        }
+
+
+        if (!config.createIfNotFound(confFile).open(confFile).isInitialized()) {
             LOG.severe("Unable to read config! This instance is not going to work!");
             throw new IOException("Config not readable");
         }
@@ -213,7 +233,7 @@ public class HWServer {
         } else {
             switch (arg) {
                 case "-debug": enableDebug(); break;
-                case "-debug_no_trace": LOGFORMATTER.setDebug(false); break;
+                case "--log-no-trace": LOGFORMATTER.setDebug(false); break;
                 default: LOG.warning("Unsupported argument: " + arg); break;
             }
         }
