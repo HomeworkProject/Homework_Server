@@ -6,4 +6,5 @@
 build/
 *.log*
 *.lck*
-*.log
+run/hwserver-latest.log
+run/conf/
