@@ -5,12 +5,14 @@ apply plugin: 'application'
 version = '0.0.0.1'
 
 //MainClass - run information
-mainClassName = 'de.mlessmann.main.Main'
+mainClassName = 'main.Main'
 
 //Wrapper
 task wrapper(type: Wrapper) {
 	gradleVersion = '2.13'
 }
+
+//TODO: Update task (maybe integrated into the server)
 
 //Dependencies and repos
 repositories {
@@ -20,3 +22,4 @@ repositories {
 dependencies {
 	compile 'org.json:json:20160212'
 }
+
