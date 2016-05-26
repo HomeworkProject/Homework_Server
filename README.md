@@ -13,7 +13,7 @@ Twitter: [Me](https://twitter.com/@MarkL4YG) or [Sebastian](https://twitter.com/
 Google Hangouts: [Me](https://plus.google.com/+MarkL4YG) <br />
 E-Mail: [Me](mailto:github@m-lessmann.de) or [Sebastian](mailto:mail@s-paarmann.de) <br />
 
-Or even personally if you live near Henstedt-Ulburg (Germany) by contacting our school <br /> (Alstergymnasium Henstedt-Ulzburg)
+Or even personally if you live near Henstedt-Ulzburg (Germany) by contacting our school <br /> (Alstergymnasium Henstedt-Ulzburg)
 
 ## Contributing
 
@@ -34,5 +34,5 @@ You can ask both of us if you need any information, but it may sometimes be quic
 
 ### ToDos (regarding the readMe) ###
 
-TODO: Enhance readMe
+TODO: Enhance readMe <br />
 TODO: Link license - Currently: ALL RIGHTS RESERVED (Will change as soon as I chose one)
