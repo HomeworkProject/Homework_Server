@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import javax.net.ssl.SSLException;
 import java.io.*;
 import java.net.Socket;
 import java.time.DateTimeException;
@@ -87,6 +88,14 @@ public class HWTCPClientHandler {
 
             }
 
+        } catch (SSLException sslEx) {
+
+            if (!terminated) {
+                master.sendLog(this, Level.FINEST, "Closing connection: " + sslEx.toString());
+                killConnection();
+            }
+            return terminated;
+
         } catch (IOException ex) {
 
             if (!isClosed) {
@@ -94,7 +103,7 @@ public class HWTCPClientHandler {
             }
             killConnection();
 
-        } catch (JSONException ex) {
+        }  catch (JSONException ex) {
 
             JSONObject response = new JSONObject();
 
@@ -135,8 +144,12 @@ public class HWTCPClientHandler {
 
         } catch (IOException ex) {
 
-            master.sendLog(this, Level.WARNING, "Unable to send Message: " + ex.toString());
-            killConnection();
+            if (!(ex instanceof SSLException)) {
+
+                master.sendLog(this, Level.WARNING, "Unable to send Message: " + ex.toString());
+                killConnection();
+
+            }
         }
     }
 
@@ -444,10 +457,25 @@ public class HWTCPClientHandler {
 
                 JSONArray arr = new JSONArray();
 
-                hws.stream().forEach(hw -> arr.put(hw.getJSON()));
+                if (!request.has("cap")) {
 
+                    hws.stream().forEach(hw -> arr.put(hw.getJSON()));
+
+                } else {
+
+                    if (request.getString("cap").equals("short")) {
+
+                        hws.stream().forEach(hw -> arr.put(hw.getShort()));
+
+                    } else if (request.getString("cap").equals("long")) {
+
+                        hws.stream().forEach(hw -> arr.put(hw.getLong()));
+
+                    }
+
+                }
                 response.put("type", "hw_array");
-                response.put("parameters", arr);
+                response.put("payload", arr);
 
                 sendJSON(response);
 
@@ -508,7 +536,7 @@ public class HWTCPClientHandler {
                 hws.stream().forEach(hw -> arr.put(hw.getJSON()));
 
                 response.put("type", "hw_array");
-                response.put("parameters", arr);
+                response.put("payload", arr);
 
                 sendJSON(response);
 

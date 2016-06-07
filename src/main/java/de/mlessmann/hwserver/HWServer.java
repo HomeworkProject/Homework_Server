@@ -16,8 +16,10 @@ import java.util.logging.Logger;
 
 import de.mlessmann.homework.HWGroup;
 import de.mlessmann.logging.*;
-import de.mlessmann.network.HWTCPServerWorker;
+import de.mlessmann.network.HWTCPServer;
 import org.json.JSONArray;
+
+import javax.net.ssl.SSLServerSocketFactory;
 
 /**
  * Created by Life4YourGames on 29.04.16.
@@ -28,7 +30,7 @@ public class HWServer {
     /**
      * TCPServerWorker used for TCPCommunication
      */
-    private HWTCPServerWorker hwtcpServerWorker;
+    private HWTCPServer hwtcpServer;
 
     /**
      * Logger used to write to console (stdOut)
@@ -168,9 +170,16 @@ public class HWServer {
 
     public HWServer start() {
 
-        hwtcpServerWorker = new HWTCPServerWorker(this);
+        hwtcpServer= new HWTCPServer(this);
 
-        hwtcpServerWorker.start();
+        if (!hwtcpServer.setUp()) {
+
+            LOG.severe("An error occurred while setting up the tcp connections, this instance is going silent now!");
+            return this;
+
+        }
+
+        hwtcpServer.start();
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
@@ -193,7 +202,7 @@ public class HWServer {
             }
         }
 
-        hwtcpServerWorker.stopServer();
+        hwtcpServer.stop();
 
         //hwGroups.forEach((k, v) -> v.flushToFiles());
         //HomeWorks are flushed on addition, this is currently not needed
@@ -291,6 +300,24 @@ public class HWServer {
         }
 
         return Optional.ofNullable(hwGroup);
+
+    }
+
+    public Optional<SSLServerSocketFactory> getSecureSocketFactory() {
+        //I know, Optional is currently optional itself, but this code may change in future updates
+
+        SSLServerSocketFactory ssf = null;
+
+        if (getConfig().getJSON().has("secure_tcp_key") && getConfig().getJSON().has("secure_tcp_password")) {
+
+            System.setProperty("javax.net.ssl.keyStore", getConfig().getJSON().getString("secure_tcp_key"));
+            System.setProperty("javax.net.ssl.keyStorePassword", getConfig().getJSON().getString("secure_tcp_password"));
+
+        }
+
+        ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+
+        return Optional.ofNullable(ssf);
 
     }
 
