@@ -32,7 +32,7 @@ This project was originally started by Sebasian and I agreed on joining him when
 As for now, he's responsible for the Android client and I'm responsible for the (cross platform) server.<br />
 You can ask both of us if you need any information, but it may sometimes be quicker to take the above into consideration before getting in touch.
 
-## Documentation ## 
+## Documentation
 
 Documentation can currently be found in the [GitHub-Wiki](https://github.com/MarkL4YG/Homework_Server/wiki)  
 
