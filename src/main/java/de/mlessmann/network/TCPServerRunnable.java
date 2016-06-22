@@ -30,7 +30,7 @@ public class TCPServerRunnable implements Runnable {
 
         stopped = false;
 
-        server.sendLog(this, Level.INFO, "Opening server on: " + socket.getLocalSocketAddress() + ":" + socket.getLocalPort());
+        server.sendLog(this, Level.INFO, "Opening server on: " + socket.getLocalSocketAddress());
 
         while (!this.stopped) {
 

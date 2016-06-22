@@ -6,6 +6,9 @@ package de.mlessmann.network;
  */
 public class Status {
 
+    //Non Status, but has to go somewhere
+    public static final String SCURRENTPROTOVERSION = "1.1.0.0";
+
     //100
     public static final int CONTINUE = 100;
     public static final String SCONTINUE = "continue";
