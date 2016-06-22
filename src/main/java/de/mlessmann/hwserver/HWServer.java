@@ -14,10 +14,11 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import de.mlessmann.homework.HWGroup;
+import de.mlessmann.allocation.HWGroup;
 import de.mlessmann.logging.*;
 import de.mlessmann.network.HWTCPServer;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import javax.net.ssl.SSLServerSocketFactory;
 
@@ -36,7 +37,7 @@ public class HWServer {
      * Logger used to write to console (stdOut)
      * @see #getLogger()
      */
-    private final Logger LOG = Logger.getLogger("HW");
+    private final Logger LOG = Logger.getLogger("hwserver");
     /**
      * FileName of the log
      * @see #getLogFile()
@@ -51,7 +52,8 @@ public class HWServer {
     /**
      * ConsoleHandler for logging to console->StdOut
      */
-    private final HWConsoleHandler HCONSOLE = new HWConsoleHandler(System.out);
+    private final HWConsoleHandler HCONSOLESTD = new HWConsoleHandler(System.out);
+    private final HWConsoleHandler HCONSOLEERR = new HWConsoleHandler(System.err);
 
     /**
      * FileHandler for writing the "latest"-log
@@ -95,19 +97,41 @@ public class HWServer {
 
         //Initialize LogLevels and debug
         LOGFORMATTER.setDebug(false);
-        HCONSOLE.setLevel(Level.FINEST);
+
+        HCONSOLESTD.setLevel(Level.FINEST);
+        HCONSOLEERR.setLevel(Level.WARNING);
+
         logFileHandler.setLevel(Level.FINEST);
+
         LOG.setLevel(Level.FINEST);
 
+        LOG.setUseParentHandlers(false);
+
         //Replace the default console formatter
-        HCONSOLE.setFormatter(LOGFORMATTER);
-        LOG.addHandler(HCONSOLE);
+        HCONSOLESTD.setFormatter(LOGFORMATTER);
+        HCONSOLEERR.setFormatter(LOGFORMATTER);
+        LOG.addHandler(HCONSOLESTD);
+        LOG.addHandler(HCONSOLEERR);
         LOG.addHandler(logFileHandler);
 
         LOG.fine("Entering preInitialization");
 
         //PreInit config so the reference is correct
         config = new HWConfig(this);
+
+        JSONObject defaultConfig = new JSONObject();
+
+        defaultConfig.put("type", "config");
+
+        defaultConfig.put("configVersion", HWConfig.confVersion);
+
+        JSONArray groups = new JSONArray();
+
+        groups.put("default");
+
+        defaultConfig.put("groups", groups);
+
+        config.defaultConf = defaultConfig;
 
         return this;
     }
@@ -258,7 +282,7 @@ public class HWServer {
 
         LOG.setLevel(Level.FINEST);
         LOGFORMATTER.setDebug(true);
-        HCONSOLE.setLevel(Level.FINEST);
+        HCONSOLESTD.setLevel(Level.FINEST);
 
         LOG.fine("Debug mode enabled");
 

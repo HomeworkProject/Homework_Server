@@ -18,11 +18,7 @@ public class HWConsoleHandler extends StreamHandler {
         super();
 
         //Use default as default
-        if (outStream == null) {
-
-            outStream = System.out;
-
-        }
+        if (outStream == null) outStream = System.out;
 
         setOutputStream(outStream);
     }
