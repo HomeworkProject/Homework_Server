@@ -1,5 +1,5 @@
 # Syntax-Help for Syntax version 1.1.0.X
-##### Last updated: 2016-06-23T17:34:00+0200
+##### Last updated: 2016-06-22T10:51:00+0200
 
 This is the Syntax and command information for unencrypted TCP connections to the server  
 - Default tcp-plaintext-port is 11900  
