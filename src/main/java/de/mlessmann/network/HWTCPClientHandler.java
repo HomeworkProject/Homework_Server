@@ -1,7 +1,9 @@
 package de.mlessmann.network;
 
-import de.mlessmann.homework.HWGroup;
+import de.mlessmann.allocation.HWGroup;
+import de.mlessmann.allocation.HWUser;
 import de.mlessmann.homework.HomeWork;
+import de.mlessmann.perms.Permission;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,19 +18,28 @@ import java.util.Optional;
 import java.util.logging.Level;
 
 /**
- * Created by mark332 on 08.05.2016.
- * @author Life4YourGames
+ * Created by MarkL4YG on 08.05.2016.
+ * @author MarkL4YG
+ * (C 2016) Magnus Leßmann
  */
 public class HWTCPClientHandler {
+
+    private static int negateInt(int i) {
+
+        return i * ( -1 );
+
+    }
+
 
     private HWTCPServer master;
     private Socket mySock;
     private BufferedReader reader;
     private BufferedWriter writer;
-    private HWGroup myGroup;
+    private HWUser myUser;
     private boolean terminated = false;
     private boolean isClosed = false;
     private boolean greeted = false;
+    private int currentCommID;
 
     public HWTCPClientHandler(Socket clientSock, HWTCPServer tcpServer) {
 
@@ -82,9 +93,17 @@ public class HWTCPClientHandler {
 
             if (message != null) {
 
-                JSONObject object = new JSONObject(message);
+                if (!message.startsWith("protoInfo")) {
 
-                processJSON(object);
+                    JSONObject object = new JSONObject(message);
+
+                    processJSON(object);
+
+                } else {
+
+                    sendProtocolInfo();
+                    return terminated;
+                }
 
             }
 
@@ -159,8 +178,16 @@ public class HWTCPClientHandler {
         JSONObject response = new JSONObject();
 
         response.put("status", Status.NOTIFY_DEV);
-        response.put("status_message", Status.SNOTIFY_DEV);
-        response.put("notify", "This server is currently NOT meeting the full requirements of the hw protocol!");
+        response.put("payload_type", "message");
+
+        JSONObject message = new JSONObject();
+            message.put("type", "message");
+            message.put("message", "This server is currently NOT meeting the full requirements of the hw protocol!");
+            message.put("messagetype", "devinfo");
+
+
+        response.put("payload", message);
+        response.put("commID", 1);
 
         sendJSON(response);
         //END PROTOCOL NOT FULLY MET
@@ -169,10 +196,20 @@ public class HWTCPClientHandler {
         JSONObject jObj = new JSONObject();
 
         jObj.put("status", Status.OK);
-        jObj.put("status_message", Status.SOK);
+        jObj.put("payload_type", "null");
+        jObj.put("commID", -1);
 
         sendJSON(jObj);
         //END GREETING
+
+    }
+
+    private void sendProtocolInfo() {
+
+        JSONObject response = new JSONObject();
+        response.put("protoVersion", Status.SCURRENTPROTOVERSION);
+
+        sendJSON(response);
 
     }
 
@@ -187,7 +224,8 @@ public class HWTCPClientHandler {
         JSONObject response = new JSONObject();
 
         response.put("status", Status.PROCESSING);
-        response.put("status_message", Status.SPROCESSING);
+        response.put("payload_type", "null");
+        response.put("commID", currentCommID);
 
         sendJSON(response);
 
@@ -200,20 +238,27 @@ public class HWTCPClientHandler {
         }
 
         JSONObject response = new JSONObject();
-        response.put("type", "error");
         response.put("status", Status.BADREQUEST);
-        response.put("status_message", Status.SBADREQUEST);
-        response.put("error", "ProtocolError");
-        response.put("error_message", "Request is missing field \"" + field + "\"!");
+        response.put("payload_type", "error");
+
+        JSONObject e = new JSONObject();
+
+            e.put("error", "ProtocolError");
+            e.put("error_message", "Request is missing field \"" + field + "\"!");
+            e.put("friendly", false);
+            e.put("friendly_message", "Request was incomplete, contact your client developer");
+
+        response.put("commID", negateInt(currentCommID));
 
         sendJSON(response);
 
         return false;
     }
 
-    private boolean requireGroup() {
-        if (myGroup == null) {
+    private boolean requireUser() {
+        if (myUser == null) {
 
+            //TODO: Continue response refactoring!
             JSONObject response = new JSONObject();
 
             response.put("status", Status.UNAUTHORIZED);
@@ -312,13 +357,54 @@ public class HWTCPClientHandler {
 
         }
 
-        String group = request.getJSONArray("parameters").getString(0);
+        JSONArray arr = request.getJSONArray("parameters");
+
+        String group = null;
+        String user = null;
+        String auth = null;
+
+        if (arr.length() >= 1) {
+
+            group = arr.getString(0);
+
+        } else {
+
+            JSONObject response = new JSONObject();
+
+            response.put("status", Status.BADREQUEST);
+            response.put("status_message", "SetGroup needs at least 1 parameter");
+
+            sendJSON(response);
+            return;
+
+        }
+
+        if (arr.length() > 2) {
+
+            user = arr.getString(1);
+            auth = arr.getString(2);
+
+        } else {
+
+            user = "default";
+
+            if (arr.length() == 2) {
+
+                auth = arr.getString(1);
+
+            } else {
+
+                auth = "default";
+
+            }
+
+        }
 
         Optional<HWGroup> hwGroup = master.getMaster().getGroup(group);
 
         if (!hwGroup.isPresent()) {
 
-            myGroup = null;
+            myUser = null;
 
             JSONObject response = new JSONObject();
             response.put("status", Status.NOTFOUND);
@@ -326,9 +412,25 @@ public class HWTCPClientHandler {
 
             sendJSON(response);
             return;
+
         }
 
-        myGroup = hwGroup.get();
+        Optional<HWUser> hwUser = hwGroup.get().getUser(user, auth);
+
+        if (!hwUser.isPresent()) {
+
+            myUser = null;
+
+            JSONObject response = new JSONObject();
+            response.put("status", Status.NOTFOUND);
+            response.put("status_message", "User " + user + " wasn't found");
+
+            sendJSON(response);
+            return;
+
+        }
+
+        myUser = hwUser.get();
 
         JSONObject response = new JSONObject();
         response.put("status", Status.OK);
@@ -344,7 +446,7 @@ public class HWTCPClientHandler {
             return;
         }
 
-        if (!requireGroup()) {
+        if (!requireUser()) {
             return;
         }
 
@@ -368,11 +470,9 @@ public class HWTCPClientHandler {
 
         }
 
-        boolean success = false;
+        int success = myUser.addHW(hwObj);
 
-        success = myGroup.addHW(hwObj);
-
-        if (!success) {
+        if (success == -1) {
 
             JSONObject response = new JSONObject();
 
@@ -386,7 +486,7 @@ public class HWTCPClientHandler {
 
             return;
 
-        } else {
+        } else if (success == 0) {
 
             JSONObject response = new JSONObject();
 
@@ -396,6 +496,37 @@ public class HWTCPClientHandler {
             sendJSON(response);
 
             return;
+
+        } else if (success == 1) {
+
+            JSONObject response = new JSONObject();
+
+            response.put("type", "error");
+            response.put("error", "InsufficientPermission");
+            response.put("error_message", "Insufficient permission to add the homework");
+            response.put("status", Status.FORBIDDEN);
+            response.put("status_message", Status.SFORBIDDEN);
+
+            //Permission error: Add this
+            response.put("perm", "has:" + Permission.HW_ADD_NEW);
+
+            return;
+
+        } else if (success == 2) {
+
+            JSONObject response = new JSONObject();
+
+            response.put("type", "error");
+            response.put("error", "InsufficientPermission");
+            response.put("error_message", "Insufficient permission to edit the homework");
+            response.put("status", Status.FORBIDDEN);
+            response.put("status_message", Status.SFORBIDDEN);
+
+            //Permission error: Add this
+            response.put("perm", "has:" + Permission.HW_ADD_EDIT);
+
+            return;
+
         }
 
     }
@@ -407,16 +538,16 @@ public class HWTCPClientHandler {
             subjects = request.getJSONArray("subjects");
         }
 
+        if (!requireUser()) {
+            return;
+        }
+
         if (!request.has("date")) {
 
             if (!require(request, "fromdate")) {
                 return;
             }
             if (!require(request, "todate")) {
-                return;
-            }
-
-            if (!requireGroup()) {
                 return;
             }
 
@@ -441,14 +572,20 @@ public class HWTCPClientHandler {
 
                 ArrayList<String> subjectFilter = null;
                 if (subjects != null && subjects.length() > 0) {
+
+                    subjectFilter = new ArrayList<String>();
+
+                    ArrayList<String> finalSubjectFilter = subjectFilter;
+
                     subjects.forEach(s -> {
                         if (s instanceof String) {
-                            subjectFilter.add((String) s);
+                            finalSubjectFilter.add((String) s);
                         }
-                    });
+                    }
+                    );
                 }
 
-                ArrayList<HomeWork> hws = myGroup.getHWBetween(dateFrom, dateTo, subjectFilter, false);
+                ArrayList<HomeWork> hws = myUser.getHWBetween(dateFrom, dateTo, subjectFilter, false);
 
                 JSONObject response = new JSONObject();
 
@@ -517,14 +654,19 @@ public class HWTCPClientHandler {
 
                 ArrayList<String> subjectFilter = null;
                 if (subjects != null && subjects.length() > 0) {
+
+                    subjectFilter = new ArrayList<String>();
+
+                    ArrayList<String> finalSubjectFilter = subjectFilter;
+
                     subjects.forEach(s -> {
                         if (s instanceof String) {
-                            subjectFilter.add((String) s);
+                            finalSubjectFilter.add((String) s);
                         }
                     });
                 }
 
-                ArrayList<HomeWork> hws = myGroup.getHWOn(date, subjectFilter);
+                ArrayList<HomeWork> hws = myUser.getHWOn(date, subjectFilter);
 
                 JSONObject response = new JSONObject();
 
@@ -572,7 +714,7 @@ public class HWTCPClientHandler {
 
     private void performDelHW(JSONObject request) {
 
-        if (!require(request, "date") | !require(request, "id") | !requireGroup()) {
+        if (!require(request, "date") | !require(request, "id") | !requireUser()) {
 
             return;
 
@@ -586,9 +728,9 @@ public class HWTCPClientHandler {
 
             LocalDate ldate = LocalDate.of(date.getInt(0), date.getInt(1), date.getInt(2));
 
-            boolean success = myGroup.delHW(ldate, id);
+            int success = myUser.delHW(ldate, id);
 
-            if (!success) {
+            if (success == 1) {
 
                 JSONObject response = new JSONObject();
 
@@ -602,7 +744,7 @@ public class HWTCPClientHandler {
 
                 return;
 
-            } else {
+            } else if (success == 0) {
 
                 JSONObject response = new JSONObject();
 
@@ -612,6 +754,13 @@ public class HWTCPClientHandler {
                 sendJSON(response);
 
                 return;
+
+            } else if (success == 2) {
+
+                JSONObject response = new JSONObject();
+
+                response.put("status", Status.FORBIDDEN);
+                response.put("status_message", Status.SFORBIDDEN);
 
             }
 

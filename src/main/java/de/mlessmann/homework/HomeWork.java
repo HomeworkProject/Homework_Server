@@ -251,4 +251,49 @@ public class HomeWork {
         if (!isLoaded) read();
         return contentAsJSON;
     }
+
+    public JSONObject getLong() {
+        if (!isLoaded) read();
+        JSONObject res = null;
+
+        try {
+
+            res = contentAsJSON.getJSONObject("long");
+
+        } catch (JSONException ex) {
+
+        }
+
+        if (res == null) {
+
+            res = new JSONObject();
+
+        }
+
+        return res;
+
+    }
+
+    public JSONObject getShort() {
+        if (!isLoaded) read();
+        JSONObject res = null;
+
+        try {
+
+            res = contentAsJSON.getJSONObject("short");
+
+        } catch (JSONException ex) {
+
+        }
+
+        if (res == null) {
+
+            res = new JSONObject();
+
+        }
+
+        return res;
+
+    }
+
 }
