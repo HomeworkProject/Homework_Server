@@ -35,7 +35,8 @@ You can ask both of us if you need any information, but it may sometimes be quic
 ## Documentation
 
 Documentation can currently be found in the [GitHub-Wiki](https://github.com/MarkL4YG/Homework_Server/wiki)  
-
+Altough the [folder](https://github.com/MarkL4YG/Homework_Server/tree/Latest/wiki) in the repo may be more up to date.  
+  
 ### ToDos (regarding the readMe) ###
 
 TODO: Enhance readMe <br />
