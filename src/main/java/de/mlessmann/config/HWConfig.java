@@ -1,5 +1,6 @@
 package de.mlessmann.config;
 
+import de.mlessmann.fileutil.FileUtil;
 import de.mlessmann.hwserver.HWServer;
 
 import java.io.*;
@@ -14,11 +15,13 @@ public class HWConfig {
 
     public static final String confVersion = "0.0.0.1";
 
-    private final HWServer HWSERVER;
+    private HWServer HWSERVER;
     private final Logger LOG;
     private String fileName;
+    private FileUtil myFileUtil;
     private boolean initialized = false;
     private JSONObject configObject;
+    public JSONObject defaultConf = new JSONObject();
 
     /**
      * Creates a new ConfigInstance
@@ -26,13 +29,70 @@ public class HWConfig {
      */
     public HWConfig(HWServer serverInstance) {
 
-        if (serverInstance == null) {
-            throw new IllegalArgumentException("serverInstance must not be null!");
+        if (serverInstance != null) {
+
+            this.HWSERVER = serverInstance;
+            this.LOG = HWSERVER.getLogger();
+
+        } else {
+
+            this.LOG = Logger.getGlobal();
+
         }
 
-        this.HWSERVER = serverInstance;
-        this.LOG = HWSERVER.getLogger();
+    }
 
+    public HWConfig createIfNotFound(String file) {
+
+        return createIfNotFound(new File(file));
+
+    }
+
+    public HWConfig createIfNotFound(File file) {
+
+        if (myFileUtil == null || file != null) {
+
+            myFileUtil = new FileUtil(file);
+            myFileUtil.setLogger(LOG);
+
+        }
+
+        if (!myFileUtil.getFile().isFile()) {
+
+            LOG.fine("Creating default config in: " + myFileUtil.getFile().getAbsolutePath());
+
+            String confCachedWarning = "Unable to create default config: caching! The instance config will not be saved!";
+
+            try {
+
+                if (!myFileUtil.getFile().createNewFile()) {
+
+                    LOG.warning(confCachedWarning);
+
+                }
+
+            } catch (IOException ex) {
+
+                LOG.warning(confCachedWarning);
+
+            }
+
+        } else {
+
+            return this;
+
+        }
+
+        configObject = defaultConf;
+
+        myFileUtil.writeToFile(configObject.toString(2));
+
+        return this;
+
+    }
+
+    public JSONObject getConfigObject() {
+        return configObject;
     }
 
     /**
@@ -43,34 +103,28 @@ public class HWConfig {
      */
     public HWConfig open(String file) {
 
-        if (file == null) {
-            throw new IllegalArgumentException("file must not be null!");
+        return open(file);
+
+    }
+
+    /**
+     * Open a file and read it as a config, check
+     * @see #isInitialized for success
+     * @param file object of the config
+     * @return this
+     */
+    public HWConfig open(File file) {
+
+        if (myFileUtil == null || file != null) {
+
+            myFileUtil = new FileUtil(file);
+            myFileUtil.setLogger(LOG);
+
         }
+
         initialized = false;
 
-        BufferedReader buff;
-        StringBuilder content;
-
-        try (FileReader fReader = new FileReader(file)) {
-            //Read the file
-
-            buff = new BufferedReader(fReader);
-
-            content = new StringBuilder();
-
-            buff.lines().forEach(content::append);
-
-        } catch (FileNotFoundException ex) {
-
-            LOG.warning("Unable to open file: " + file + ": " + ex.toString());
-            return this;
-
-        } catch (IOException ex) {
-
-            LOG.warning("Unable to read file: " + file + ": " + ex.toString());
-            return this;
-
-        }
+        StringBuilder content = myFileUtil.getContent(true);
 
         String stringContent = content.toString();
 
@@ -81,10 +135,9 @@ public class HWConfig {
 
         } catch (JSONException ex) {
 
-            //TODO: JSONException returns wrong position
             LOG.warning(
                     (new StringBuilder("Error reading file: ")
-                            .append(file)
+                            .append(file.getPath())
                             .append(": ")
                             .append(ex))
                             .toString());
@@ -98,7 +151,7 @@ public class HWConfig {
         if (json.has("configVersion")) {
             LOG.fine(
                     new StringBuilder("Loaded config: ")
-                            .append(file)
+                            .append(file.getPath())
                             .append(" version ")
                             .append(json.get("configVersion"))
                             .toString());
@@ -109,43 +162,12 @@ public class HWConfig {
         return this;
     }
 
-    public HWConfig createIfNotFound(String file) throws IOException {
+    public boolean flush() {
 
-        File fil  = new File(file);
-
-        if (!fil.isFile()) {
-
-            fil.createNewFile();
-
-            LOG.fine("Creating default config in: " + fil.getAbsolutePath());
-
-        } else {
-
-            return this;
-
-        }
-
-        configObject = new JSONObject();
-
-        configObject.put("type", "config");
-
-        configObject.put("configVersion", confVersion);
-
-        JSONArray groups = new JSONArray();
-
-        groups.put("default");
-
-        configObject.put("groups", groups);
-
-        try (FileWriter writer = new FileWriter(file)) {
-
-            writer.write(configObject.toString(2));
-
-        }
-
-        return this;
+        return myFileUtil != null && myFileUtil.writeToFile(getJSON().toString(2));
 
     }
+
 
     /**
      * Did the last #open() call succeed
