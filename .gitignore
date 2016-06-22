@@ -8,3 +8,4 @@ build/
 *.lck*
 run/hwserver-latest.log
 run/conf/
+/src/test/
