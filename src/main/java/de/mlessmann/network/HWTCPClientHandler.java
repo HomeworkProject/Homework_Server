@@ -4,6 +4,7 @@ import de.mlessmann.allocation.HWGroup;
 import de.mlessmann.allocation.HWUser;
 import de.mlessmann.homework.HomeWork;
 import de.mlessmann.perms.Permission;
+import de.mlessmann.util.L4YGRandom;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,6 +16,7 @@ import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.Random;
 import java.util.logging.Level;
 
 /**
@@ -245,8 +247,8 @@ public class HWTCPClientHandler {
 
             e.put("error", "ProtocolError");
             e.put("error_message", "Request is missing field \"" + field + "\"!");
-            e.put("friendly", false);
             e.put("friendly_message", "Request was incomplete, contact your client developer");
+        response.put("payload", e);
 
         response.put("commID", negateInt(currentCommID));
 
@@ -262,7 +264,16 @@ public class HWTCPClientHandler {
             JSONObject response = new JSONObject();
 
             response.put("status", Status.UNAUTHORIZED);
-            response.put("status_message", Status.SUNAUTHORIZED);
+            response.put("payload_type", "error");
+
+            JSONObject e = new JSONObject();
+
+                e.put("error", "PermissionError");
+                e.put("error_message", "Login request was missing or failed previously");
+                e.put("friendly_message", "Please log in first");
+            response.put("payload", e);
+
+            response.put("commID", negateInt(currentCommID));
 
             sendJSON(response);
 
@@ -278,6 +289,17 @@ public class HWTCPClientHandler {
         }
 
         try {
+
+            if (json.has("commID")) {
+
+                currentCommID = json.getInt("commID");
+
+            } else {
+
+                L4YGRandom.initRndIfNotAlready();
+                currentCommID = L4YGRandom.random.nextInt(5000) + 20;
+
+            }
 
             String command = json.getString("command");
 
@@ -301,19 +323,32 @@ public class HWTCPClientHandler {
             JSONObject response = new JSONObject();
 
             response.put("status", Status.BADREQUEST);
-            response.put("status_message", "Command " + command + " not found!");
+            response.put("payload_type", "error");
 
+            JSONObject e = new JSONObject();
+
+                e.put("error", "ProtocolError");
+                e.put("error_message", "Command \"" + command + "\" does not exist");
+                e.put("friendly_message", "Client request included an unknown command");
+            response.put("payload", e);
+
+            response.put("commID", negateInt(currentCommID));
             sendJSON(response);
 
         } catch (JSONException ex) {
 
             JSONObject response = new JSONObject();
 
-            response.put("type", "error");
             response.put("status", Status.INTERNALERROR);
-            response.put("status_message", Status.SINTERNALERROR);
-            response.put("error", "JSONException");
-            response.put("error_message", ex.toString());
+            response.put("payload_type", "error");
+
+            JSONObject e = new JSONObject();
+                e.put("error", "JSONError");
+                e.put("error_message", ex.toString());
+                e.put("friendly_message", "Internal server error occurred");
+            response.put("payload", e);
+
+            response.put("commID", negateInt(currentCommID));
 
             sendJSON(response);
 
@@ -322,7 +357,15 @@ public class HWTCPClientHandler {
             JSONObject response = new JSONObject();
 
             response.put("status", Status.INTERNALERROR);
-            response.put("status_message", Status.SINTERNALERROR);
+            response.put("payload_type", "error");
+
+            JSONObject e = new JSONObject();
+                e.put("error", "Exception");
+                e.put("error_message", ex.toString());
+                e.put("friendly_message", "Internal server error occurred");
+            response.put("payload", e);
+
+            response.put("commID", negateInt(currentCommID));
 
             sendJSON(response);
 
@@ -372,7 +415,15 @@ public class HWTCPClientHandler {
             JSONObject response = new JSONObject();
 
             response.put("status", Status.BADREQUEST);
-            response.put("status_message", "SetGroup needs at least 1 parameter");
+            response.put("payload_type", "error");
+
+            JSONObject e = new JSONObject();
+                e.put("error", "ProtocolError");
+                e.put("error_message", "SetGroup needs at least 1 parameter");
+                e.put("friendly_message", "Client request was incomplete");
+            response.put("payload", e);
+
+            response.put("commID", negateInt(currentCommID));
 
             sendJSON(response);
             return;
@@ -408,7 +459,15 @@ public class HWTCPClientHandler {
 
             JSONObject response = new JSONObject();
             response.put("status", Status.NOTFOUND);
-            response.put("status_message", "Group " + group + " wasn't found");
+            response.put("payload_type", "error");
+
+            JSONObject e = new JSONObject();
+                e.put("error", "NotFoundError");
+                e.put("error_message", "Group " + group + " wasn't found");
+                e.put("friendly_message", "Group \"" + group + "\" does not exist");
+            response.put("payload", e);
+
+            response.put("commID", negateInt(currentCommID));
 
             sendJSON(response);
             return;
@@ -423,7 +482,15 @@ public class HWTCPClientHandler {
 
             JSONObject response = new JSONObject();
             response.put("status", Status.NOTFOUND);
-            response.put("status_message", "User " + user + " wasn't found");
+            response.put("payload_type", "error");
+
+            JSONObject e = new JSONObject();
+                e.put("error", "NotFoundNumber");
+                e.put("error_message", "User \"" + user + "\" wasn't found");
+                e.put("friendly_message", "User \"" + user + "\" does not exist");
+            response.put("payload", e);
+
+            response.put("commID", negateInt(currentCommID));
 
             sendJSON(response);
             return;
@@ -434,7 +501,8 @@ public class HWTCPClientHandler {
 
         JSONObject response = new JSONObject();
         response.put("status", Status.OK);
-        response.put("status_message", Status.SOK);
+        response.put("payload_type", "null");
+        response.put("commID", negateInt(currentCommID));
 
         sendJSON(response);
 
@@ -458,11 +526,16 @@ public class HWTCPClientHandler {
 
             JSONObject response = new JSONObject();
 
-            response.put("type", "error");
-            response.put("error", "PutHWError");
-            response.put("error_message", "Submitted HomeWork was invalid");
             response.put("status", Status.BADREQUEST);
-            response.put("status_message", Status.SBADREQUEST);
+            response.put("payload_type", "error");
+
+            JSONObject e = new JSONObject();
+                e.put("error", "PutHWError");
+                e.put("error_message", "Submitted HomeWork was invalid");
+                e.put("friendly_message", "Client submitted an invalid object");
+            response.put("payload", e);
+
+            response.put("commID", negateInt(currentCommID));
 
             sendJSON(response);
 
@@ -476,11 +549,16 @@ public class HWTCPClientHandler {
 
             JSONObject response = new JSONObject();
 
-            response.put("type", "error");
-            response.put("error", "PutHWError");
-            response.put("error_message", "HomeWork was not added");
             response.put("status", Status.INTERNALERROR);
-            response.put("status_message", Status.SINTERNALERROR);
+            response.put("type", "error");
+
+            JSONObject e = new JSONObject();
+                e.put("error", "PutHWError");
+                e.put("error_message", "HomeWork not added");
+                e.put("friendly_message", "HomeWork wasn't added due to a server error");
+            response.put("payload", e);
+
+            response.put("commID", negateInt(currentCommID));
 
             sendJSON(response);
 
@@ -491,7 +569,8 @@ public class HWTCPClientHandler {
             JSONObject response = new JSONObject();
 
             response.put("status", Status.CREATED);
-            response.put("status_message", Status.SCREATED);
+            response.put("payload_type", "null");
+            response.put("commID", negateInt(currentCommID));
 
             sendJSON(response);
 
@@ -501,14 +580,19 @@ public class HWTCPClientHandler {
 
             JSONObject response = new JSONObject();
 
-            response.put("type", "error");
-            response.put("error", "InsufficientPermission");
-            response.put("error_message", "Insufficient permission to add the homework");
             response.put("status", Status.FORBIDDEN);
-            response.put("status_message", Status.SFORBIDDEN);
+            response.put("type", "error");
 
-            //Permission error: Add this
-            response.put("perm", "has:" + Permission.HW_ADD_NEW);
+            JSONObject e = new JSONObject();
+                e.put("error", "InsufficientPermissionError");
+                e.put("error_message", "Insufficient permission to add the homework");
+                e.put("friendly_message", "You don't have enough permission to add a homework");
+                e.put("perm", "has:" + Permission.HW_ADD_NEW);
+            response.put("payload", e);
+
+            response.put("commID", negateInt(currentCommID));
+
+            sendJSON(response);
 
             return;
 
@@ -516,14 +600,19 @@ public class HWTCPClientHandler {
 
             JSONObject response = new JSONObject();
 
-            response.put("type", "error");
-            response.put("error", "InsufficientPermission");
-            response.put("error_message", "Insufficient permission to edit the homework");
             response.put("status", Status.FORBIDDEN);
-            response.put("status_message", Status.SFORBIDDEN);
+            response.put("payload_type", "error");
 
-            //Permission error: Add this
-            response.put("perm", "has:" + Permission.HW_ADD_EDIT);
+            JSONObject e = new JSONObject();
+                e.put("error", "InsufficientPermissionError");
+                e.put("error_message", "Insufficient permission to edit the homework");
+                e.put("friendly_message", "You don't have enough permission to edit this homework");
+                e.put("perm", "has:" + Permission.HW_ADD_EDIT);
+            response.put("payload", e);
+
+            response.put("commID", negateInt(currentCommID));
+
+            sendJSON(response);
 
             return;
 
@@ -602,17 +691,19 @@ public class HWTCPClientHandler {
 
                     if (request.getString("cap").equals("short")) {
 
-                        hws.stream().forEach(hw -> arr.put(hw.getShort()));
+                        hws.stream().forEach(hw -> arr.put(new JSONObject().put("short", hw.getShort())));
 
                     } else if (request.getString("cap").equals("long")) {
 
-                        hws.stream().forEach(hw -> arr.put(hw.getLong()));
+                        hws.stream().forEach(hw -> arr.put(new JSONObject().put("long", hw.getLong())));
 
                     }
 
                 }
-                response.put("type", "hw_array");
+                response.put("payload_type", "JSONArray");
+                response.put("array_type", "HWObject");
                 response.put("payload", arr);
+                response.put("commID", negateInt(currentCommID));
 
                 sendJSON(response);
 
@@ -620,25 +711,39 @@ public class HWTCPClientHandler {
 
                 JSONObject response = new JSONObject();
 
-                response.put("type", "error");
                 response.put("status", Status.BADREQUEST);
-                response.put("status_message", Status.BADREQUEST);
-                response.put("error", "JSONException");
-                response.put("error_message", ex.toString());
+                response.put("payload_type", "error");
+
+                JSONObject e = new JSONObject();
+                    e.put("error", "JSONError");
+                    e.put("error_message", ex.toString());
+                    e.put("friendly_message", "Client sent an invalid request");
+                response.put("payload", e);
+
+                response.put("commID", negateInt(currentCommID));
 
                 sendJSON(response);
+
+                return;
 
             } catch (DateTimeException ex) {
 
                 JSONObject response = new JSONObject();
 
-                response.put("type", "error");
                 response.put("status", Status.BADREQUEST);
-                response.put("status_message", Status.SBADREQUEST);
-                response.put("error", "DateTimeException");
-                response.put("error_message", ex.toString());
+                response.put("payload_type", "error");
+
+                JSONObject e = new JSONObject();
+                    e.put("error", "DateTimeException");
+                    e.put("error_message", ex.toString());
+                    e.put("friendly_message", "Client sent an invalid request");
+                response.put("payload", e);
+
+                response.put("commID", negateInt(currentCommID));
 
                 sendJSON(response);
+
+                return;
 
             }
 
@@ -671,40 +776,57 @@ public class HWTCPClientHandler {
                 JSONObject response = new JSONObject();
 
                 response.put("status", Status.OK);
-                response.put("status_message", Status.SOK);
 
                 JSONArray arr = new JSONArray();
 
                 hws.stream().forEach(hw -> arr.put(hw.getJSON()));
 
-                response.put("type", "hw_array");
+                response.put("payload_type", "JSONArray");
+                response.put("array_type", "HWObject");
                 response.put("payload", arr);
+                response.put("commID", negateInt(currentCommID));
 
                 sendJSON(response);
+
+                return;
 
             } catch (JSONException ex) {
 
                 JSONObject response = new JSONObject();
 
-                response.put("type", "error");
                 response.put("status", Status.BADREQUEST);
-                response.put("status_message", Status.BADREQUEST);
-                response.put("error", "JSONException");
-                response.put("error_message", ex.toString());
+                response.put("payload_type", "error");
+
+                JSONObject e = new JSONObject();
+                    e.put("error", "JSONException");
+                    e.put("error_message", ex.toString());
+                    e.put("friendly_message", "Client sent an invalid request");
+                response.put("payload", e);
+
+                response.put("commID", negateInt(currentCommID));
 
                 sendJSON(response);
+
+                return;
 
             } catch (DateTimeException ex) {
 
                 JSONObject response = new JSONObject();
 
-                response.put("type", "error");
                 response.put("status", Status.BADREQUEST);
-                response.put("status_message", Status.SBADREQUEST);
-                response.put("error", "DateTimeException");
-                response.put("error_message", ex.toString());
+                response.put("payload_type", "error");
+
+                JSONObject e = new JSONObject();
+                    e.put("error", "DateTimeException");
+                    e.put("error_message", ex.toString());
+                    e.put("friendly_message", "Client sent an invalid request");
+                response.put("payload", e);
+
+                response.put("commID", negateInt(currentCommID));
 
                 sendJSON(response);
+
+                return;
 
             }
 
@@ -734,11 +856,16 @@ public class HWTCPClientHandler {
 
                 JSONObject response = new JSONObject();
 
-                response.put("type", "error");
-                response.put("error", "DelHWError");
-                response.put("error_message", "HomeWork could not be deleted");
                 response.put("status", Status.INTERNALERROR);
-                response.put("status_message", Status.SINTERNALERROR);
+                response.put("payload_type", "error");
+
+                JSONObject e = new JSONObject();
+                    e.put("error", "DelHWError");
+                    e.put("error_message", "HomeWork could not be deleted");
+                    e.put("friendly_message", "HomeWork wasn't deleted due to a server error");
+                response.put("payload", e);
+
+                response.put("commID", negateInt(currentCommID));
 
                 sendJSON(response);
 
@@ -748,8 +875,9 @@ public class HWTCPClientHandler {
 
                 JSONObject response = new JSONObject();
 
-                response.put("status", Status.CREATED);
-                response.put("status_message", Status.SCREATED);
+                response.put("status", Status.OK);
+                response.put("payload_type", "null");
+                response.put("commID", negateInt(currentCommID));
 
                 sendJSON(response);
 
@@ -760,7 +888,20 @@ public class HWTCPClientHandler {
                 JSONObject response = new JSONObject();
 
                 response.put("status", Status.FORBIDDEN);
-                response.put("status_message", Status.SFORBIDDEN);
+                response.put("payload_type", "error");
+
+                JSONObject e = new JSONObject();
+                    e.put("error", "InsufficientPermissionError");
+                    e.put("error_message", "Insufficient permission to delete the homework");
+                    e.put("friendly_message", "You're not allowed to delete this homework");
+                    e.put("perm", "has:" + Permission.HW_DEL);
+                response.put("payload", e);
+
+                response.put("commID", negateInt(currentCommID));
+
+                sendJSON(response);
+
+                return;
 
             }
 
@@ -768,25 +909,39 @@ public class HWTCPClientHandler {
 
             JSONObject response = new JSONObject();
 
-            response.put("type", "error");
             response.put("status", Status.BADREQUEST);
-            response.put("status_message", Status.BADREQUEST);
-            response.put("error", "JSONException");
-            response.put("error_message", ex.toString());
+            response.put("payload_type", "error");
+
+            JSONObject e = new JSONObject();
+                e.put("error", "JSONError");
+                e.put("error_message", ex.toString());
+                e.put("friendly_message", "Client sent an invalid request");
+            response.put("payload", e);
+
+            response.put("commID", negateInt(currentCommID));
 
             sendJSON(response);
+
+            return;
 
         } catch (DateTimeException ex) {
 
             JSONObject response = new JSONObject();
 
-            response.put("type", "error");
             response.put("status", Status.BADREQUEST);
-            response.put("status_message", Status.SBADREQUEST);
-            response.put("error", "DateTimeException");
-            response.put("error_message", ex.toString());
+            response.put("payload_type", "error");
+
+            JSONObject e = new JSONObject();
+                e.put("error", "DateTimeException");
+                e.put("error_message", ex.toString());
+                e.put("status_message", "Client sent an invalid request");
+            response.put("payload", e);
+
+            response.put("commID", negateInt(currentCommID));
 
             sendJSON(response);
+
+            return;
 
         }
 
