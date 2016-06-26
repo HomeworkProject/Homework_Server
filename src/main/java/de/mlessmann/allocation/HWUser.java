@@ -1,5 +1,7 @@
 package de.mlessmann.allocation;
 
+import de.mlessmann.authentication.AuthProvider;
+import de.mlessmann.authentication.IAuthMethod;
 import de.mlessmann.homework.HomeWork;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -23,6 +25,7 @@ public class HWUser {
         obj.put("permissions", perms);
         obj.put("name", DEFNAME);
         obj.put("password", DEFPASS);
+        obj.put("authMethod", DEFAUTH);
 
         return new HWUser(obj, g);
 
@@ -30,9 +33,14 @@ public class HWUser {
 
     public static final String DEFNAME = "default";
     public static final String DEFPASS = "default";
+    public static final String DEFAUTH = "default";
 
+
+    //Authentication
+    private String authMethod = DEFAUTH;
     private String userName = DEFNAME;
-    private String userPass = DEFPASS;
+    private String passData = DEFPASS;
+    private IAuthMethod myAuthMethod = AuthProvider.getDefault();
 
     private Map<String, HWPermission> permissions;
 
@@ -59,8 +67,15 @@ public class HWUser {
         }
 
         userName = json.getString("name");
-        userPass = json.getString("password");
+        passData = json.getString("password");
         myGroup = group;
+
+        if (json.has("authMethod")) {
+
+            authMethod = json.getString("authMethod");
+            myAuthMethod = AuthProvider.getMethod(authMethod);
+
+        }
 
     }
 
@@ -70,17 +85,15 @@ public class HWUser {
 
     }
 
-    public String getUserPass() {
+    public String getPassData() {
 
-        return userPass;
+        return passData;
 
     }
 
     public boolean authenticate(String auth) {
 
-        //TODO: More auth options ?
-
-        return userPass.equals(auth);
+        return myAuthMethod.authorize(passData, auth);
 
     }
 
@@ -125,5 +138,11 @@ public class HWUser {
         return myGroup.delHW(date, id, this);
 
     }
+
+    public IAuthMethod getAuth() { return myAuthMethod; }
+
+    public String getAuthIdent() { return myAuthMethod.getMethodIdentifier(); }
+
+    public JSONObject getJSON() { return json; }
 
 }

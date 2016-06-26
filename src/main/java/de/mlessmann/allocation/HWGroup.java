@@ -10,7 +10,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -22,7 +21,7 @@ import java.util.logging.Logger;
  */
 public class HWGroup {
 
-    public static JSONObject getDefaultConfig() {
+    public static JSONObject getDefaultConfig(HWGroup g) {
 
         JSONObject defaultConfig = new JSONObject();
 
@@ -30,7 +29,7 @@ public class HWGroup {
 
         defaultConfig.put("configVersion", HWConfig.confVersion);
 
-        defaultConfig.put("users", new JSONArray());
+        defaultConfig.put("users", new JSONArray().put(HWUser.getDefaultUser(g).getJSON()));
 
         return defaultConfig;
 
@@ -40,7 +39,7 @@ public class HWGroup {
     private String storeFolder;
 
     private HWServer hwServer;
-    private Logger log;
+    private Logger LOG;
 
     private boolean initialized;
 
@@ -60,8 +59,8 @@ public class HWGroup {
                 .toString();
         hwServer = hwserver;
 
-        log = hwserver.getLogger();
-        log.finest("Group \"" + gName + "\" created");
+        LOG = hwserver.getLogger();
+        LOG.finest("Group \"" + gName + "\" created");
 
         users = new HashMap<String, HWUser>();
 
@@ -81,19 +80,21 @@ public class HWGroup {
 
         File fil = new File(storeFolder + File.separator + "users.conf");
 
-        if (fil.exists()) {
+        //if (fil.exists()) {
 
             //TODO: Finish user integration
 
             userConf = new HWConfig(hwServer);
 
-            userConf.defaultConf = getDefaultConfig();
+            userConf.defaultConf = getDefaultConfig(this);
 
             userConf.createIfNotFound(fil);
 
             userConf.open((File) null); // ?! xD
 
             JSONArray jUsers = userConf.getJSON().getJSONArray("users");
+
+            LOG.finest("G:" + gName + " found " + jUsers.length() + " users");
 
             if (jUsers.length() > 0) {
 
@@ -103,6 +104,8 @@ public class HWGroup {
 
                     users.put(u.getUserName(), u);
 
+                    LOG.finest("G:" + gName + " registered user \"" + u.getUserName() + "\" using auth \"" + u.getAuthIdent() + "\"");
+
                 }
 
             } else {
@@ -111,9 +114,11 @@ public class HWGroup {
 
                 users.put(defUser.getUserName(), defUser);
 
+                LOG.finest("G:" + gName + " registered user \"" + defUser.getUserName() + "\" using auth \"" + defUser.getAuthIdent() + "\"");
+
             }
 
-        }
+        //}
 
     }
 
@@ -184,7 +189,7 @@ public class HWGroup {
 
         ArrayList<HomeWork> res = new ArrayList<HomeWork>();
 
-        log.finest("HWSearch#START # " + from.toString() + " -> " + to.toString());
+        LOG.finest("HWSearch#START # " + from.toString() + " -> " + to.toString());
 
         for (int cYear = from.getYear(); cYear <= to.getYear() && !kill; cYear++) {
 
@@ -192,13 +197,13 @@ public class HWGroup {
 
                 if (cYear == from.getYear() && cMonth < from.getMonthValue()) {
 
-                    log.finest("HWSearch#SKIP # MM_" + cYear + '-' + cMonth);
+                    LOG.finest("HWSearch#SKIP # MM_" + cYear + '-' + cMonth);
 
                     continue;
                 }
                 if (cYear == to.getYear() && cMonth > to.getMonthValue()) {
 
-                    log.finest("HWSearch#BREAK # MM_" + cYear + '-' + cMonth);
+                    LOG.finest("HWSearch#BREAK # MM_" + cYear + '-' + cMonth);
 
                     break;
                 }
@@ -207,13 +212,13 @@ public class HWGroup {
 
                     if (cYear == from.getYear() && cMonth == from.getMonthValue() && cDay < from.getDayOfMonth()) {
 
-                        log.finest("HWSearch#SKIP # dd_" + cYear + '-' + cMonth + '-' + cDay);
+                        LOG.finest("HWSearch#SKIP # dd_" + cYear + '-' + cMonth + '-' + cDay);
 
                         continue;
                     }
                     if (cYear == to.getYear() && cMonth == to.getMonthValue() && cDay >= to.getDayOfMonth()) {
 
-                        log.finest("HWSearch#BREAK # dd_" + cYear + '-' + cMonth + '-' + cDay);
+                        LOG.finest("HWSearch#BREAK # dd_" + cYear + '-' + cMonth + '-' + cDay);
 
                         break;
                     }
@@ -236,7 +241,7 @@ public class HWGroup {
 
                         String pathWithoutName = storeFolder + File.separator + childPath + File.separator;
 
-                        log.finest("HWSearch#ADD # " + childPath);
+                        LOG.finest("HWSearch#ADD # " + childPath);
 
                         ArrayList<HomeWork> tempRes = res;
 
@@ -260,7 +265,7 @@ public class HWGroup {
 
                     } else {
 
-                        log.finest("HWSearch#SKIP # " + childPath + " not present");
+                        LOG.finest("HWSearch#SKIP # " + childPath + " not present");
 
                     }
 
@@ -284,7 +289,7 @@ public class HWGroup {
 
         } catch (JSONException ex) {
 
-            log.warning("Reached JSONEx while adding hw -> unchecked parameter passed ?");
+            LOG.warning("Reached JSONEx while adding hw -> unchecked parameter passed ?");
 
             return -1;
 
@@ -301,7 +306,7 @@ public class HWGroup {
 
             if (!tree.isPresent()) {
 
-                log.warning("Unable to add hw: Tree for \"" + path.toString() + "\" is missing!");
+                LOG.warning("Unable to add hw: Tree for \"" + path.toString() + "\" is missing!");
 
                 return -1;
 
@@ -315,7 +320,7 @@ public class HWGroup {
 
                 if (!id.isPresent()) {
 
-                    log.warning("genFreeID reached null for \"" + path.toString() + "\": Max IDs reached ?");
+                    LOG.warning("genFreeID reached null for \"" + path.toString() + "\": Max IDs reached ?");
 
                     return -1;
 
@@ -350,7 +355,7 @@ public class HWGroup {
 
             boolean res = tree.get().flushOrCreateFile(fileName, hw.toString(2));
 
-            log.finest("HWG#addHW$" + gName + "{FlushRes}: " + fileName + " -> " + res);
+            LOG.finest("HWG#addHW$" + gName + "{FlushRes}: " + fileName + " -> " + res);
 
             return res ? 0 : -1;
 
