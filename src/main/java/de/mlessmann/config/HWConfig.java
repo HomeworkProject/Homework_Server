@@ -103,7 +103,7 @@ public class HWConfig {
      */
     public HWConfig open(String file) {
 
-        return open(file);
+        return open(new File(file));
 
     }
 
@@ -137,7 +137,7 @@ public class HWConfig {
 
             LOG.warning(
                     (new StringBuilder("Error reading file: ")
-                            .append(file.getPath())
+                            .append(myFileUtil.getFile().getPath())
                             .append(": ")
                             .append(ex))
                             .toString());
@@ -151,7 +151,7 @@ public class HWConfig {
         if (json.has("configVersion")) {
             LOG.fine(
                     new StringBuilder("Loaded config: ")
-                            .append(file.getPath())
+                            .append(myFileUtil.getFile().getPath())
                             .append(" version ")
                             .append(json.get("configVersion"))
                             .toString());
