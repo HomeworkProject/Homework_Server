@@ -1,5 +1,7 @@
 package de.mlessmann.network;
 
+import org.json.JSONObject;
+
 /**
  * Created by mark332 on 08.05.2016.
  * @author Life4YourGames
@@ -144,5 +146,72 @@ public class Status {
     //511
     public static final int NETWORKAUTHREQUIRED = 511;
     public static final String SNETWORKAUTHREQUIRED = "network_authentication_required";
+
+
+    //----------------------------------------------------------
+    //-------------Begin message presets------------------------
+    //----------------------------------------------------------
+
+
+    public static JSONObject state_OK() {
+
+        JSONObject o = new JSONObject();
+
+        o.put("status", OK);
+        o.put("payload_type", "null");
+
+        return o;
+
+    }
+
+    public static JSONObject state_PROCESSING() {
+
+        JSONObject o = new JSONObject();
+
+        o.put("status", Status.PROCESSING);
+        o.put("payload_type", "null");
+
+        return o;
+
+    }
+
+    public static JSONObject state_ERROR(int ErrorID, JSONObject error) {
+
+        JSONObject o = new JSONObject();
+        o.put("status", ErrorID);
+        o.put("payload_type", "error");
+
+        o.put("payload", error);
+
+        return o;
+
+    }
+
+    public static JSONObject state_genError(String type, String message, String friendly) {
+
+        JSONObject e = new JSONObject();
+
+        e.put("error", type);
+        e.put("error_message", message);
+        e.put("friendly_message", friendly);
+
+        return e;
+
+    }
+
+    public static JSONObject state_INTERNALEXCEPTION(Exception ex) {
+
+        JSONObject o = null;
+
+        o = state_ERROR(Status.INTERNALERROR,
+                state_genError(
+                        ex.getClass().getName(),
+                        ex.getMessage(),
+                        "Internal server error occurred"
+                ));
+
+        return o;
+
+    }
 
 }
