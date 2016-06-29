@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by Life4YourGames on 08.06.16.
@@ -73,7 +74,16 @@ public class HWUser {
         if (json.has("authMethod")) {
 
             authMethod = json.getString("authMethod");
-            myAuthMethod = AuthProvider.getMethod(authMethod);
+
+            Optional<IAuthMethod> m = AuthProvider.getMethod(authMethod);
+
+            if (m.isPresent()) {
+                myAuthMethod = m.get();
+            } else {
+                authMethod = "default";
+                myAuthMethod = AuthProvider.getDefault();
+                myGroup.getLogger().warning("User \"" + userName + "\" wants an invalid authMethod: \"" + authMethod + "\" using \"" + getAuthIdent() + "\"");
+            }
 
         }
 

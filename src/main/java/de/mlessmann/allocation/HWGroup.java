@@ -387,4 +387,6 @@ public class HWGroup {
 
     }
 
+    public Logger getLogger() { return LOG; }
+
 }
