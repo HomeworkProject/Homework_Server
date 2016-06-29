@@ -1,0 +1,115 @@
+package de.mlessmann.network.commands;
+
+import com.google.common.base.Predicate;
+import de.mlessmann.hwserver.HWServer;
+import org.reflections.Reflections;
+import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.FilterBuilder;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.Set;
+import java.util.logging.Logger;
+
+/**
+ * Created by Life4YourGames on 28.06.16.
+ */
+public class CommandLoader {
+
+    private Logger myLogger = Logger.getGlobal();
+    private CommHandProvider myProvider;
+    private HWServer myMaster;
+
+    public void loadAll() {
+
+        if (myProvider == null) return;
+
+        ClassLoader loader = getClass().getClassLoader();
+
+        URLClassLoader ucl = null;
+
+        if (loader instanceof URLClassLoader) ucl = (URLClassLoader) loader;
+        else throw new RuntimeException("HWCommandLoader: Classloader is not an instance of URLClassLoader - Unable to load command handler");
+
+        URL[] urls = ucl.getURLs();
+
+        //Set up filters
+        //String partPkgName = "/^.*(commands).*$/ig";
+        String partPkgName = "^.*(commands).*$*";
+
+        Predicate<String> filter = new FilterBuilder().include(partPkgName);
+
+        //Set up configuration builder
+
+        ConfigurationBuilder cBuilder = new ConfigurationBuilder();
+
+        cBuilder.filterInputsBy(filter);
+        cBuilder.setUrls(urls);
+
+        Reflections ref = new Reflections(cBuilder);
+
+        Set<Class<?>> classes = ref.getTypesAnnotatedWith(HWCommandHandler.class);
+
+
+        classes.stream().filter(c1 -> c1 != null)
+                        .forEach(c3 -> loadFromClass(c3));
+
+    }
+
+    private void loadFromClass(Class<?> c) {
+
+        if (!ICommandHandler.class.isAssignableFrom(c)) {
+
+            return;
+
+        }
+
+        try {
+
+            myLogger.finest("Instantiating new Handler from " + c.toString());
+
+            Object o = null;
+
+            try {
+
+                o = c.getDeclaredConstructor(HWServer.class).newInstance(myMaster);
+
+            } catch (NoSuchMethodException ex1) {
+
+                try {
+
+                    o = c.getDeclaredConstructor().newInstance();
+
+                } catch (NoSuchMethodException ex2) {
+                    //Do not care
+                }
+
+            }
+
+            if (o == null) o = c.newInstance();
+
+
+            ICommandHandler h = (ICommandHandler) o;
+
+            //myLogger.finest("Resulting class: " + v.getClass().toString());
+
+            myProvider.registerCommand(h);
+
+        } catch (Exception e) {
+
+            myLogger.warning("Unable to create ICommandHandler from class \"" + c.toString() + "\": " + e.toString());
+            e.printStackTrace();
+
+        }
+
+    }
+
+    public void setLogger(Logger l) { myLogger = l; }
+
+    public void setProvider(CommHandProvider p) { myProvider = p; }
+
+    public void setMaster(HWServer m) { myMaster = m; }
+
+}

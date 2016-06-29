@@ -21,6 +21,7 @@ repositories {
 
 dependencies {
 	compile 'org.json:json:20160212'
+	compile 'org.reflections:reflections:0.9.10'
 }
 
 //noinspection GroovyAssignabilityCheck

@@ -17,6 +17,8 @@ import java.util.logging.Logger;
 import de.mlessmann.allocation.HWGroup;
 import de.mlessmann.logging.*;
 import de.mlessmann.network.HWTCPServer;
+import de.mlessmann.network.commands.CommHandProvider;
+import de.mlessmann.network.commands.CommandLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -79,6 +81,11 @@ public class HWServer {
     private Map<String, HWGroup> hwGroups = new HashMap<String, HWGroup>();
 
     /**
+     * Provider for commandHandlers
+     */
+    private CommHandProvider myCommHandProvider;
+
+    /**
      * Create a new Server instance
      * Currently multiple instances are not natively implemented
      */
@@ -114,7 +121,7 @@ public class HWServer {
         LOG.addHandler(HCONSOLEERR);
         LOG.addHandler(logFileHandler);
 
-        LOG.fine("Entering preInitialization");
+        LOG.info("------Entering preInitialization------");
 
         //PreInit config so the reference is correct
         config = new HWConfig(this);
@@ -142,7 +149,7 @@ public class HWServer {
      */
     public HWServer initialize() throws IOException {
 
-        LOG.fine("Entering initialization");
+        LOG.info("------Entering initialization------");
 
         File confDir = new File("conf");
 
@@ -164,13 +171,34 @@ public class HWServer {
 
 
         if (!config.createIfNotFound(confFile).open(confFile).isInitialized()) {
+
             LOG.severe("Unable to read config! This instance is not going to work!");
             throw new IOException("Config not readable");
+
         }
+
+        LOG.finest("Config opened, registering groups");
 
         JSONArray arr = config.getJSON().getJSONArray("groups");
 
         arr.forEach(s -> loadGroup(s.toString()));
+
+        LOG.info("------Entering post-initialization------");
+
+        LOG.finest("Trying to load CommandHandler");
+
+        myCommHandProvider = new CommHandProvider();
+        myCommHandProvider.setLogger(LOG);
+
+        CommandLoader loader = new CommandLoader();
+
+        loader.setProvider(myCommHandProvider);
+        loader.setLogger(LOG);
+        loader.setMaster(this);
+
+        loader.loadAll();
+
+        LOG.fine(myCommHandProvider.getHandler().size() + " handler registered.");
 
         return this;
     }
@@ -312,6 +340,8 @@ public class HWServer {
     public HWConfig getConfig() {
         return config;
     }
+
+    public CommHandProvider getCommandHandlerProvider() { return myCommHandProvider; }
 
     public synchronized Optional<HWGroup> getGroup(String group) {
 

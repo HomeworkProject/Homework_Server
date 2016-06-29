@@ -3,7 +3,11 @@ package de.mlessmann.network;
 import de.mlessmann.allocation.HWGroup;
 import de.mlessmann.allocation.HWUser;
 import de.mlessmann.homework.HomeWork;
+import de.mlessmann.hwserver.HWServer;
+import de.mlessmann.network.commands.ICommandHandler;
+import de.mlessmann.network.commands.cmHTCPNativeDummy;
 import de.mlessmann.perms.Permission;
+import de.mlessmann.util.Common;
 import de.mlessmann.util.L4YGRandom;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,6 +23,8 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.logging.Level;
 
+import static de.mlessmann.util.Common.negateInt;
+
 /**
  * Created by MarkL4YG on 08.05.2016.
  * @author MarkL4YG
@@ -26,11 +32,7 @@ import java.util.logging.Level;
  */
 public class HWTCPClientHandler {
 
-    private static int negateInt(int i) {
-
-        return i * ( -1 );
-
-    }
+    private static ICommandHandler HANDLER_NATIVE = new cmHTCPNativeDummy();
 
 
     private HWTCPServer master;
@@ -38,6 +40,8 @@ public class HWTCPClientHandler {
     private BufferedReader reader;
     private BufferedWriter writer;
     private HWUser myUser;
+    private HWTCPClientReference myReference;
+    private ICommandHandler currentCommHandler = HANDLER_NATIVE;
     private boolean terminated = false;
     private boolean isClosed = false;
     private boolean greeted = false;
@@ -47,6 +51,7 @@ public class HWTCPClientHandler {
 
         this.mySock = clientSock;
         this.master = tcpServer;
+        this.myReference = new HWTCPClientReference(this);
 
     }
 
@@ -69,6 +74,14 @@ public class HWTCPClientHandler {
         return true;
 
     }
+
+    public synchronized int getCurrentCommID() { return currentCommID; }
+
+    public HWTCPServer getMaster() { return master; }
+
+    public synchronized Optional<HWUser> getUser() { return Optional.ofNullable(myUser); }
+
+    public synchronized void setUser(HWUser u) { myUser = u; }
 
     /**
      * This should repeatedly be called by the thread dedicated to the Handler
@@ -142,7 +155,9 @@ public class HWTCPClientHandler {
 
     }
 
-    private void sendJSON(JSONObject json) {
+    public synchronized void sendJSON(JSONObject json) {
+
+        json.put("handler", currentCommHandler.getIdentifier());
 
         String message = json.toString().replaceAll("\n", "") + "\n";
 
@@ -156,7 +171,7 @@ public class HWTCPClientHandler {
      *
      * @param message the message to be send
      */
-    private void sendMessage(String message) {
+    public synchronized void sendMessage(String message) {
 
         try {
 
@@ -223,10 +238,8 @@ public class HWTCPClientHandler {
 
     private void sendState_processing() {
 
-        JSONObject response = new JSONObject();
+        JSONObject response = Status.state_PROCESSING();
 
-        response.put("status", Status.PROCESSING);
-        response.put("payload_type", "null");
         response.put("commID", currentCommID);
 
         sendJSON(response);
@@ -239,16 +252,13 @@ public class HWTCPClientHandler {
             return true;
         }
 
-        JSONObject response = new JSONObject();
-        response.put("status", Status.BADREQUEST);
-        response.put("payload_type", "error");
-
-        JSONObject e = new JSONObject();
-
-            e.put("error", "ProtocolError");
-            e.put("error_message", "Request is missing field \"" + field + "\"!");
-            e.put("friendly_message", "Request was incomplete, contact your client developer");
-        response.put("payload", e);
+        JSONObject response = Status.state_ERROR(
+                Status.BADREQUEST,
+                Status.state_genError(
+                        "ProtocolError",
+                        "Request is missing field \"" + field + "\"!",
+                        "Request was incomplete, contact your client developer"
+                ));
 
         response.put("commID", negateInt(currentCommID));
 
@@ -257,21 +267,18 @@ public class HWTCPClientHandler {
         return false;
     }
 
-    private boolean requireUser() {
+    private synchronized boolean requireUser() {
         if (myUser == null) {
 
             //TODO: Continue response refactoring!
-            JSONObject response = new JSONObject();
-
-            response.put("status", Status.UNAUTHORIZED);
-            response.put("payload_type", "error");
-
-            JSONObject e = new JSONObject();
-
-                e.put("error", "PermissionError");
-                e.put("error_message", "Login request was missing or failed previously");
-                e.put("friendly_message", "Please log in first");
-            response.put("payload", e);
+            JSONObject response = Status.state_ERROR(
+                    Status.UNAUTHORIZED,
+                    Status.state_genError(
+                            "PermissionError",
+                            "Login request was missing or failed previously",
+                            "Please log in first"
+                    )
+                );
 
             response.put("commID", negateInt(currentCommID));
 
@@ -298,11 +305,53 @@ public class HWTCPClientHandler {
 
                 L4YGRandom.initRndIfNotAlready();
                 currentCommID = L4YGRandom.random.nextInt(5000) + 20;
+                //Send the client the generated commID
+                sendState_processing();
 
             }
 
             String command = json.getString("command");
 
+             ArrayList<ICommandHandler> handlers = master.getMaster().getCommandHandlerProvider().getByCommand(command);
+
+            if (handlers.size() == 0) {
+
+                JSONObject response = Status.state_ERROR(
+                        Status.BADREQUEST,
+                        Status.state_genError(
+                                "UnknownCommandError",
+                                "Command \"" + command + "\" does not exist",
+                                "Client request included an unknown command"
+                        )
+                );
+
+                response.put("commID", negateInt(currentCommID));
+
+                sendJSON(response);
+
+            } else {
+
+                HWClientCommandContext c = new HWClientCommandContext(json, myReference);
+
+                for (ICommandHandler h : handlers) {
+
+                    currentCommHandler = h;
+                    h.onMessage(c);
+
+                }
+
+                currentCommHandler = HANDLER_NATIVE;
+
+                JSONObject r = Status.state_OK();
+
+                r.put("commID", negateInt(currentCommID));
+
+                sendJSON(r);
+
+            }
+
+            /*
+            --- OLD HANDLING ---
             if (command.equals("setgroup")) {
                 performSetGroup(json);
                 return;
@@ -320,33 +369,11 @@ public class HWTCPClientHandler {
                 return;
             }
 
-            JSONObject response = new JSONObject();
-
-            response.put("status", Status.BADREQUEST);
-            response.put("payload_type", "error");
-
-            JSONObject e = new JSONObject();
-
-                e.put("error", "ProtocolError");
-                e.put("error_message", "Command \"" + command + "\" does not exist");
-                e.put("friendly_message", "Client request included an unknown command");
-            response.put("payload", e);
-
-            response.put("commID", negateInt(currentCommID));
-            sendJSON(response);
+            */
 
         } catch (JSONException ex) {
 
-            JSONObject response = new JSONObject();
-
-            response.put("status", Status.INTERNALERROR);
-            response.put("payload_type", "error");
-
-            JSONObject e = new JSONObject();
-                e.put("error", "JSONError");
-                e.put("error_message", ex.toString());
-                e.put("friendly_message", "Internal server error occurred");
-            response.put("payload", e);
+            JSONObject response = Status.state_INTERNALEXCEPTION(ex);
 
             response.put("commID", negateInt(currentCommID));
 
@@ -354,16 +381,7 @@ public class HWTCPClientHandler {
 
         } catch (Exception ex) {
 
-            JSONObject response = new JSONObject();
-
-            response.put("status", Status.INTERNALERROR);
-            response.put("payload_type", "error");
-
-            JSONObject e = new JSONObject();
-                e.put("error", "Exception");
-                e.put("error_message", ex.toString());
-                e.put("friendly_message", "Internal server error occurred");
-            response.put("payload", e);
+            JSONObject response = Status.state_INTERNALEXCEPTION(ex);
 
             response.put("commID", negateInt(currentCommID));
 
@@ -394,117 +412,7 @@ public class HWTCPClientHandler {
 
     private void performSetGroup(JSONObject request) {
 
-        if (!require(request, "parameters")) {
 
-            return;
-
-        }
-
-        JSONArray arr = request.getJSONArray("parameters");
-
-        String group = null;
-        String user = null;
-        String auth = null;
-
-        if (arr.length() >= 1) {
-
-            group = arr.getString(0);
-
-        } else {
-
-            JSONObject response = new JSONObject();
-
-            response.put("status", Status.BADREQUEST);
-            response.put("payload_type", "error");
-
-            JSONObject e = new JSONObject();
-                e.put("error", "ProtocolError");
-                e.put("error_message", "SetGroup needs at least 1 parameter");
-                e.put("friendly_message", "Client request was incomplete");
-            response.put("payload", e);
-
-            response.put("commID", negateInt(currentCommID));
-
-            sendJSON(response);
-            return;
-
-        }
-
-        if (arr.length() > 2) {
-
-            user = arr.getString(1);
-            auth = arr.getString(2);
-
-        } else {
-
-            user = "default";
-
-            if (arr.length() == 2) {
-
-                auth = arr.getString(1);
-
-            } else {
-
-                auth = "default";
-
-            }
-
-        }
-
-        Optional<HWGroup> hwGroup = master.getMaster().getGroup(group);
-
-        if (!hwGroup.isPresent()) {
-
-            myUser = null;
-
-            JSONObject response = new JSONObject();
-            response.put("status", Status.NOTFOUND);
-            response.put("payload_type", "error");
-
-            JSONObject e = new JSONObject();
-                e.put("error", "NotFoundError");
-                e.put("error_message", "Group " + group + " wasn't found");
-                e.put("friendly_message", "Group \"" + group + "\" does not exist");
-            response.put("payload", e);
-
-            response.put("commID", negateInt(currentCommID));
-
-            sendJSON(response);
-            return;
-
-        }
-
-        Optional<HWUser> hwUser = hwGroup.get().getUser(user, auth);
-
-        if (!hwUser.isPresent()) {
-
-            myUser = null;
-
-            JSONObject response = new JSONObject();
-            response.put("status", Status.NOTFOUND);
-            response.put("payload_type", "error");
-
-            JSONObject e = new JSONObject();
-                e.put("error", "NotFoundNumber");
-                e.put("error_message", "User \"" + user + "\" wasn't found");
-                e.put("friendly_message", "User \"" + user + "\" does not exist");
-            response.put("payload", e);
-
-            response.put("commID", negateInt(currentCommID));
-
-            sendJSON(response);
-            return;
-
-        }
-
-        myUser = hwUser.get();
-
-        JSONObject response = new JSONObject();
-        response.put("status", Status.OK);
-        response.put("payload_type", "null");
-        response.put("commID", negateInt(currentCommID));
-
-        sendJSON(response);
 
     }
 
