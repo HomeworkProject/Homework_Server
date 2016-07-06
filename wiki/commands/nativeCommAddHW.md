@@ -26,3 +26,8 @@ If the homework was added successfully the response will be Status-201
   
 ## References:  
 * Code implementation: [nativeCommAddHW.java](https://github.com/MarkL4YG/Homework_Server/blob/Latest/src/main/java/de/mlessmann/network/commands/nativeCommAddHW.java)  
+  
+# 2nd USAGE!  
+If the HomeWork objects contains an ID that already exists on the specified date, the server will attempt to edit the HomeWork.  
+Meaning that the old HW will be overwritten with the new one.  
+(This is actually how you're currently supposed to edit HomeWork entries)  
