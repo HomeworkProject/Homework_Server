@@ -74,6 +74,30 @@ public abstract class nativeCommandParent implements ICommandHandler {
 
     }
 
+    protected boolean requireUser(HWTCPClientReference r) {
+
+        if (!r.getUser().isPresent()) {
+
+            JSONObject response = Status.state_ERROR(
+                    Status.UNAUTHORIZED,
+                    Status.state_genError(
+                            "PermissionError",
+                            "Login request was missing or failed previously",
+                            "Please log in first"
+                    )
+            );
+
+            response.put("commID", r.getCurrentCommID());
+
+            sendJSON(r, response);
+
+            return false;
+        }
+
+        return true;
+
+    }
+
     protected void sendJSON(HWTCPClientReference r, JSONObject json) {
 
         json.put("handler", this.getIdentifier());

@@ -1,26 +1,17 @@
 package de.mlessmann.network;
 
-import de.mlessmann.allocation.HWGroup;
 import de.mlessmann.allocation.HWUser;
-import de.mlessmann.homework.HomeWork;
-import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.network.commands.ICommandHandler;
 import de.mlessmann.network.commands.cmHTCPNativeDummy;
-import de.mlessmann.perms.Permission;
-import de.mlessmann.util.Common;
 import de.mlessmann.util.L4YGRandom;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import javax.net.ssl.SSLException;
 import java.io.*;
 import java.net.Socket;
-import java.time.DateTimeException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.Random;
 import java.util.logging.Level;
 
 import static de.mlessmann.util.Common.negateInt;
@@ -95,8 +86,10 @@ public class HWTCPClientHandler {
         try {
 
             if (!greeted) {
+
                 greet();
                 greeted = true;
+
             }
 
             if (mySock.isClosed()) {
@@ -270,7 +263,6 @@ public class HWTCPClientHandler {
     private synchronized boolean requireUser() {
         if (myUser == null) {
 
-            //TODO: Continue response refactoring!
             JSONObject response = Status.state_ERROR(
                     Status.UNAUTHORIZED,
                     Status.state_genError(
@@ -412,446 +404,17 @@ public class HWTCPClientHandler {
 
     private void performSetGroup(JSONObject request) {
 
-
-
     }
 
     private void performAddHW(JSONObject request) {
-
-        if (!require(request, "homework")) {
-            return;
-        }
-
-        if (!requireUser()) {
-            return;
-        }
-
-        JSONObject hwObj = request.getJSONObject("homework");
-
-        sendState_processing();
-
-        if (!HomeWork.checkValidity(hwObj)) {
-
-            JSONObject response = new JSONObject();
-
-            response.put("status", Status.BADREQUEST);
-            response.put("payload_type", "error");
-
-            JSONObject e = new JSONObject();
-                e.put("error", "PutHWError");
-                e.put("error_message", "Submitted HomeWork was invalid");
-                e.put("friendly_message", "Client submitted an invalid object");
-            response.put("payload", e);
-
-            response.put("commID", negateInt(currentCommID));
-
-            sendJSON(response);
-
-            return;
-
-        }
-
-        int success = myUser.addHW(hwObj);
-
-        if (success == -1) {
-
-            JSONObject response = new JSONObject();
-
-            response.put("status", Status.INTERNALERROR);
-            response.put("type", "error");
-
-            JSONObject e = new JSONObject();
-                e.put("error", "PutHWError");
-                e.put("error_message", "HomeWork not added");
-                e.put("friendly_message", "HomeWork wasn't added due to a server error");
-            response.put("payload", e);
-
-            response.put("commID", negateInt(currentCommID));
-
-            sendJSON(response);
-
-            return;
-
-        } else if (success == 0) {
-
-            JSONObject response = new JSONObject();
-
-            response.put("status", Status.CREATED);
-            response.put("payload_type", "null");
-            response.put("commID", negateInt(currentCommID));
-
-            sendJSON(response);
-
-            return;
-
-        } else if (success == 1) {
-
-            JSONObject response = new JSONObject();
-
-            response.put("status", Status.FORBIDDEN);
-            response.put("type", "error");
-
-            JSONObject e = new JSONObject();
-                e.put("error", "InsufficientPermissionError");
-                e.put("error_message", "Insufficient permission to add the homework");
-                e.put("friendly_message", "You don't have enough permission to add a homework");
-                e.put("perm", "has:" + Permission.HW_ADD_NEW);
-            response.put("payload", e);
-
-            response.put("commID", negateInt(currentCommID));
-
-            sendJSON(response);
-
-            return;
-
-        } else if (success == 2) {
-
-            JSONObject response = new JSONObject();
-
-            response.put("status", Status.FORBIDDEN);
-            response.put("payload_type", "error");
-
-            JSONObject e = new JSONObject();
-                e.put("error", "InsufficientPermissionError");
-                e.put("error_message", "Insufficient permission to edit the homework");
-                e.put("friendly_message", "You don't have enough permission to edit this homework");
-                e.put("perm", "has:" + Permission.HW_ADD_EDIT);
-            response.put("payload", e);
-
-            response.put("commID", negateInt(currentCommID));
-
-            sendJSON(response);
-
-            return;
-
-        }
 
     }
 
     private void performGetHW(JSONObject request) {
 
-        JSONArray subjects = null;
-        if (request.has("subjects")) {
-            subjects = request.getJSONArray("subjects");
-        }
-
-        if (!requireUser()) {
-            return;
-        }
-
-        if (!request.has("date")) {
-
-            if (!require(request, "fromdate")) {
-                return;
-            }
-            if (!require(request, "todate")) {
-                return;
-            }
-
-            try {
-
-                JSONArray fromDate = request.getJSONArray("fromdate");
-
-                JSONArray toDate = request.getJSONArray("todate");
-
-                int fyyyy = fromDate.getInt(0);
-                int fMM = fromDate.getInt(1);
-                int fdd = fromDate.getInt(2);
-
-                int tyyyy = toDate.getInt(0);
-                int tMM = toDate.getInt(1);
-                int tdd = toDate.getInt(2);
-
-                sendState_processing();
-
-                LocalDate dateFrom = LocalDate.of(fyyyy, fMM, fdd);
-                LocalDate dateTo = LocalDate.of(tyyyy, tMM, tdd);
-
-                ArrayList<String> subjectFilter = null;
-                if (subjects != null && subjects.length() > 0) {
-
-                    subjectFilter = new ArrayList<String>();
-
-                    ArrayList<String> finalSubjectFilter = subjectFilter;
-
-                    subjects.forEach(s -> {
-                        if (s instanceof String) {
-                            finalSubjectFilter.add((String) s);
-                        }
-                    }
-                    );
-                }
-
-                ArrayList<HomeWork> hws = myUser.getHWBetween(dateFrom, dateTo, subjectFilter, false);
-
-                JSONObject response = new JSONObject();
-
-                response.put("status", Status.OK);
-                response.put("status_message", Status.SOK);
-
-                JSONArray arr = new JSONArray();
-
-                if (!request.has("cap")) {
-
-                    hws.stream().forEach(hw -> arr.put(hw.getJSON()));
-
-                } else {
-
-                    if (request.getString("cap").equals("short")) {
-
-                        hws.stream().forEach(hw -> arr.put(new JSONObject().put("short", hw.getShort())));
-
-                    } else if (request.getString("cap").equals("long")) {
-
-                        hws.stream().forEach(hw -> arr.put(new JSONObject().put("long", hw.getLong())));
-
-                    }
-
-                }
-                response.put("payload_type", "JSONArray");
-                response.put("array_type", "HWObject");
-                response.put("payload", arr);
-                response.put("commID", negateInt(currentCommID));
-
-                sendJSON(response);
-
-            } catch (JSONException ex) {
-
-                JSONObject response = new JSONObject();
-
-                response.put("status", Status.BADREQUEST);
-                response.put("payload_type", "error");
-
-                JSONObject e = new JSONObject();
-                    e.put("error", "JSONError");
-                    e.put("error_message", ex.toString());
-                    e.put("friendly_message", "Client sent an invalid request");
-                response.put("payload", e);
-
-                response.put("commID", negateInt(currentCommID));
-
-                sendJSON(response);
-
-                return;
-
-            } catch (DateTimeException ex) {
-
-                JSONObject response = new JSONObject();
-
-                response.put("status", Status.BADREQUEST);
-                response.put("payload_type", "error");
-
-                JSONObject e = new JSONObject();
-                    e.put("error", "DateTimeException");
-                    e.put("error_message", ex.toString());
-                    e.put("friendly_message", "Client sent an invalid request");
-                response.put("payload", e);
-
-                response.put("commID", negateInt(currentCommID));
-
-                sendJSON(response);
-
-                return;
-
-            }
-
-        } else {
-
-            try {
-
-                JSONArray datArr = request.getJSONArray("date");
-
-                LocalDate date = LocalDate.of(datArr.getInt(0), datArr.getInt(1), datArr.getInt(2));
-
-                sendState_processing();
-
-                ArrayList<String> subjectFilter = null;
-                if (subjects != null && subjects.length() > 0) {
-
-                    subjectFilter = new ArrayList<String>();
-
-                    ArrayList<String> finalSubjectFilter = subjectFilter;
-
-                    subjects.forEach(s -> {
-                        if (s instanceof String) {
-                            finalSubjectFilter.add((String) s);
-                        }
-                    });
-                }
-
-                ArrayList<HomeWork> hws = myUser.getHWOn(date, subjectFilter);
-
-                JSONObject response = new JSONObject();
-
-                response.put("status", Status.OK);
-
-                JSONArray arr = new JSONArray();
-
-                hws.stream().forEach(hw -> arr.put(hw.getJSON()));
-
-                response.put("payload_type", "JSONArray");
-                response.put("array_type", "HWObject");
-                response.put("payload", arr);
-                response.put("commID", negateInt(currentCommID));
-
-                sendJSON(response);
-
-                return;
-
-            } catch (JSONException ex) {
-
-                JSONObject response = new JSONObject();
-
-                response.put("status", Status.BADREQUEST);
-                response.put("payload_type", "error");
-
-                JSONObject e = new JSONObject();
-                    e.put("error", "JSONException");
-                    e.put("error_message", ex.toString());
-                    e.put("friendly_message", "Client sent an invalid request");
-                response.put("payload", e);
-
-                response.put("commID", negateInt(currentCommID));
-
-                sendJSON(response);
-
-                return;
-
-            } catch (DateTimeException ex) {
-
-                JSONObject response = new JSONObject();
-
-                response.put("status", Status.BADREQUEST);
-                response.put("payload_type", "error");
-
-                JSONObject e = new JSONObject();
-                    e.put("error", "DateTimeException");
-                    e.put("error_message", ex.toString());
-                    e.put("friendly_message", "Client sent an invalid request");
-                response.put("payload", e);
-
-                response.put("commID", negateInt(currentCommID));
-
-                sendJSON(response);
-
-                return;
-
-            }
-
-        }
-
     }
 
     private void performDelHW(JSONObject request) {
-
-        if (!require(request, "date") | !require(request, "id") | !requireUser()) {
-
-            return;
-
-        }
-
-        try {
-
-            JSONArray date = request.getJSONArray("date");
-
-            String id = request.getString("id");
-
-            LocalDate ldate = LocalDate.of(date.getInt(0), date.getInt(1), date.getInt(2));
-
-            int success = myUser.delHW(ldate, id);
-
-            if (success == 1) {
-
-                JSONObject response = new JSONObject();
-
-                response.put("status", Status.INTERNALERROR);
-                response.put("payload_type", "error");
-
-                JSONObject e = new JSONObject();
-                    e.put("error", "DelHWError");
-                    e.put("error_message", "HomeWork could not be deleted");
-                    e.put("friendly_message", "HomeWork wasn't deleted due to a server error");
-                response.put("payload", e);
-
-                response.put("commID", negateInt(currentCommID));
-
-                sendJSON(response);
-
-                return;
-
-            } else if (success == 0) {
-
-                JSONObject response = new JSONObject();
-
-                response.put("status", Status.OK);
-                response.put("payload_type", "null");
-                response.put("commID", negateInt(currentCommID));
-
-                sendJSON(response);
-
-                return;
-
-            } else if (success == 2) {
-
-                JSONObject response = new JSONObject();
-
-                response.put("status", Status.FORBIDDEN);
-                response.put("payload_type", "error");
-
-                JSONObject e = new JSONObject();
-                    e.put("error", "InsufficientPermissionError");
-                    e.put("error_message", "Insufficient permission to delete the homework");
-                    e.put("friendly_message", "You're not allowed to delete this homework");
-                    e.put("perm", "has:" + Permission.HW_DEL);
-                response.put("payload", e);
-
-                response.put("commID", negateInt(currentCommID));
-
-                sendJSON(response);
-
-                return;
-
-            }
-
-        } catch (JSONException ex) {
-
-            JSONObject response = new JSONObject();
-
-            response.put("status", Status.BADREQUEST);
-            response.put("payload_type", "error");
-
-            JSONObject e = new JSONObject();
-                e.put("error", "JSONError");
-                e.put("error_message", ex.toString());
-                e.put("friendly_message", "Client sent an invalid request");
-            response.put("payload", e);
-
-            response.put("commID", negateInt(currentCommID));
-
-            sendJSON(response);
-
-            return;
-
-        } catch (DateTimeException ex) {
-
-            JSONObject response = new JSONObject();
-
-            response.put("status", Status.BADREQUEST);
-            response.put("payload_type", "error");
-
-            JSONObject e = new JSONObject();
-                e.put("error", "DateTimeException");
-                e.put("error_message", ex.toString());
-                e.put("status_message", "Client sent an invalid request");
-            response.put("payload", e);
-
-            response.put("commID", negateInt(currentCommID));
-
-            sendJSON(response);
-
-            return;
-
-        }
 
     }
 

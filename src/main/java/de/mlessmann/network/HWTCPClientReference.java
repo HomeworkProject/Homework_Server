@@ -43,6 +43,8 @@ public class HWTCPClientReference {
 
     }
 
+    public Optional<HWUser> getUser() { return myHandler.getUser(); }
+
     public void setUser(HWUser u) { myHandler.setUser(u); }
 
 }
