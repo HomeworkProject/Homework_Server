@@ -55,11 +55,6 @@ ___currently unimplemented___
   
   
 ## *** IMPORTANT: ALWAYS CHECK THE SERVERs SYNTAX VERSION! ***  
-
-###### . 
-
-## GetInfo
-### Protocoll information
 #### Command
 (this command is guarranteed to be accepted ALWAYS by ANY Server version)
 ```
@@ -74,15 +69,5 @@ ___currently unimplemented___
 ```
 (THIS is the ONLY case in which non-json is accepted!)
 #### Response:
-Response will ALWAYS contain AT LEAST this:
-```
-{
-	"protoVersion": "MAJOR.MINOR.RELEASE.BUILD"
-}
-```
-##### Details on if something does not match:  
-- MAJOR: NONE or at least one critical of the commands is compatible
-- MINOR: Some or major part of commands are INCOMPATIBLE  
-- RELEASE: Not all commands () are supported, but those who are should work (DOES NOT MEAN IT'S COMPATIBLE!)  
-- BUILD: Some aditional commands or parameters may be available  
+Refer to [nativeCommGetProtocolVersion.md](https://github.com/MarkL4YG/Homework_Server/blob/Latest/wiki/commands/nativeCommGetProtocolVersion.md)
 
