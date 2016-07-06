@@ -18,10 +18,10 @@ As expected it will be embedded into JSON with two fields:
 Any response of the server will follow this pattern:  
 ```
 {  
-	"status"<int>: <status>,  
-	"payload_type"<String>: <Type of payload>,  
-	"payload"<see above>: <payload>	 
-	(, "array_type"<String>: <type of array content>)
+	"status": status<int>,  
+	"payload_type": TypeOfPayload<String>,  
+	"payload": Payload<see above>	 
+	(, "array_type": TypeOfArrayContent<String>)
 }  
 ```
   
