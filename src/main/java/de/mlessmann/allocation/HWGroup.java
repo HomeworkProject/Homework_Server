@@ -389,4 +389,6 @@ public class HWGroup {
 
     public Logger getLogger() { return LOG; }
 
+    public HWServer getHwServer() { return hwServer; }
+
 }

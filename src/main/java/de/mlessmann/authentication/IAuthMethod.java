@@ -11,7 +11,7 @@ public interface IAuthMethod {
 
     String masqueradePass(String input);
 
-    String getMethodIdentifier();
+    String getIdentifier();
 
     void setHWInstance(HWServer server);
 

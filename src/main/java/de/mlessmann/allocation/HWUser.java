@@ -41,7 +41,7 @@ public class HWUser {
     private String authMethod = DEFAUTH;
     private String userName = DEFNAME;
     private String passData = DEFPASS;
-    private IAuthMethod myAuthMethod = AuthProvider.getDefault();
+    private IAuthMethod myAuthMethod;
 
     private Map<String, HWPermission> permissions;
 
@@ -75,13 +75,13 @@ public class HWUser {
 
             authMethod = json.getString("authMethod");
 
-            Optional<IAuthMethod> m = AuthProvider.getMethod(authMethod);
+            Optional<IAuthMethod> m = myGroup.getHwServer().getAuthProvider().getMethod(authMethod);
 
             if (m.isPresent()) {
                 myAuthMethod = m.get();
             } else {
                 authMethod = "default";
-                myAuthMethod = AuthProvider.getDefault();
+                myAuthMethod = myGroup.getHwServer().getAuthProvider().getDefault();
                 myGroup.getLogger().warning("User \"" + userName + "\" wants an invalid authMethod: \"" + authMethod + "\" using \"" + getAuthIdent() + "\"");
             }
 
@@ -151,7 +151,7 @@ public class HWUser {
 
     public IAuthMethod getAuth() { return myAuthMethod; }
 
-    public String getAuthIdent() { return myAuthMethod.getMethodIdentifier(); }
+    public String getAuthIdent() { return myAuthMethod.getIdentifier(); }
 
     public JSONObject getJSON() { return json; }
 

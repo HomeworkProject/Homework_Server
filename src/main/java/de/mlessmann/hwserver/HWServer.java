@@ -1,5 +1,7 @@
 package de.mlessmann.hwserver;
 
+import de.mlessmann.authentication.AuthLoader;
+import de.mlessmann.authentication.AuthProvider;
 import de.mlessmann.config.HWConfig;
 
 import java.io.BufferedReader;
@@ -88,6 +90,11 @@ public class HWServer {
     private CommHandProvider myCommHandProvider;
 
     /**
+     * Provider for Authentication Methods
+     */
+    private AuthProvider myAuthProvider;
+
+    /**
      * Create a new Server instance
      * Currently multiple instances are not natively implemented
      */
@@ -153,6 +160,44 @@ public class HWServer {
 
         LOG.info("------Entering initialization------");
 
+        // --- Command Handler ---
+
+        LOG.fine("Trying to load CommandHandler");
+
+        myCommHandProvider = new CommHandProvider();
+        myCommHandProvider.setLogger(LOG);
+
+        CommandLoader cLoader = new CommandLoader();
+
+        cLoader.setProvider(myCommHandProvider);
+        cLoader.setLogger(LOG);
+        cLoader.setMaster(this);
+
+        cLoader.loadAll();
+
+        LOG.fine(myCommHandProvider.getHandler().size() + " handler registered.");
+
+        // --- Auth Methods ---
+
+        LOG.fine("Trying to load Authmethods");
+
+        myAuthProvider = new AuthProvider();
+        myAuthProvider.setLogger(LOG);
+
+        AuthLoader aLoader = new AuthLoader();
+
+        aLoader.setProvider(myAuthProvider);
+        aLoader.setLogger(LOG);
+        aLoader.setMaster(this);
+
+        aLoader.loadAll();
+
+        LOG.fine(myAuthProvider.getMethods().size() + " methods registered.");
+
+        // --- Config ---
+
+        LOG.fine("Trying to load configuration");
+
         File confDir = new File("conf");
 
         if (!confDir.isDirectory()) {
@@ -179,28 +224,14 @@ public class HWServer {
 
         }
 
-        LOG.finest("Config opened, registering groups");
+
+        LOG.info("------Entering post-initialization------");
 
         JSONArray arr = config.getJSON().getJSONArray("groups");
 
         arr.forEach(s -> loadGroup(s.toString()));
 
-        LOG.info("------Entering post-initialization------");
-
-        LOG.finest("Trying to load CommandHandler");
-
-        myCommHandProvider = new CommHandProvider();
-        myCommHandProvider.setLogger(LOG);
-
-        CommandLoader loader = new CommandLoader();
-
-        loader.setProvider(myCommHandProvider);
-        loader.setLogger(LOG);
-        loader.setMaster(this);
-
-        loader.loadAll();
-
-        LOG.fine(myCommHandProvider.getHandler().size() + " handler registered.");
+        LOG.info(hwGroups.size() + " groups registered");
 
         return this;
     }
@@ -344,6 +375,8 @@ public class HWServer {
     }
 
     public CommHandProvider getCommandHandlerProvider() { return myCommHandProvider; }
+
+    public AuthProvider getAuthProvider() { return myAuthProvider; }
 
     public synchronized Optional<HWGroup> getGroup(String group) {
 

@@ -5,6 +5,7 @@ import de.mlessmann.hwserver.HWServer;
 /**
  * Created by Life4YourGames on 26.06.16.
  */
+@HWAuthMethod
 public class nativeAuthMethodPlaintext implements IAuthMethod {
 
     public static String ident = "de.mlessmann.hwserver.auth.plaintext";
@@ -21,7 +22,7 @@ public class nativeAuthMethodPlaintext implements IAuthMethod {
 
     }
 
-    public String getMethodIdentifier() {
+    public String getIdentifier() {
 
         return ident;
 
