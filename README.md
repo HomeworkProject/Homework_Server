@@ -15,6 +15,21 @@ E-Mail: [Me](mailto:github@m-lessmann.de) or [Sebastian](mailto:mail@s-paarmann.
 
 Or even personally if you live near Henstedt-Ulzburg (Germany) by contacting our school <br /> (Alstergymnasium Henstedt-Ulzburg)
 
+## Progress  
+The best place to get information about pending features, pending fixed, current target, etc. can be obtained in the [issues section](https://github.com/MarkL4YG/Homework_Server/issues)  
+### Markers  
+#### Status of progress:  
+* ```In progress``` - Assignee is currently working on it  
+* ```Todo``` - Planned to be resolved  
+* ```Enhancement``` - May be resolved once someone has spare time  
+* ```Suggestions welcome``` - Further input by users may be required and is appreciated  
+* ```help wanted``` - Active help may highly decrease the time needed to resolve this one  
+* ```wontfix``` - Bug/Feature declined - Nothing is going to happen here anymore  
+
+#### Purely descriptive labels:  
+* ```bug``` - Aknowleged bug - Will be resolved, if on our side  
+* ```duplicate``` - Issue is a duplicate of another open issue - Will be closed instantly  
+
 ## Contributing
 
 If you want to contribute to our project, feel free, to do so via.<br />
