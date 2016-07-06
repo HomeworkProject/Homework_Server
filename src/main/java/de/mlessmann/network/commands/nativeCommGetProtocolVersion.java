@@ -1,6 +1,8 @@
 package de.mlessmann.network.commands;
 
 import de.mlessmann.network.HWClientCommandContext;
+import de.mlessmann.network.Status;
+import org.json.JSONObject;
 
 /**
  * Created by Life4YourGames on 28.06.16.
@@ -22,7 +24,11 @@ public class nativeCommGetProtocolVersion extends nativeCommandParent {
     @Override
     public boolean onMessage(HWClientCommandContext context) {
 
-        //TODO: Command body
+        JSONObject response = new JSONObject();
+        response.put("protoVersion", Status.SCURRENTPROTOVERSION);
+
+        sendJSON(context.getHandler(), response);
+
         return true;
 
     }
