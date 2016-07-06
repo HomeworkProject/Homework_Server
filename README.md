@@ -29,6 +29,7 @@ The best place to get information about pending features, pending fixed, current
 #### Purely descriptive labels:  
 * ```bug``` - Aknowleged bug - Will be resolved, if on our side  
 * ```duplicate``` - Issue is a duplicate of another open issue - Will be closed instantly  
+* ```persistent``` - Altough this issue might be resolved, it'll stay open for some time  
 
 ## Contributing
 
