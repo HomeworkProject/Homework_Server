@@ -6,6 +6,7 @@ import de.mlessmann.network.HWClientCommandContext;
 import de.mlessmann.network.Status;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import de.mlessmann.network.Error;
 
 import java.util.Optional;
 
@@ -49,7 +50,7 @@ public class nativeCommLogin extends nativeCommandParent {
             JSONObject response = Status.state_ERROR(
                     Status.BADREQUEST,
                     Status.state_genError(
-                            "ProtocolError",
+                            Error.BadRequest,
                             "SetGroup needs at least 1 parameter",
                             "Client request was incomplete"
                     ));
@@ -90,7 +91,7 @@ public class nativeCommLogin extends nativeCommandParent {
             JSONObject response = Status.state_ERROR(
                     Status.NOTFOUND,
                     Status.state_genError(
-                            "NotFoundError",
+                            Error.NotFound,
                             "Group " + group + " wasn't found",
                             "Group \"" + group + "\" does not exist"
                     ));
@@ -111,7 +112,7 @@ public class nativeCommLogin extends nativeCommandParent {
             JSONObject response = Status.state_ERROR(
                     Status.UNAUTHORIZED,
                     Status.state_genError(
-                            "InvalidCredentialsError",
+                            Error.InvalidCred,
                             "User not found or password wrong",
                             "Invalid user or password supplied"
                     ));

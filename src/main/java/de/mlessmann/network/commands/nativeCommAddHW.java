@@ -6,6 +6,7 @@ import de.mlessmann.network.HWClientCommandContext;
 import de.mlessmann.network.Status;
 import de.mlessmann.perms.Permission;
 import org.json.JSONObject;
+import de.mlessmann.network.Error;
 
 import java.util.Optional;
 
@@ -49,7 +50,7 @@ public class nativeCommAddHW extends nativeCommandParent {
             JSONObject response = Status.state_ERROR(
                     Status.BADREQUEST,
                     Status.state_genError(
-                            "AddHWError",
+                            Error.AddHWError,
                             "Submitted HomeWork was invalid",
                             "Client submitted an invalid object"
                     )
@@ -77,7 +78,7 @@ public class nativeCommAddHW extends nativeCommandParent {
             JSONObject response = Status.state_ERROR(
                     Status.INTERNALERROR,
                     Status.state_genError(
-                            "AddHWError",
+                            Error.AddHWError,
                             "HomeWork not added",
                             "HomeWork wasn't added due to a server error"
                     )
@@ -106,7 +107,7 @@ public class nativeCommAddHW extends nativeCommandParent {
             JSONObject response = Status.state_ERROR(
                     Status.FORBIDDEN,
                     Status.state_genError(
-                            "InsufficientPermissionError",
+                            Error.InsuffPerm,
                             "Insufficient permission to add the homework",
                             "You don't have enough permission to add a homework"
                     )
@@ -125,7 +126,7 @@ public class nativeCommAddHW extends nativeCommandParent {
             JSONObject response = Status.state_ERROR(
                     Status.FORBIDDEN,
                     Status.state_genError(
-                            "InsufficientPermissionError",
+                            Error.InsuffPerm,
                             "Insufficient permission to edit the homework",
                             "You don't have enough permission to edit this homework"
                     )

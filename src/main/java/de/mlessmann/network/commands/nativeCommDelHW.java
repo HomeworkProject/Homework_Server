@@ -7,6 +7,7 @@ import de.mlessmann.perms.Permission;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import de.mlessmann.network.Error;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -62,7 +63,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
                 response.put("payload_type", "error");
 
                 JSONObject e = new JSONObject();
-                e.put("error", "DelHWError");
+                e.put("error", Error.DelHWError);
                 e.put("error_message", "HomeWork could not be deleted");
                 e.put("friendly_message", "HomeWork wasn't deleted due to a server error");
                 response.put("payload", e);
@@ -93,7 +94,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
                 response.put("payload_type", "error");
 
                 JSONObject e = new JSONObject();
-                e.put("error", "InsufficientPermissionError");
+                e.put("error", Error.InsuffPerm);
                 e.put("error_message", "Insufficient permission to delete the homework");
                 e.put("friendly_message", "You're not allowed to delete this homework");
                 e.put("perm", "has:" + Permission.HW_DEL);
@@ -115,7 +116,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
             response.put("payload_type", "error");
 
             JSONObject e = new JSONObject();
-            e.put("error", "JSONError");
+            e.put("error", Error.BadRequest);
             e.put("error_message", ex.toString());
             e.put("friendly_message", "Client sent an invalid request");
             response.put("payload", e);
@@ -134,7 +135,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
             response.put("payload_type", "error");
 
             JSONObject e = new JSONObject();
-            e.put("error", "DateTimeException");
+            e.put("error", Error.DateTimeError);
             e.put("error_message", ex.toString());
             e.put("status_message", "Client sent an invalid request");
             response.put("payload", e);

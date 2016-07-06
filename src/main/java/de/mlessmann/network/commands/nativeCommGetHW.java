@@ -7,6 +7,7 @@ import de.mlessmann.network.Status;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import de.mlessmann.network.Error;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -110,11 +111,21 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                     if (context.getRequest().getString("cap").equals("short")) {
 
-                        hws.stream().forEach(hw -> arr.put(new JSONObject().put("short", hw.getShort())));
+                        hws.stream().forEach(hw -> arr.put(
+                                new JSONObject().put("short", hw.getShort())
+                                    .put("id", hw.getJSON().getString("id"))
+                                    .put("date", hw.getJSON().getJSONArray("date"))
+                                    .put("subject", hw.getJSON().getString("subject"))
+                        ));
 
                     } else if (context.getRequest().getString("cap").equals("long")) {
 
-                        hws.stream().forEach(hw -> arr.put(new JSONObject().put("long", hw.getLong())));
+                        hws.stream().forEach(hw -> arr.put(
+                                new JSONObject().put("long", hw.getLong())
+                                    .put("id", hw.getJSON().get("id"))
+                                    .put("date", hw.getJSON().getJSONArray("date"))
+                                    .put("subject", hw.getJSON().getString("subject"))
+                        ));
 
                     }
 
@@ -136,7 +147,7 @@ public class nativeCommGetHW extends nativeCommandParent {
                 response.put("payload_type", "error");
 
                 JSONObject e = new JSONObject();
-                e.put("error", "JSONError");
+                e.put("error", Error.BadRequest);
                 e.put("error_message", ex.toString());
                 e.put("friendly_message", "Client sent an invalid request");
                 response.put("payload", e);
@@ -155,7 +166,7 @@ public class nativeCommGetHW extends nativeCommandParent {
                 response.put("payload_type", "error");
 
                 JSONObject e = new JSONObject();
-                e.put("error", "DateTimeException");
+                e.put("error", Error.DateTimeError);
                 e.put("error_message", ex.toString());
                 e.put("friendly_message", "Client sent an invalid request");
                 response.put("payload", e);
@@ -221,7 +232,7 @@ public class nativeCommGetHW extends nativeCommandParent {
                 response.put("payload_type", "error");
 
                 JSONObject e = new JSONObject();
-                e.put("error", "JSONException");
+                e.put("error", Error.BadRequest);
                 e.put("error_message", ex.toString());
                 e.put("friendly_message", "Client sent an invalid request");
                 response.put("payload", e);
@@ -240,7 +251,7 @@ public class nativeCommGetHW extends nativeCommandParent {
                 response.put("payload_type", "error");
 
                 JSONObject e = new JSONObject();
-                e.put("error", "DateTimeException");
+                e.put("error", Error.DateTimeError);
                 e.put("error_message", ex.toString());
                 e.put("friendly_message", "Client sent an invalid request");
                 response.put("payload", e);

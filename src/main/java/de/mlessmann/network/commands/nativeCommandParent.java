@@ -5,6 +5,7 @@ import de.mlessmann.network.HWTCPClientReference;
 import de.mlessmann.network.Status;
 import de.mlessmann.util.Common;
 import org.json.JSONObject;
+import de.mlessmann.network.Error;
 
 import java.util.Optional;
 
@@ -13,7 +14,7 @@ import java.util.Optional;
  */
 public abstract class nativeCommandParent implements ICommandHandler {
 
-    private String ID = "";
+    private String ID = "de.mlessmann.command.native";
     private String COMM = "";
     private boolean critical = false;
 
@@ -61,7 +62,7 @@ public abstract class nativeCommandParent implements ICommandHandler {
 
         JSONObject e = new JSONObject();
 
-        e.put("error", "ProtocolError");
+        e.put("error", Error.BadRequest);
         e.put("error_message", "Request is missing field \"" + field + "\"!");
         e.put("friendly_message", "Request was incomplete, contact your client developer");
         response.put("payload", e);
@@ -81,7 +82,7 @@ public abstract class nativeCommandParent implements ICommandHandler {
             JSONObject response = Status.state_ERROR(
                     Status.UNAUTHORIZED,
                     Status.state_genError(
-                            "PermissionError",
+                            Error.LoginRequired,
                             "Login request was missing or failed previously",
                             "Please log in first"
                     )
