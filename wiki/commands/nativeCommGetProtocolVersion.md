@@ -14,7 +14,7 @@
 	"protoVersion": "X.X.X.X(.X.X)"
 }
 ```  
-```MAJOR.MINOR.RELEASE.BUILD```  
+``` MAJOR.MINOR.RELEASE.BUILD ```  
 ##### Details on if something does not match:  
 - MAJOR: NONE of the commands is compatible or at least one critical is incompatible (e.g. login)  
 - MINOR: Some or major part of commands are INCOMPATIBLE  
