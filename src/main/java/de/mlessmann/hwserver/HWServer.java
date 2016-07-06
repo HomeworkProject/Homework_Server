@@ -30,6 +30,8 @@ import javax.net.ssl.SSLServerSocketFactory;
  */
 public class HWServer {
 
+    public static final String VERSION = "0.0.0.1";
+
     /**
      * TCPServerWorker used for TCPCommunication
      */
