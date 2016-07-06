@@ -9,3 +9,11 @@ build/
 run/hwserver-latest.log
 run/conf/
 /src/test/
+
+# .class files
+
+out/
+
+# Example groups
+run/groups/test_2/
+run/groups/test_3/
