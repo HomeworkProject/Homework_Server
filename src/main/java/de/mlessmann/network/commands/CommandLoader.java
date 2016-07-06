@@ -6,8 +6,6 @@ import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Set;
@@ -28,7 +26,7 @@ public class CommandLoader {
 
         ClassLoader loader = getClass().getClassLoader();
 
-        URLClassLoader ucl = null;
+        URLClassLoader ucl;
 
         if (loader instanceof URLClassLoader) ucl = (URLClassLoader) loader;
         else throw new RuntimeException("HWCommandLoader: Classloader is not an instance of URLClassLoader - Unable to load command handler");
@@ -39,7 +37,7 @@ public class CommandLoader {
         //String partPkgName = "/^.*(commands).*$/ig";
         String partPkgName = "^.*(commands).*$*";
 
-        Predicate<String> filter = new FilterBuilder().include(partPkgName);
+        @SuppressWarnings("Guava") Predicate<String> filter = new FilterBuilder().include(partPkgName);
 
         //Set up configuration builder
 
@@ -54,7 +52,7 @@ public class CommandLoader {
 
 
         classes.stream().filter(c1 -> c1 != null)
-                        .forEach(c3 -> loadFromClass(c3));
+                        .forEach(this::loadFromClass);
 
     }
 

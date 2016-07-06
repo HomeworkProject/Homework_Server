@@ -1,7 +1,6 @@
 package de.mlessmann.allocation;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
  * Created by Life4YourGames on 08.06.16.
@@ -34,7 +33,7 @@ public class HWPermission {
 
             int v = values.getInt(i);
 
-                valueSet.put((int) v);
+                valueSet.put(v);
 
         }
 

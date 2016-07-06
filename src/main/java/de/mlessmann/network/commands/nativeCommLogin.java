@@ -4,7 +4,6 @@ import de.mlessmann.allocation.HWGroup;
 import de.mlessmann.allocation.HWUser;
 import de.mlessmann.network.HWClientCommandContext;
 import de.mlessmann.network.Status;
-import de.mlessmann.util.Common;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

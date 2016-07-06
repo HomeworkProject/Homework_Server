@@ -9,14 +9,14 @@ import java.util.Optional;
  */
 public interface ICommandHandler {
 
-    public abstract String getCommand();
+    String getCommand();
 
-    public abstract String getIdentifier();
+    String getIdentifier();
 
-    public abstract boolean onMessage(HWClientCommandContext context);
+    boolean onMessage(HWClientCommandContext context);
 
-    public abstract Optional<ICommandHandler> clone();
+    Optional<ICommandHandler> clone();
 
-    public abstract boolean isCritical();
+    boolean isCritical();
 
 }

@@ -67,13 +67,7 @@ public class FileUtil {
 
         try {
 
-            if (!myFile.exists()) {
-
-                return myFile.createNewFile();
-
-            }
-
-            return false;
+            return !myFile.exists() && myFile.createNewFile();
 
         } catch (IOException ex) {
 

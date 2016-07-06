@@ -1,8 +1,6 @@
 package de.mlessmann.network.commands;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Optional;
 import java.util.logging.Logger;
 
 /**

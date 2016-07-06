@@ -1,7 +1,6 @@
 package de.mlessmann.hwserver;
 
 import java.io.IOException;
-import java.util.logging.Logger;
 
 /**
  * Created by Life4YourGames on 09.06.16.

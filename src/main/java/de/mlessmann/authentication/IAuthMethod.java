@@ -7,12 +7,12 @@ import de.mlessmann.hwserver.HWServer;
  */
 public interface IAuthMethod {
 
-    public abstract boolean authorize(String storedData, String input);
+    boolean authorize(String storedData, String input);
 
-    public abstract String masqueradePass(String input);
+    String masqueradePass(String input);
 
-    public abstract String getMethodIdentifier();
+    String getMethodIdentifier();
 
-    public abstract void setHWInstance(HWServer server);
+    void setHWInstance(HWServer server);
 
 }
