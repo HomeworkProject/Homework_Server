@@ -4,7 +4,7 @@
 ## Request
 ```  
 {  
-	"command": "getinfo",  
+	"command": "getinfo"  
 }  
 ```  
   
