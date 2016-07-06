@@ -109,11 +109,11 @@ public class nativeCommLogin extends nativeCommandParent {
             context.getHandler().setUser(null);
 
             JSONObject response = Status.state_ERROR(
-                    Status.NOTFOUND,
+                    Status.UNAUTHORIZED,
                     Status.state_genError(
-                            "NotFoundError",
-                            "User \"" + user + "\" wasn't found",
-                            "User \"" + user + "\" does not exist"
+                            "InvalidCredentialsError",
+                            "User not found or password wrong",
+                            "Invalid user or password supplied"
                     ));
 
             response.put("commID", context.getHandler().getCurrentCommID());
