@@ -12,8 +12,6 @@ task wrapper(type: Wrapper) {
 	gradleVersion = '2.13'
 }
 
-//TODO: Update task (maybe integrated into the server)
-
 //Dependencies and repos
 repositories {
 	mavenCentral()
@@ -22,16 +20,120 @@ repositories {
 dependencies {
 	compile 'org.json:json:20160212'
 	compile 'org.reflections:reflections:0.9.10'
+	testCompile 'junit:junit:4.11'
 }
 
 //noinspection GroovyAssignabilityCheck
 jar {
 
+	name = 'hwserver.jar'
+
 	manifest {
 
 		attributes 'Main-Class': 'main.Main'
-		attributes 'Class-Path': configurations.compile.collect { it.getName() }.join(' ')
+		attributes 'Class-Path': configurations.compile.collect { "libraries/" + it.getName() }.join(' ')
 
 	}
+
+}
+
+//noinspection GroovyAssignabilityCheck
+test {
+
+	useJUnit()
+
+	testLogging.showStandardStreams = true
+
+	beforeTest { descriptor ->
+		logger.lifecycle("Running test: " + (String) descriptor)
+	}
+
+	onOutput { descriptor, event ->
+		logger.lifecycle("Test: " + (String) descriptor + " produced standard out/err: " + event.message )
+	}
+
+
+
+}
+
+//noinspection GroovyAssignabilityCheck
+sourceSets {
+
+	test {
+
+		java {
+
+			srcDirs = ["test"]
+
+		}
+
+	}
+
+}
+
+task copyRuntimeLibs(type: Copy) {
+
+	into "build/libs/libraries"
+
+	from configurations.runtime
+
+}
+
+
+
+//noinspection GroovyAssignabilityCheck
+build.finalizedBy(copyRuntimeLibs)
+
+task cleanupCRunDir(type: Delete) {
+
+	FileTree tree = fileTree(dir: "run/_cleanRun");
+
+	tree.exclude "+*"
+
+	tree.each {
+		File file -> delete(file)
+	}
+
+}
+
+run{
+
+	workingDir = 'run/_normal'
+
+	standardInput = System.in
+
+	standardOutput = System.out
+
+}
+
+task debug(type: JavaExec) {
+
+	classpath = sourceSets.main.runtimeClasspath
+
+	main = 'main.Main'
+
+	args = ['--debug']
+
+	workingDir = "run/_normal"
+
+	standardInput = System.in
+
+	standardOutput = System.out
+
+}
+
+task cleanRun(dependsOn: cleanupCRunDir, type: JavaExec) {
+
+	classpath = sourceSets.main.runtimeClasspath
+
+	main = 'main.Main'
+
+	args = ["--debug","--log-no-trace"]
+
+	workingDir = "run/_cleanRun"
+
+	standardInput = System.in
+
+	standardOutput = System.out
 
 }
