@@ -2,7 +2,7 @@ package de.mlessmann.network;
 
 import de.mlessmann.allocation.HWUser;
 import de.mlessmann.network.commands.ICommandHandler;
-import de.mlessmann.network.commands.cmHTCPNativeDummy;
+import de.mlessmann.network.commands._nativeCommTCPCHDummy;
 import de.mlessmann.util.L4YGRandom;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,7 +23,7 @@ import static de.mlessmann.util.Common.negateInt;
  */
 public class HWTCPClientHandler {
 
-    private static ICommandHandler HANDLER_NATIVE = new cmHTCPNativeDummy();
+    private static ICommandHandler HANDLER_NATIVE = new _nativeCommTCPCHDummy();
 
 
     private HWTCPServer master;

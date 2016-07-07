@@ -1,17 +1,15 @@
 package de.mlessmann.hwserver;
 
-import de.mlessmann.authentication.AuthLoader;
-import de.mlessmann.authentication.AuthProvider;
+import de.mlessmann.reflections.AuthLoader;
+import de.mlessmann.reflections.AuthProvider;
 import de.mlessmann.config.HWConfig;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.nio.file.FileAlreadyExistsException;
+import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,8 +17,9 @@ import java.util.logging.Logger;
 import de.mlessmann.allocation.HWGroup;
 import de.mlessmann.logging.*;
 import de.mlessmann.network.HWTCPServer;
-import de.mlessmann.network.commands.CommHandProvider;
-import de.mlessmann.network.commands.CommandLoader;
+import de.mlessmann.reflections.CommHandProvider;
+import de.mlessmann.reflections.CommandLoader;
+import de.mlessmann.util.apparguments.AppArgument;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -227,6 +226,27 @@ public class HWServer {
 
         LOG.info("------Entering post-initialization------");
 
+        File groupDir = new File("groups");
+
+        if (groupDir.isFile()) {
+
+            String msg = "File \"groups\" is occupying the groups directory! Delete or move the file before starting the server";
+
+            LOG.severe(msg);
+            throw new FileAlreadyExistsException(msg);
+
+        }
+
+        if (!groupDir.isDirectory() && !groupDir.mkdirs()) {
+
+            String msg = "Unable to create group directory!";
+
+            LOG.severe(msg);
+            throw new IOException(msg);
+
+        }
+
+
         JSONArray arr = config.getJSON().getJSONArray("groups");
 
         arr.forEach(s -> loadGroup(s.toString()));
@@ -268,15 +288,18 @@ public class HWServer {
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-        while (true) {
+        loop: while (true) {
 
             try {
 
                 String command = reader.readLine();
 
-                if (command.startsWith("exit")) {
+                switch (command) {
 
-                    break;
+                    case "stop": ;
+                    case "quit": ;
+                    case "exit": break loop;
+
 
                 }
 
@@ -301,9 +324,11 @@ public class HWServer {
      * @param args This should be the start arguments (of the application)
      */
     public HWServer setArgs(String[] args) {
-        if (args.length > 0) {
-            Arrays.stream(args).forEach(this::setArg);
-        }
+
+        ArrayList<AppArgument> arguments = AppArgument.fromArray(args);
+
+        arguments.forEach(this::setArg);
+
         return this;
     }
 
@@ -329,6 +354,35 @@ public class HWServer {
                 case "-debug": enableDebug(); break;
                 case "--log-no-trace": LOGFORMATTER.setDebug(false); break;
                 default: LOG.warning("Unsupported argument: " + arg); break;
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * Sets one specific argument. Remember: Args cannot be removed, just adjusted
+     * @param a The argument as AppArgument
+     *          @see AppArgument;
+     * @return this
+     */
+    public HWServer setArg(AppArgument a) {
+
+        if (a.getValue() != null && !a.getValue().equals("")) {
+
+            String key = a.getKey();
+            String value = a.getValue();
+
+            switch (key) {
+                case "--config": confFile = value; break;
+                default: LOG.warning("Unsupported argument: " + key);
+            }
+
+        } else {
+            switch (a.getKey()) {
+                case "--debug": enableDebug(); break;
+                case "--log-no-trace": LOGFORMATTER.setDebug(false); break;
+                default: LOG.warning("Unsupported argument: " + a.getKey()); break;
             }
         }
 

@@ -3,6 +3,7 @@ package de.mlessmann.network.commands;
 import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.network.HWClientCommandContext;
 import de.mlessmann.network.Status;
+import de.mlessmann.reflections.HWCommandHandler;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

@@ -1,6 +1,7 @@
 package de.mlessmann.authentication;
 
 import de.mlessmann.hwserver.HWServer;
+import de.mlessmann.reflections.HWAuthMethod;
 
 /**
  * Created by Life4YourGames on 26.06.16.

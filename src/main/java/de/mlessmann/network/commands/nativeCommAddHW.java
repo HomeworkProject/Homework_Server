@@ -5,6 +5,7 @@ import de.mlessmann.homework.HomeWork;
 import de.mlessmann.network.HWClientCommandContext;
 import de.mlessmann.network.Status;
 import de.mlessmann.perms.Permission;
+import de.mlessmann.reflections.HWCommandHandler;
 import org.json.JSONObject;
 import de.mlessmann.network.Error;
 
