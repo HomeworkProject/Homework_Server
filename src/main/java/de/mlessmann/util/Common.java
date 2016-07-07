@@ -26,9 +26,9 @@ public class Common {
 
         int end = s.indexOf(" ", start  + 1);
 
-        if (end == -1) end = s.length() - 1;
+        if (end == -1) end = s.length();
 
-        return s.substring(start == -1 ? 0 : start + 1, end + 1);
+        return s.substring(start == -1 ? 0 : start + 1, end);
 
     }
 
