@@ -1,4 +1,4 @@
-package de.mlessmann.updates.github;
+package de.mlessmann.updates_old.github;
 
 import de.mlessmann.http.HTTPUtils;
 import org.json.JSONObject;

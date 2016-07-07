@@ -1,6 +1,8 @@
-package de.mlessmann.updates;
+package de.mlessmann.updates_old.github;
 
-import de.mlessmann.updates.github.GitHubReleaseInfo;
+import de.mlessmann.updates_old.HWUpdateIndex;
+import de.mlessmann.updates_old.IReleaseInfo;
+import de.mlessmann.updates_old.IUpdateIndex;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -9,9 +11,11 @@ import java.util.HashMap;
 import java.util.Optional;
 
 /**
- * Created by Life4YourGames on 05.07.16.
+ * Created by Life4YourGames on 06.07.16.
  */
-public class UpdateIndex {
+
+@HWUpdateIndex(JSONType="Array")
+public class GitHubRelUpdateIndex implements IUpdateIndex {
 
     private JSONArray json;
     private HashMap<String, IReleaseInfo> releases;
@@ -57,5 +61,7 @@ public class UpdateIndex {
         return Optional.ofNullable(i);
 
     }
+
+
 
 }

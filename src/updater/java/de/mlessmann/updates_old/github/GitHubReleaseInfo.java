@@ -1,7 +1,7 @@
-package de.mlessmann.updates.github;
+package de.mlessmann.updates_old.github;
 
-import de.mlessmann.updates.HWUpdater;
-import de.mlessmann.updates.IReleaseInfo;
+import de.mlessmann.updates_old.HWUpdater;
+import de.mlessmann.updates_old.IReleaseInfo;
 import de.mlessmann.util.Common;
 import org.json.JSONArray;
 import org.json.JSONObject;

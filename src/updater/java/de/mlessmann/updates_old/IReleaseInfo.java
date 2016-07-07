@@ -1,4 +1,4 @@
-package de.mlessmann.updates;
+package de.mlessmann.updates_old;
 
 import org.json.JSONObject;
 

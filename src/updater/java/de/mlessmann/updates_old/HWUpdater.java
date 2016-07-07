@@ -1,14 +1,7 @@
-package de.mlessmann.updates;
+package de.mlessmann.updates_old;
 
-import de.mlessmann.http.HTTPUtils;
-import de.mlessmann.hwserver.HWServer;
-import de.mlessmann.util.Common;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -33,6 +26,13 @@ public class HWUpdater implements Runnable {
 
     private boolean updateAble = false;
     private String url = "http://schule.m-lessmann.de/hwserver/updates.json";
+
+    /*
+    Override seachIndex!
+     */
+    private String directUrl = null;
+    private String directType = null;
+
     private int mode = 1;
     private Logger l = Logger.getGlobal();
 
@@ -40,6 +40,7 @@ public class HWUpdater implements Runnable {
 
         switch (mode) {
             case 1: checkForUpdate(); break;
+            default: l.info("Updater: Unknown mode: " + mode); break;
         }
 
     }
@@ -56,55 +57,37 @@ public class HWUpdater implements Runnable {
 
     private void checkForUpdate() {
 
-        Optional<String> content;
+        updateAble = false;
 
-        try {
+        SearchIndex index;
 
-            if (url.startsWith("https")) {
+        if (directUrl == null) {
 
-                content = HTTPUtils.GETHTTPSText(url, 0, null);
+            Optional<SearchIndex> i = SearchIndex.fromUrl(url, l);
 
-            } else {
+            if (!i.isPresent()) return;
 
-                content = HTTPUtils.GETHTTPText(url, 0, null);
+            index = i.get();
+
+        } else {
+
+            if (directType == null) {
+
+                l.severe("SearchIndex cannot be overridden without \"url-type\" being set!");
+                return;
 
             }
 
-        } catch (MalformedURLException ex) {
-
-            l.warning("Updater: Invalid URL \"" + url + "\"");
-            updateAble = false;
-            return;
-
-        } catch (IOException ex) {
-
-            l.warning("Updater: Unable to check for updates: " + ex.toString());
-            ex.printStackTrace();
-            updateAble = false;
-            return;
+            index = new SearchIndex(
+                        new JSONObject()
+                                .put("url", directUrl)
+            );
 
         }
 
-        if (!content.isPresent()) {
+        String updateUrl = index.getUpdIndexUrl();
 
-            updateAble = false;
-            return;
-
-        }
-
-
-        String c = content.get();
-
-        try {
-
-            //SearchIndex
-
-            JSONObject obj = new JSONObject(c);
-
-            JSONObject updateIndex = obj.getJSONObject(indexTree);
-
-            boolean allowPreRel = updateIndex.getBoolean("prereleases");
-            String updateUrl = updateIndex.getString("url");
+        /*
 
             //Retrieve UpdateIndex
 
@@ -181,6 +164,8 @@ public class HWUpdater implements Runnable {
 
         }
 
+        */
+
     }
 
     public boolean hasUpdate() { return updateAble; }
@@ -188,5 +173,13 @@ public class HWUpdater implements Runnable {
     public Logger getLogger() { return l; }
 
     public void setLogger(Logger lo) { l = lo; }
+
+    public void setUrl(String u) { url = u; }
+
+    public void setDirectUrl(String u) { directUrl = u; }
+
+    public void setDirectType(String t) { directType = t; }
+
+    public void setMode(int m) { mode = m; }
 
 }
