@@ -1,7 +1,8 @@
-package de.mlessmann.network.commands;
+package de.mlessmann.reflections;
 
 import com.google.common.base.Predicate;
 import de.mlessmann.hwserver.HWServer;
+import de.mlessmann.network.commands.ICommandHandler;
 import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
@@ -59,6 +60,8 @@ public class CommandLoader {
     private void loadFromClass(Class<?> c) {
 
         if (!ICommandHandler.class.isAssignableFrom(c)) {
+
+            myLogger.info("Class " + c.toString() + " does not implement ICommandHandler, but is annotated!");
 
             return;
 

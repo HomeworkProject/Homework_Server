@@ -1,6 +1,7 @@
-package de.mlessmann.authentication;
+package de.mlessmann.reflections;
 
 import com.google.common.base.Predicate;
+import de.mlessmann.authentication.IAuthMethod;
 import de.mlessmann.hwserver.HWServer;
 import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
@@ -59,6 +60,8 @@ public class AuthLoader {
     private void loadFromClass(Class<?> c) {
 
         if (!IAuthMethod.class.isAssignableFrom(c)) {
+
+            myLogger.info("Class " + c.toString() + " does not implement IAuthMethod, but is annotated!");
 
             return;
 

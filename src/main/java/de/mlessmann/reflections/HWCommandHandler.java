@@ -1,4 +1,4 @@
-package de.mlessmann.network.commands;
+package de.mlessmann.reflections;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,4 +1,6 @@
-package de.mlessmann.network.commands;
+package de.mlessmann.reflections;
+
+import de.mlessmann.network.commands.ICommandHandler;
 
 import java.util.ArrayList;
 import java.util.logging.Logger;

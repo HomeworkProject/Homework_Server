@@ -1,4 +1,7 @@
-package de.mlessmann.authentication;
+package de.mlessmann.reflections;
+
+import de.mlessmann.authentication.IAuthMethod;
+import de.mlessmann.authentication.nativeAuthMethodPlaintext;
 
 import java.util.HashMap;
 import java.util.Optional;
