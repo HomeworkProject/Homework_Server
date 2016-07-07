@@ -6,14 +6,13 @@
 build/
 *.log*
 *.lck*
-run/hwserver-latest.log
-run/conf/
-/src/test/
+run/*/hwserver-latest.log
+run/*/conf/
 
 # .class files
 
 out/
 
 # Example groups
-run/groups/test_2/
-run/groups/test_3/
+run/*/groups/test_2/
+run/*/groups/test_3/
