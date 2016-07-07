@@ -1,6 +1,5 @@
 package de.mlessmann.allocation;
 
-import de.mlessmann.authentication.AuthProvider;
 import de.mlessmann.authentication.IAuthMethod;
 import de.mlessmann.homework.HomeWork;
 import org.json.JSONArray;
