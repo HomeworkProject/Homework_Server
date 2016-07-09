@@ -55,13 +55,15 @@ public class Common {
 
             }
 
-            if (c < d) {
+            //First higher than second
+            if (c > d) {
 
-                return -1;
+                return - 1;
 
             }
 
-            if (c > d) {
+            //Second higher than first
+            if (d > c) {
 
                 return 1;
 
