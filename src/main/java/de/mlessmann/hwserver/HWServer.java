@@ -19,6 +19,8 @@ import de.mlessmann.logging.*;
 import de.mlessmann.network.HWTCPServer;
 import de.mlessmann.reflections.CommHandProvider;
 import de.mlessmann.reflections.CommandLoader;
+import de.mlessmann.updates.IAppRelease;
+import de.mlessmann.updates.UpdateManager;
 import de.mlessmann.util.apparguments.AppArgument;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -32,6 +34,14 @@ import javax.net.ssl.SSLServerSocketFactory;
 public class HWServer {
 
     public static final String VERSION = "0.0.0.1";
+
+    /**
+     * Updater - well everyone knows what this is
+     */
+    private UpdateManager updater;
+    private int updateMode = 1;
+    //Collect start arguments to pass them through to the updater
+    private ArrayList<AppArgument> startArgs = new ArrayList<AppArgument>();
 
     /**
      * TCPServerWorker used for TCPCommunication
@@ -107,6 +117,10 @@ public class HWServer {
      */
     public HWServer preInitialize() throws IOException {
 
+        // -------------------------------- PRE INIT --------------------------------
+        // -------------------------------- PRE INIT --------------------------------
+        // -------------------------------- PRE INIT --------------------------------
+
         logFileHandler = new FileHandler(getLogFile());
         logFileHandler.setFormatter(LOGFORMATTER);
 
@@ -157,6 +171,9 @@ public class HWServer {
      */
     public HWServer initialize() throws IOException {
 
+        // -------------------------------- INIT --------------------------------
+        // -------------------------------- INIT --------------------------------
+        // -------------------------------- INIT --------------------------------
         LOG.info("------Entering initialization------");
 
         // --- Command Handler ---
@@ -223,9 +240,6 @@ public class HWServer {
 
         }
 
-
-        LOG.info("------Entering post-initialization------");
-
         File groupDir = new File("groups");
 
         if (groupDir.isFile()) {
@@ -253,7 +267,51 @@ public class HWServer {
 
         LOG.info(hwGroups.size() + " groups registered");
 
+        // -------------------------------- POST INIT --------------------------------
+        // -------------------------------- POST INIT --------------------------------
+        // -------------------------------- POST INIT --------------------------------
+
+        LOG.info("------Entering post-initialization------");
+
+        updater = new UpdateManager();
+
+        try {
+
+            updater.setLogger(LOG);
+            updater.setMode(updateMode);
+
+            updater.setArgs(startArgs);
+
+            updater.run();
+
+            if (updater.isUpdateAvailable()) {
+
+                IAppRelease r = updater.getLastResult().get();
+
+                LOG.info("#########################################");
+                LOG.info("There's an update available: " + r.getVersion());
+                LOG.info("#########################################");
+
+            } else {
+
+                if (updater.getErrorCode() == 0)
+                    LOG.info("Instance up to date! :)");
+                else
+                    LOG.warning("Unable to check for updates! Updater returned code: " + updater.getErrorCode());
+
+            }
+
+            LOG.info("------Exiting initialization phase------");
+
+        } catch (Exception e) {
+
+            LOG.severe("Unable to check for updates!");
+            e.printStackTrace();
+
+        }
+
         return this;
+
     }
 
     /**
@@ -368,6 +426,7 @@ public class HWServer {
      */
     public HWServer setArg(AppArgument a) {
 
+
         if (a.getValue() != null && !a.getValue().equals("")) {
 
             String key = a.getKey();
@@ -375,14 +434,14 @@ public class HWServer {
 
             switch (key) {
                 case "--config": confFile = value; break;
-                default: LOG.warning("Unsupported argument: " + key);
+                default: LOG.warning("Unsupported argument: " + key); startArgs.add(a);;
             }
 
         } else {
             switch (a.getKey()) {
                 case "--debug": enableDebug(); break;
                 case "--log-no-trace": LOGFORMATTER.setDebug(false); break;
-                default: LOG.warning("Unsupported argument: " + a.getKey()); break;
+                default: LOG.warning("Unsupported argument: " + a.getKey()); startArgs.add(a); break;
             }
         }
 

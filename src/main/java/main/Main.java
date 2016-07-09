@@ -1,7 +1,10 @@
 package main;
 
 import java.io.IOException;
+import java.util.ArrayList;
+
 import de.mlessmann.hwserver.HWServer;
+import de.mlessmann.util.apparguments.AppArgument;
 
 /**
  * Created by Life4YourGames on 29.04.16.
@@ -12,25 +15,17 @@ public class Main {
 
     public static void main (String[] args) throws IOException {
 
-        //try {
+        ArrayList<AppArgument> aa = AppArgument.fromArray(args);
 
-            HWServer hwServer = new HWServer();
+        HWServer hwServer = new HWServer();
 
-            hwServer.preInitialize();
+        hwServer.preInitialize();
 
-            hwServer.setArgs(args);
+        aa.forEach(hwServer::setArg);
 
-            hwServer.initialize();
+        hwServer.initialize();
 
-            hwServer.start();
-
-        /*} catch (Exception ex) {
-
-            System.out.print(ex.toString());
-            ex.printStackTrace(System.out);
-
-        }*/
-
+        hwServer.start();
 
     }
 
