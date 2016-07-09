@@ -12,7 +12,7 @@ import java.util.Optional;
  */
 public class HTTPUtils {
 
-    public static Optional<String> GETHTTPSText(String sUrl, int port, String proxy) throws IOException {
+    public static String GETHTTPSText(String sUrl, int port, String proxy) throws IOException {
 
         String res = null;
 
@@ -48,11 +48,11 @@ public class HTTPUtils {
 
         }
 
-        return Optional.ofNullable(res);
+        return res;
 
     }
 
-    public static Optional<String> GETHTTPText(String sURL, int port, String proxy) throws IOException {
+    public static String GETHTTPText(String sURL, int port, String proxy) throws IOException {
 
         String res = null;
 
@@ -88,7 +88,7 @@ public class HTTPUtils {
 
         }
 
-        return Optional.ofNullable(res);
+        return res;
 
     }
 

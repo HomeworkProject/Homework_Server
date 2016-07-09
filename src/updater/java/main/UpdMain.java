@@ -1,6 +1,6 @@
 package main;
 
-import de.mlessmann.updates_old.HWUpdater;
+import de.mlessmann.updates.UpdateManager;
 import de.mlessmann.util.apparguments.AppArgument;
 
 import java.io.IOException;
@@ -20,26 +20,22 @@ public class UpdMain {
 
         Logger l = Logger.getLogger("Test");
 
-        HWUpdater updater = new HWUpdater();
+        UpdateManager updater = new UpdateManager();
 
         ArrayList<AppArgument> arguments = AppArgument.fromArray(args);
 
-        for (AppArgument a : arguments) {
-
-            switch (a.getKey()) {
-
-                case "--search-url": updater.setUrl(a.getValue()); break;
-                case "--url-type": updater.setDirectType(a.getValue()); break;
-                case "--url": updater.setUrl(a.getValue()); break;
-                case "--check-only": updater.setMode(1); break;
-                default: l.warning("Unknown argument \"" + a.getKey() + "\"");
-            }
-
-        }
+        updater.setArgs(arguments);
 
         updater.setLogger(l);
 
         updater.run();
+
+        if (updater.isUpdateAvailable()) {
+
+            l.info("An update is available:");
+            l.info(updater.getLastResult().get().getVersion() + ": " + updater.getLastResult().get().getInfo());
+
+        }
 
     }
 

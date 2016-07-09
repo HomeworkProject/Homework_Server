@@ -10,8 +10,7 @@ import java.util.logging.Logger;
  */
 public class UpdIndexProvider {
 
-
-    private static ArrayList<IAppUpdateIndex> commands = new ArrayList<IAppUpdateIndex>();
+    private ArrayList<IAppUpdateIndex> commands = new ArrayList<IAppUpdateIndex>();
     private Logger myLogger = Logger.getGlobal();
 
     public void registerIndex(IAppUpdateIndex handler) {

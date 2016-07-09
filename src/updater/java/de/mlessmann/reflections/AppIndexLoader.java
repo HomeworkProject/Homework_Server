@@ -1,11 +1,8 @@
 package de.mlessmann.reflections;
 
 import com.google.common.base.Predicate;
-import de.mlessmann.authentication.IAuthMethod;
-import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.updates.IAppUpdateIndex;
 import de.mlessmann.updates.UpdateManager;
-import de.mlessmann.updates_old.HWUpdateIndex;
 import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
@@ -52,7 +49,7 @@ public class AppIndexLoader {
 
         Reflections ref = new Reflections(cBuilder);
 
-        Set<Class<?>> classes = ref.getTypesAnnotatedWith(HWUpdateIndex.class);
+        Set<Class<?>> classes = ref.getTypesAnnotatedWith(AppUpdateIndex.class);
 
 
         classes.stream().filter(c1 -> c1 != null)
