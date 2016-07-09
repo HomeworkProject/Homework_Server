@@ -8,6 +8,7 @@ build/
 *.lck*
 run/*/hwserver-latest.log
 run/*/conf/
+run/_cleanRun/
 
 # .class files
 
