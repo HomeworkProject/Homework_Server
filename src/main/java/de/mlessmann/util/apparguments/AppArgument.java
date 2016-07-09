@@ -20,7 +20,7 @@ public class AppArgument {
             if (arg.contains("=")) {
 
                 key = arg.substring(0, arg.indexOf('='));
-                value = arg.substring(arg.indexOf('='));
+                value = arg.substring(arg.indexOf('=') + 1);
 
             } else {
 
