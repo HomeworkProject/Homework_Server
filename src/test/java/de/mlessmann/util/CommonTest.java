@@ -3,6 +3,8 @@ package de.mlessmann.util;
 import org.junit.Test;
 import org.junit.Assert;
 
+import java.util.logging.Logger;
+
 /**
  * Created by Life4YourGames on 05.07.16.
  */
@@ -31,9 +33,11 @@ public class CommonTest {
 
         Assert.assertEquals(0, Common.compareVersions("2.7.8", "2.7.8.0"));
 
-        Assert.assertEquals(-1, Common.compareVersions("2.7.7", "2.7.8"));
+        int a = 1;
+        int b = Common.compareVersions("2.7.7", "2.7.8");
+        Assert.assertEquals(a, b);
 
-        Assert.assertEquals(1, Common.compareVersions("2.7.7", "2.7.6"));
+        Assert.assertEquals(-1, Common.compareVersions("2.7.7", "2.7.6"));
 
     }
 
