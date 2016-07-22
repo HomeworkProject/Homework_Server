@@ -33,7 +33,7 @@ import javax.net.ssl.SSLServerSocketFactory;
  */
 public class HWServer {
 
-    public static final String VERSION = "0.0.0.1";
+    public static final String VERSION = "0.0.0.2";
 
     /**
      * Updater - well everyone knows what this is
