@@ -244,23 +244,30 @@ public class UpdateManager implements Runnable {
 
     public void setArgs(ArrayList<AppArgument> aa) {
 
-        for (AppArgument a : aa) {
+        aa.forEach(this::setArg);
 
-            switch (a.getKey()) {
+    }
 
-                case "--search-url": setSearchUrl(a.getValue()); break;
-                case "--url-type": setDirectType(a.getValue()); break;
-                case "--url": setDirectUrl(a.getValue()); break;
-                case "--check-only": setMode(1); break;
-                case "--o":
-                    String v = a.getValue();
-                    int diff = v.indexOf(",");
-                        getOptions().put(
-                            v.substring(0, diff),
-                            v.substring(diff + 1, v.length() - 1)
-                    );
-                default: l.warning("Updater: Unknown argument \"" + a.getKey() + "\"");
-            }
+    public void setArg(AppArgument a) {
+
+        //l.finest("Updater: Parsing arg: " + a.getKey());
+        switch (a.getKey()) {
+
+            case "--mode": setMode(Integer.parseInt(a.getValue())); break;
+            case "--select": selectedVersion = a.getValue(); setMode(2); break;
+            case "--search-url": setSearchUrl(a.getValue()); break;
+            case "--url-type": setDirectType(a.getValue()); break;
+            case "--url": setDirectUrl(a.getValue()); break;
+            case "--check-only": setMode(1); break;
+            case "--force-download": setMode(2); break;
+            case "--o":
+                String v = a.getValue();
+                int diff = v.indexOf(",");
+                getOptions().put(
+                        v.substring(0, diff),
+                        v.substring(diff + 1, v.length() - 1)
+                ); break;
+            default: l.warning("Updater: Unknown argument \"" + a.getKey() + "\""); break;
 
         }
 

@@ -5,6 +5,7 @@ import de.mlessmann.util.apparguments.AppArgument;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -18,7 +19,8 @@ public class UpdMain {
 
         //HTTPUtils.HTTPGetFile("https://s3.amazonaws.com/Minecraft.Download/versions/1.7.10/1.7.10.jar", "C:\\_Share\\example.txt");
 
-        Logger l = Logger.getLogger("Test");
+        Logger l = Logger.getGlobal();
+        l.setLevel(Level.FINEST);
 
         UpdateManager updater = new UpdateManager();
 

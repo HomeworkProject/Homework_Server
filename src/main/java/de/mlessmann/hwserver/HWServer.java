@@ -357,8 +357,7 @@ public class HWServer {
                     case "stop": ;
                     case "quit": ;
                     case "exit": break loop;
-
-
+                    default: System.out.println("Unknown command: " + command); break;
                 }
 
             } catch (IOException ex) {
@@ -426,6 +425,13 @@ public class HWServer {
      */
     public HWServer setArg(AppArgument a) {
 
+        if (a.getKey().startsWith("--u:")) {
+
+            startArgs.add(new AppArgument("--" + a.getKey().substring(4), a.getValue()));
+            return this;
+
+        }
+
 
         if (a.getValue() != null && !a.getValue().equals("")) {
 
@@ -434,14 +440,14 @@ public class HWServer {
 
             switch (key) {
                 case "--config": confFile = value; break;
-                default: LOG.warning("Unsupported argument: " + key); startArgs.add(a);;
+                default: LOG.warning("Unsupported argument: " + key); break;
             }
 
         } else {
             switch (a.getKey()) {
                 case "--debug": enableDebug(); break;
                 case "--log-no-trace": LOGFORMATTER.setDebug(false); break;
-                default: LOG.warning("Unsupported argument: " + a.getKey()); startArgs.add(a); break;
+                default: LOG.warning("Unsupported argument: " + a.getKey()); break;
             }
         }
 
