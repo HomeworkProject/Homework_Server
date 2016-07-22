@@ -22,6 +22,8 @@ public interface IAppUpdateIndex {
 
     Optional<IAppRelease> updateAvailable(String currentVersion, boolean preReleases);
 
+    Optional<IAppRelease> selectUpdate(String versionNum);
+
     boolean downloadTo(String version, String cacheDir);
 
     boolean downloadLatest(boolean preReleases);

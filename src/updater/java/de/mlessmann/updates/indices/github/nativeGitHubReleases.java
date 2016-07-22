@@ -1,4 +1,4 @@
-package de.mlessmann.updates.indices;
+package de.mlessmann.updates.indices.github;
 
 import de.mlessmann.reflections.AppUpdateIndex;
 import de.mlessmann.updates.IAppRelease;
@@ -11,6 +11,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 /**
  * Created by Life4YourGames on 07.07.16.
@@ -59,6 +60,8 @@ public class nativeGitHubReleases implements IAppUpdateIndex {
 
                 releases.add(r);
 
+                //Logger.getGlobal().info("Found release: \"" + r.getVersion() + "\"");
+
             }
 
         } catch (JSONException ex) {
@@ -106,13 +109,46 @@ public class nativeGitHubReleases implements IAppUpdateIndex {
     }
 
     @Override
+    public Optional<IAppRelease> selectUpdate(String version) {
+
+        String selBranch = myMaster.getOptions().getOrDefault("branch", null);
+
+        for (nativeGitHubRelease r : releases) {
+
+            if (selBranch != null) {
+
+                //Ignore wrong branches
+                if (!r.getBranch().equals(selBranch)) continue;
+
+            }
+
+            //Ignore drafts
+            if (r.isDraft()) continue;
+
+            if (r.getVersion().equals(version)) {
+
+                latest = r;
+
+                return Optional.of(r);
+
+            }
+
+        }
+
+        return Optional.empty();
+
+    }
+
+    @Override
     public boolean downloadLatest(boolean preReleases) {
         return false;
     }
 
     @Override
     public boolean downloadTo(String version, String cacheDir) {
+
         return false;
+
     }
 
 }

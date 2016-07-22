@@ -35,6 +35,7 @@ public class UpdateManager implements Runnable {
 
     private String directUrl = null;
     private String directType = null;
+    private String selectedVersion = null;
 
     private UpdIndexProvider myIndexProvider;
 
@@ -59,6 +60,8 @@ public class UpdateManager implements Runnable {
 
     public void run() {
 
+        l.info("Running updater in mode " + mode);
+
         if (myIndexProvider == null) {
 
             myIndexProvider = new UpdIndexProvider();
@@ -77,7 +80,9 @@ public class UpdateManager implements Runnable {
 
         switch (mode) {
 
+            case 2: ;
             case 1: errorCode = checkForUpdate(); break;
+            //case 3: errorCode = checkAndGetIfAvailable(); break;
             default: l.severe("Unsupported update mode: " + mode);
 
         }
@@ -90,6 +95,8 @@ public class UpdateManager implements Runnable {
         if (index != null) return true;
 
         if (directUrl != null && directType != null) {
+
+            l.fine("Using predefined values to locally construct the search index");
 
             searchContent = new JSONObject()
                     .put("url", directUrl)
@@ -198,15 +205,54 @@ public class UpdateManager implements Runnable {
 
         if (index == null) return 1;
 
+        if (selectedVersion == null) {
 
-        lastResult = index.updateAvailable(HWServer.VERSION, preReleases);
-        updateAvailable = lastResult.isPresent();
+            lastResult = index.updateAvailable(HWServer.VERSION, preReleases);
+            updateAvailable = lastResult.isPresent();
+
+            //TODO: Work out how to acquire the latest and specific releases
+
+
+        } else {
+
+
+            lastResult = index.selectUpdate(selectedVersion);
+            updateAvailable = lastResult.isPresent();
+
+            if (!lastResult.isPresent()) {
+
+                l.warning("Unable to select version \"" + selectedVersion + "\"");
+
+            }
+
+        }
+
+        if (updateAvailable && mode == 2) {
+
+            l.info("Starting download of selected version: " + selectedVersion);
+
+            if (lastResult.get().getVersion().equals(HWServer.VERSION)) updateAvailable = false;
+
+            return getUpdate();
+
+        }
 
         return 0;
 
     }
 
-    private void getUpdate() {
+    private int getUpdate() {
+
+        if (!lastResult.isPresent()) {
+
+            l.severe("Unable to download update: Run update search first!");
+            return 1;
+
+        }
+
+        l.info("Downloading update...");
+
+        return lastResult.get().downloadTo("cache/update-" + lastResult.get().getVersion(), l);
 
     }
 
