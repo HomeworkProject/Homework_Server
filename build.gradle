@@ -20,7 +20,8 @@ repositories {
 dependencies {
 	compile 'org.json:json:20160212'
 	compile 'org.reflections:reflections:0.9.10'
-	testCompile 'junit:junit:4.11'
+
+	compile 'junit:junit:4.11'
 }
 
 //noinspection GroovyAssignabilityCheck
@@ -52,18 +53,26 @@ test {
 		logger.lifecycle("Test: " + (String) descriptor + " produced standard out/err: " + event.message )
 	}
 
-
-
 }
 
 //noinspection GroovyAssignabilityCheck
 sourceSets {
 
+	main {
+
+		java {
+
+			srcDirs = ["src/main/java", "src/updater/java", "src/test/java"]
+
+		}
+
+	}
+
 	test {
 
 		java {
 
-			srcDirs = ["test"]
+//			srcDirs = ["test", "main"]
 
 		}
 
