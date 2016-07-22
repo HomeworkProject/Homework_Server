@@ -106,6 +106,10 @@ public class HTTPUtils {
 
         out.getChannel().transferFrom(channel, 0, Long.MAX_VALUE); //Results in a maximum size of 8 ExaBytes
 
+        channel.close();
+
+        out.close();
+
     }
 
 }
