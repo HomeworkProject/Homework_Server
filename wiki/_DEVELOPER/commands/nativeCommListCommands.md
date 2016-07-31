@@ -1,4 +1,4 @@
-# Command: nativeCommDelHW
+# Command: nativeCommListCommands
 ##### ID: de.mlessmann.commands.listCommands
 
 ## Request
