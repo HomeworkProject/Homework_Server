@@ -1,4 +1,8 @@
+[logo]:https://github.com/MarkL4YG/Homework_Server/blob/Latest/src/main/resources/experimental_logo.png
+
 # Homework_Server
+
+![alt text][logo]
 
 ## Description
 
