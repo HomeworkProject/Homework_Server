@@ -4,7 +4,7 @@
 ## Request
 ```  
 {  
-	"command": "addhw",  
+	"command": "delhw",  
 	"date": [yyyy<int>, MM<int>, dd<int>]  
 	"id": idOfHW<String>  
 }  
