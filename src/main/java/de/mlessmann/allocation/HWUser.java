@@ -61,6 +61,7 @@ public class HWUser {
             for (Object o : arr) {
 
                 HWPermission perm = new HWPermission((JSONArray) o);
+                permissions.put(perm.getName(), perm);
 
             }
 

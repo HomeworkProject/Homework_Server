@@ -29,6 +29,7 @@ public class HWPermission {
 
         name = values.getString(0);
 
+        valueSet = new JSONArray();
         for (int i = 1; i < values.length(); i++) {
 
             int v = values.getInt(i);
