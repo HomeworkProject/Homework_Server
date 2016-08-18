@@ -1,4 +1,4 @@
-[logo]:https://github.com/MarkL4YG/Homework_Server/blob/Latest/src/main/resources/experimental_logo.png
+[logo]:https://github.com/MarkL4YG/Homework_Server/blob/bleeding/src/main/resources/experimental_logo.png
 
 # Homework_Server
 
@@ -55,7 +55,7 @@ You can ask both of us if you need any information, but it may sometimes be quic
 ## Documentation
 
 Documentation can currently be found in the [GitHub-Wiki](https://github.com/MarkL4YG/Homework_Server/wiki)  
-*** Altough the [folder](https://github.com/MarkL4YG/Homework_Server/tree/Latest/wiki) in the repo may be more up to date. ***  
+*** Altough the [folder](https://github.com/MarkL4YG/Homework_Server/tree/bleeding/wiki) in the repo may be more up to date. ***  
   
 ### ToDos (regarding the readMe) ###
 
