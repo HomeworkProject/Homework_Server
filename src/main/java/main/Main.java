@@ -1,10 +1,13 @@
 package main;
 
-import java.io.IOException;
-import java.util.ArrayList;
-
 import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.util.apparguments.AppArgument;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.logging.Logger;
 
 /**
  * Created by Life4YourGames on 29.04.16.
@@ -15,17 +18,35 @@ public class Main {
 
     public static void main (String[] args) throws IOException {
 
-        ArrayList<AppArgument> aa = AppArgument.fromArray(args);
+        try {
 
-        HWServer hwServer = new HWServer();
+            ArrayList<AppArgument> aa = AppArgument.fromArray(args);
 
-        hwServer.preInitialize();
+            HWServer hwServer = new HWServer();
 
-        aa.forEach(hwServer::setArg);
+            hwServer.preInitialize();
 
-        hwServer.initialize();
+            aa.forEach(hwServer::setArg);
 
-        hwServer.start();
+            hwServer.initialize();
+
+            hwServer.start();
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+            try (PrintWriter w = new PrintWriter(new FileWriter("hwserver_crash.log"))) {
+                w.println(e.toString());
+                e.printStackTrace(w);
+                Logger.getGlobal().severe("An unhandled exception occurred! The process is forced to halt!");
+                Logger.getGlobal().severe("A crash log has been written to \"hwserver_crash.log\"");
+            } catch (IOException e1) {
+
+                Logger.getGlobal().severe("Unable to write crash log: " + e1.toString());
+                e1.printStackTrace();
+
+            }
+        }
 
     }
 
