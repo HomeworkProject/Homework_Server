@@ -6,9 +6,9 @@ import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Optional;
 
 /**
  * Created by Life4YourGames on 01.05.16.
@@ -47,11 +47,11 @@ public class HWTCPServer {
         log = hwServer.getLogger();
         master = hwServer;
 
-        plainPort = master.getConfig().getJSON().optInt("plain_tcp_port", 11900);
-        securePort = master.getConfig().getJSON().optInt("secure_tcp_port", plainPort + 1);
+        plainPort = master.getConfig().getNode("plain_tcp_port").optInt(11900);
+        securePort = master.getConfig().getNode("secure_tcp_port").optInt(plainPort + 1);
 
-        enablePlainTCP = master.getConfig().getJSON().optBoolean("plain_tcp_enable", true);
-        enableSecureTCP = master.getConfig().getJSON().optBoolean("secure_tcp_enable", false);
+        enablePlainTCP = master.getConfig().getNode("plain_tcp_enable").optBoolean(true);
+        enableSecureTCP = master.getConfig().getNode("secure_tcp_enable").optBoolean(false);
 
     }
 

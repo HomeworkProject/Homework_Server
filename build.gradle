@@ -1,5 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin: 'idea'
 
 //MainClass - run information
 mainClassName = 'main.Main'
@@ -9,14 +10,45 @@ task wrapper(type: Wrapper) {
 	gradleVersion = '2.13'
 }
 
+//noinspection GroovyAssignabilityCheck
+sourceSets {
+
+	main {
+
+		java {
+
+			srcDirs = ["src/main/java", "src/updater/java", "src/test/java"]
+
+		}
+
+	}
+
+	test {
+
+		java {
+
+//			srcDirs = ["test", "main"]
+
+		}
+
+	}
+
+}
+
 //Dependencies and repos
 repositories {
 	mavenCentral()
+
+	flatDir {
+		dirs 'libs'
+	}
+
 }
 
 dependencies {
 	compile 'org.json:json:20160212'
 	compile 'org.reflections:reflections:0.9.10'
+	compile name: 'configurate-0.0.0.1'
 
 	compile 'junit:junit:4.11'
 }
@@ -52,30 +84,6 @@ test {
 
 }
 
-//noinspection GroovyAssignabilityCheck
-sourceSets {
-
-	main {
-
-		java {
-
-			srcDirs = ["src/main/java", "src/updater/java", "src/test/java"]
-
-		}
-
-	}
-
-	test {
-
-		java {
-
-//			srcDirs = ["test", "main"]
-
-		}
-
-	}
-
-}
 
 task copyRuntimeLibs(type: Copy) {
 

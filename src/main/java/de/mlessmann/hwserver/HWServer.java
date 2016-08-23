@@ -1,9 +1,21 @@
 package de.mlessmann.hwserver;
 
+import de.mlessmann.allocation.HWGroup;
+import de.mlessmann.config.ConfigNode;
+import de.mlessmann.config.JSONConfigLoader;
+import de.mlessmann.config.api.ConfigLoader;
+import de.mlessmann.logging.HWConsoleHandler;
+import de.mlessmann.logging.HWLogFormatter;
+import de.mlessmann.network.HWTCPServer;
 import de.mlessmann.reflections.AuthLoader;
 import de.mlessmann.reflections.AuthProvider;
-import de.mlessmann.config.HWConfig;
+import de.mlessmann.reflections.CommHandProvider;
+import de.mlessmann.reflections.CommandLoader;
+import de.mlessmann.updates.IAppRelease;
+import de.mlessmann.updates.UpdateManager;
+import de.mlessmann.util.apparguments.AppArgument;
 
+import javax.net.ssl.SSLServerSocketFactory;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -13,19 +25,6 @@ import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import de.mlessmann.allocation.HWGroup;
-import de.mlessmann.logging.*;
-import de.mlessmann.network.HWTCPServer;
-import de.mlessmann.reflections.CommHandProvider;
-import de.mlessmann.reflections.CommandLoader;
-import de.mlessmann.updates.IAppRelease;
-import de.mlessmann.updates.UpdateManager;
-import de.mlessmann.util.apparguments.AppArgument;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import javax.net.ssl.SSLServerSocketFactory;
 
 /**
  * Created by Life4YourGames on 29.04.16.
@@ -85,7 +84,12 @@ public class HWServer {
      * Configuration object (using JSON)
      * @see #getConfig
      */
-    private HWConfig config;
+    private ConfigLoader confLoader;
+
+    /**
+     * Root node of configuration
+     */
+    private ConfigNode config;
 
     /**
      * HashMap to store groups
@@ -146,21 +150,21 @@ public class HWServer {
         LOG.info("------Entering preInitialization------");
 
         //PreInit config so the reference is correct
-        config = new HWConfig(this);
+        confLoader = new JSONConfigLoader();
 
-        JSONObject defaultConfig = new JSONObject();
+        config = confLoader.loadFromFile(confFile);
 
-        defaultConfig.put("type", "config");
+        if (confLoader.hasError()) {
 
-        defaultConfig.put("configVersion", HWConfig.confVersion);
+            confLoader.getError().printStackTrace();
+            LOG.severe("Unable to read JSON-Conf: Falling back to defaults...");
+            config = new ConfigNode();
+            LOG.severe("Attempting to save an empty root node configuration...");
+            confLoader.save(config);
+            //This save does not have to be successful
+            confLoader.resetError();
 
-        JSONArray groups = new JSONArray();
-
-        groups.put("default");
-
-        defaultConfig.put("groups", groups);
-
-        config.defaultConf = defaultConfig;
+        }
 
         return this;
     }
@@ -232,13 +236,18 @@ public class HWServer {
 
         }
 
+        //-----------------------------------------------------------------------------------
+        //--------------------------- Config Init -------------------------------------------
+        ConfigNode node;
 
-        if (!config.createIfNotFound(confFile).open(confFile).isInitialized()) {
-
-            LOG.severe("Unable to read config! This instance is not going to work!");
-            throw new IOException("Config not readable");
-
+        node = config.getNode("groups");
+        if (node.isVirtual()) {
+            ArrayList<String> groups = new ArrayList<String>();
+            groups.add("default");
+            node.setList(groups);
         }
+        //--------------------------- END Config Init ---------------------------------------
+        //-----------------------------------------------------------------------------------
 
         File groupDir = new File("groups");
 
@@ -261,9 +270,9 @@ public class HWServer {
         }
 
 
-        JSONArray arr = config.getJSON().getJSONArray("groups");
+        List<String> l = config.getNode("groups").getList();
 
-        arr.forEach(s -> loadGroup(s.toString()));
+        l.stream().filter(s -> !s.isEmpty()).forEach(this::loadGroup);
 
         LOG.info(hwGroups.size() + " groups registered");
 
@@ -372,6 +381,12 @@ public class HWServer {
         //hwGroups.forEach((k, v) -> v.flushToFiles());
         //HomeWorks are flushed on addition, this is currently not needed
         //However caching may come back-> This is a reminder
+
+        confLoader.save(config);
+        if (confLoader.hasError()) {
+            confLoader.getError().printStackTrace();
+            LOG.severe("Unable to save configuration!");
+        }
 
         return this;
 
@@ -489,7 +504,7 @@ public class HWServer {
      * Returns the configuration reference of the server
      * May be null if called before initialisation
      */
-    public HWConfig getConfig() {
+    public ConfigNode getConfig() {
         return config;
     }
 
@@ -516,10 +531,10 @@ public class HWServer {
 
         SSLServerSocketFactory ssf = null;
 
-        if (getConfig().getJSON().has("secure_tcp_key") && getConfig().getJSON().has("secure_tcp_password")) {
+        if (!getConfig().getNode("secure_tcp_key").isVirtual() && !getConfig().getNode("secure_tcp_password").isVirtual()) {
 
-            System.setProperty("javax.net.ssl.keyStore", getConfig().getJSON().getString("secure_tcp_key"));
-            System.setProperty("javax.net.ssl.keyStorePassword", getConfig().getJSON().getString("secure_tcp_password"));
+            System.setProperty("javax.net.ssl.keyStore", getConfig().getNode("secure_tcp_key").optString(null));
+            System.setProperty("javax.net.ssl.keyStorePassword", getConfig().getNode("secure_tcp_password").optString(null));
 
         }
 
