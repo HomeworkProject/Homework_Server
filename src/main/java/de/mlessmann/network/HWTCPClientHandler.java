@@ -207,7 +207,7 @@ public class HWTCPClientHandler {
 
         jObj.put("status", Status.OK);
         jObj.put("payload_type", "null");
-        jObj.put("commID", -1);
+        jObj.put("commID", 1);
 
         sendJSON(jObj);
         //END GREETING
