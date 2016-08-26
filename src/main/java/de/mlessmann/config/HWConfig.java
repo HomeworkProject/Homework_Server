@@ -2,15 +2,18 @@ package de.mlessmann.config;
 
 import de.mlessmann.fileutil.FileUtil;
 import de.mlessmann.hwserver.HWServer;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.logging.Logger;
-import org.json.*;
 
 /**
  * Created by Life4YourGames on 29.04.16.
  * @author Life4YourGames
  */
+@Deprecated
 public class HWConfig {
 
     public static final String confVersion = "0.0.0.1";
@@ -51,10 +54,8 @@ public class HWConfig {
     public HWConfig createIfNotFound(File file) {
 
         if (myFileUtil == null || file != null) {
-
             myFileUtil = new FileUtil(file);
             myFileUtil.setLogger(LOG);
-
         }
 
         if (!myFileUtil.getFile().isFile()) {
