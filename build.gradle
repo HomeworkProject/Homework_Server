@@ -112,7 +112,7 @@ task cleanupCRunDir(type: Delete) {
 
 run{
 
-	workingDirFile = new File('run/_normal');
+	File workingDirFile = new File('run/_normal');
 	if (!workingDirFile.isDirectory())
 		workingDirFile.mkdir();
 
@@ -145,7 +145,7 @@ task debug(type: JavaExec) {
 
 task cleanRun(dependsOn: cleanupCRunDir, type: JavaExec) {
 
-	workingDir = new File('run/_cleanRun');
+	File workingDirFile = new File('run/_cleanRun');
 	if (!workingDirFile.isDirectory())
 		workingDirFile.mkdir();
 
