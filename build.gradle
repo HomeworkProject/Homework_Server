@@ -112,7 +112,14 @@ task cleanupCRunDir(type: Delete) {
 
 run{
 
+	workingDirFile = new File('run/_normal');
+	if (!workingDirFile.isDirectory())
+		workingDirFile.mkdir();
+
+
 	workingDir = 'run/_normal'
+
+	args = ['--debug --log-no-trace']
 
 	standardInput = System.in
 
@@ -137,6 +144,11 @@ task debug(type: JavaExec) {
 }
 
 task cleanRun(dependsOn: cleanupCRunDir, type: JavaExec) {
+
+	workingDir = new File('run/_cleanRun');
+	if (!workingDirFile.isDirectory())
+		workingDirFile.mkdir();
+
 
 	classpath = sourceSets.main.runtimeClasspath
 
