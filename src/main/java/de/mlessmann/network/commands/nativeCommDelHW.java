@@ -1,6 +1,7 @@
 package de.mlessmann.network.commands;
 
 import de.mlessmann.allocation.HWUser;
+import de.mlessmann.network.Error;
 import de.mlessmann.network.HWClientCommandContext;
 import de.mlessmann.network.Status;
 import de.mlessmann.perms.Permission;
@@ -8,7 +9,6 @@ import de.mlessmann.reflections.HWCommandHandler;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import de.mlessmann.network.Error;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -20,7 +20,7 @@ import java.time.LocalDate;
 @HWCommandHandler
 public class nativeCommDelHW  extends nativeCommandParent {
 
-    public static final String IDENTIFIER = "de.mlessmann.commands.delHW";
+    public static final String IDENTIFIER = "de.mlessmann.commands.delhw";
     public static final String COMMAND = "delhw";
 
     public nativeCommDelHW() {

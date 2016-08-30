@@ -2,12 +2,12 @@ package de.mlessmann.network.commands;
 
 import de.mlessmann.allocation.HWUser;
 import de.mlessmann.homework.HomeWork;
+import de.mlessmann.network.Error;
 import de.mlessmann.network.HWClientCommandContext;
 import de.mlessmann.network.Status;
 import de.mlessmann.perms.Permission;
 import de.mlessmann.reflections.HWCommandHandler;
 import org.json.JSONObject;
-import de.mlessmann.network.Error;
 
 import java.util.Optional;
 
@@ -18,7 +18,7 @@ import java.util.Optional;
 @HWCommandHandler
 public class nativeCommAddHW extends nativeCommandParent {
 
-    public static final String IDENTIFIER = "de.mlessmann.commands.addHW";
+    public static final String IDENTIFIER = "de.mlessmann.commands.addhw";
     public static final String COMMAND = "addhw";
 
     public nativeCommAddHW() {
