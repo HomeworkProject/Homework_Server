@@ -37,9 +37,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
 
         if (!require(request, "date", context.getHandler()) || !require(request, "id", context.getHandler())
                 || !requireUser(context.getHandler())) {
-
             return false;
-
         }
 
         //IsPresent checked in #requireUser(HWTCPClientReference) above
