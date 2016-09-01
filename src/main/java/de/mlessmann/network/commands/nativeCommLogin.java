@@ -2,12 +2,14 @@ package de.mlessmann.network.commands;
 
 import de.mlessmann.allocation.HWGroup;
 import de.mlessmann.allocation.HWUser;
+import de.mlessmann.hwserver.services.sessionsvc.ClientSession;
+import de.mlessmann.hwserver.services.sessionsvc.SessionMgrSvc;
+import de.mlessmann.network.Error;
 import de.mlessmann.network.HWClientCommandContext;
 import de.mlessmann.network.Status;
 import de.mlessmann.reflections.HWCommandHandler;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import de.mlessmann.network.Error;
 
 import java.util.Optional;
 
@@ -29,6 +31,69 @@ public class nativeCommLogin extends nativeCommandParent {
     }
 
     public boolean onMessage(HWClientCommandContext context) {
+
+        JSONObject request = context.getRequest();
+
+        if (request.has("session")) {
+            return byToken(context);
+        } else {
+            return byAuth(context);
+        }
+
+    }
+
+    public boolean byToken(HWClientCommandContext context) {
+
+        boolean valid = false;
+        ClientSession cs = null;
+
+        JSONObject request = context.getRequest();
+        JSONObject session = request.getJSONObject("session");
+
+        String token = session.getString("token");
+
+        SessionMgrSvc svc = context.getHandler().getSessionMgr();
+
+        Optional<ClientSession> s = svc.getSession(token);
+
+        if (s.isPresent()) {
+            cs = s.get();
+            if (cs.getToken().isValid()) {
+                Optional<HWUser> u = cs.getUser();
+                Optional<HWGroup> g = cs.getGroup();
+                if (u.isPresent() && g.isPresent()) {
+                    context.getHandler().setUser(u.get());
+                    valid = true;
+                }
+            }
+        }
+
+        if (valid) {
+            JSONObject response = Status.state_OK();
+
+            JSONObject rS = cs.getToken().toJSON();
+            rS.put("group", cs.getGroup().get().getName());
+            rS.put("user", cs.getUser().get().getUserName());
+
+            response.put("session", rS);
+            response.put("commID", context.getHandler().getCurrentCommID());
+
+            sendJSON(context.getHandler(), response);
+        } else {
+            JSONObject response = Status.state_ERROR(Status.EXPIRED,
+                    Status.state_genError(
+                            Status.SEXPIRED,
+                            "Token invalid. May be expired.",
+                            "Sorry, the supplied token is invalid"
+                    ));
+            response.put("commID", context.getHandler().getCurrentCommID());
+
+            sendJSON(context.getHandler(), response);
+        }
+        return valid;
+    }
+
+    public boolean byAuth(HWClientCommandContext context) {
 
         if (!require(context.getRequest(), "parameters", context.getHandler())) {
 
@@ -125,10 +190,24 @@ public class nativeCommLogin extends nativeCommandParent {
 
         }
 
+        SessionMgrSvc svc = context.getHandler().getSessionMgr();
+        ClientSession s = new ClientSession(svc);
+        s.setUser(hwUser.get());
+        s.setGroup(hwGroup.get());
+        s.genSToken();
+
         context.getHandler().setUser(hwUser.get());
 
         JSONObject response = Status.state_OK();
         response.put("commID", context.getHandler().getCurrentCommID());
+
+        if (s.getToken().isValid()) {
+            JSONObject sJ = s.getToken().toJSON();
+            sJ.put("user", hwUser.get().getUserName());
+            sJ.put("group", hwGroup.get().getName());
+            response.put("session", sJ);
+            svc.addSession(s);
+        }
 
         sendJSON(context.getHandler(), response);
 

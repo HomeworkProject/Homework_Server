@@ -9,7 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.*;
+import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -386,6 +386,8 @@ public class HWGroup {
         return tree.get().deleteFile("hw_" + id + ".json") ? 0 : 1;
 
     }
+
+    public String getName() { return gName; }
 
     public Logger getLogger() { return LOG; }
 

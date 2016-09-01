@@ -4,6 +4,7 @@ import de.mlessmann.allocation.HWGroup;
 import de.mlessmann.config.ConfigNode;
 import de.mlessmann.config.JSONConfigLoader;
 import de.mlessmann.config.api.ConfigLoader;
+import de.mlessmann.hwserver.services.sessionsvc.SessionMgrSvc;
 import de.mlessmann.logging.HWConsoleHandler;
 import de.mlessmann.logging.HWLogFormatter;
 import de.mlessmann.network.HWTCPServer;
@@ -106,6 +107,11 @@ public class HWServer {
      * Provider for Authentication Methods
      */
     private AuthProvider myAuthProvider;
+
+    /**
+     * Management of Sessions
+     */
+    private SessionMgrSvc sessionMgrSvc;
 
     /**
      * Create a new Server instance
@@ -319,6 +325,9 @@ public class HWServer {
 
         }
 
+        LOG.info("Initializing SessionMgrSvc");
+        sessionMgrSvc = new SessionMgrSvc(this);
+
         return this;
 
     }
@@ -511,6 +520,8 @@ public class HWServer {
     public CommHandProvider getCommandHandlerProvider() { return myCommHandProvider; }
 
     public AuthProvider getAuthProvider() { return myAuthProvider; }
+
+    public SessionMgrSvc getSessionMgr() { return sessionMgrSvc; }
 
     public synchronized Optional<HWGroup> getGroup(String group) {
 

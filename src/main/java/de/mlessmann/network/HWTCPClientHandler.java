@@ -1,6 +1,7 @@
 package de.mlessmann.network;
 
 import de.mlessmann.allocation.HWUser;
+import de.mlessmann.hwserver.services.sessionsvc.SessionMgrSvc;
 import de.mlessmann.network.commands.ICommandHandler;
 import de.mlessmann.network.commands._nativeCommTCPCHDummy;
 import de.mlessmann.util.L4YGRandom;
@@ -65,6 +66,10 @@ public class HWTCPClientHandler {
         return true;
 
     }
+
+    public SessionMgrSvc getSessionMgr() { return master.getMaster().getSessionMgr(); }
+
+    public Socket getRawSocket() { return mySock; }
 
     public synchronized int getCurrentCommID() { return currentCommID; }
 
@@ -342,27 +347,6 @@ public class HWTCPClientHandler {
 
             }
 
-            /*
-            --- OLD HANDLING ---
-            if (command.equals("setgroup")) {
-                performSetGroup(json);
-                return;
-            }
-            if (command.equals("addhw")) {
-                performAddHW(json);
-                return;
-            }
-            if (command.equals("gethw")) {
-                performGetHW(json);
-                return;
-            }
-            if (command.equals("delhw")) {
-                performDelHW(json);
-                return;
-            }
-
-            */
-
         } catch (JSONException ex) {
 
             JSONObject response = Status.state_INTERNALEXCEPTION(ex);
@@ -398,24 +382,6 @@ public class HWTCPClientHandler {
             master.sendLog(this, Level.WARNING, "Unable to close connection: " + ex.toString());
 
         }
-    }
-
-    //----------BEGIN COMMAND IMPLEMENTATION-------------
-
-    private void performSetGroup(JSONObject request) {
-
-    }
-
-    private void performAddHW(JSONObject request) {
-
-    }
-
-    private void performGetHW(JSONObject request) {
-
-    }
-
-    private void performDelHW(JSONObject request) {
-
     }
 
 }

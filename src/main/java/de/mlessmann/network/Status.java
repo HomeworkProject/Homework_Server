@@ -75,6 +75,10 @@ public class Status {
     public static final int UNAUTHORIZED = 401;
     public static final String SUNAUTHORIZED = "unauthorized";
 
+    //4011
+    public static final int EXPIRED = 4011;
+    public static final String SEXPIRED = "expired";
+
     //402
     public static final int PAYMENTREQUIRED = 402;
     public static final String SPAYMENTREQUIRED = "payment_required";

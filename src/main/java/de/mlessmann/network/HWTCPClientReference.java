@@ -2,8 +2,10 @@ package de.mlessmann.network;
 
 import de.mlessmann.allocation.HWGroup;
 import de.mlessmann.allocation.HWUser;
+import de.mlessmann.hwserver.services.sessionsvc.SessionMgrSvc;
 import org.json.JSONObject;
 
+import java.net.Socket;
 import java.util.Optional;
 
 /**
@@ -46,5 +48,13 @@ public class HWTCPClientReference {
     public Optional<HWUser> getUser() { return myHandler.getUser(); }
 
     public void setUser(HWUser u) { myHandler.setUser(u); }
+
+    public SessionMgrSvc getSessionMgr() {
+        return myHandler.getSessionMgr();
+    }
+
+    public Socket getRawSocket() {
+        return myHandler.getRawSocket();
+    }
 
 }
