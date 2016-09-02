@@ -371,7 +371,6 @@ public class HWServer {
                 String command = reader.readLine();
 
                 switch (command) {
-
                     case "stop": ;
                     case "quit": ;
                     case "exit": break loop;

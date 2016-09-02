@@ -14,8 +14,8 @@ OR
 ```  
 {
 	"command": "gethw",  
-	"fromdate": [yyyy<int>, MM<int>, dd<int>],  
-	"todate": [yyy<int>, MM<int>, dd<int>],  
+	"dateFrom": [yyyy<int>, MM<int>, dd<int>],  
+	"dateTo": [yyy<int>, MM<int>, dd<int>],  
 	(, "cap": "short"/"long")  
 	(, "subjects": [<String(s)>])  
 }

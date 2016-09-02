@@ -52,18 +52,18 @@ public class nativeCommGetHW extends nativeCommandParent {
 
         if (!context.getRequest().has("date")) {
 
-            if (!require(context.getRequest(), "fromdate", context.getHandler())) {
+            if (!require(context.getRequest(), "dateFrom", context.getHandler())) {
                 return false;
             }
-            if (!require(context.getRequest(), "todate", context.getHandler())) {
+            if (!require(context.getRequest(), "dateTo", context.getHandler())) {
                 return false;
             }
 
             try {
 
-                JSONArray fromDate = context.getRequest().getJSONArray("fromdate");
+                JSONArray fromDate = context.getRequest().getJSONArray("dateFrom");
 
-                JSONArray toDate = context.getRequest().getJSONArray("todate");
+                JSONArray toDate = context.getRequest().getJSONArray("dateTo");
 
                 int fyyyy = fromDate.getInt(0);
                 int fMM = fromDate.getInt(1);
