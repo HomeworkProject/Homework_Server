@@ -1,11 +1,10 @@
 package de.mlessmann.network.commands;
 
+import de.mlessmann.network.Error;
 import de.mlessmann.network.HWClientCommandContext;
 import de.mlessmann.network.HWTCPClientReference;
 import de.mlessmann.network.Status;
-import de.mlessmann.util.Common;
 import org.json.JSONObject;
-import de.mlessmann.network.Error;
 
 import java.util.Optional;
 
@@ -67,7 +66,7 @@ public abstract class nativeCommandParent implements ICommandHandler {
         e.put("friendly_message", "Request was incomplete, contact your client developer");
         response.put("payload", e);
 
-        response.put("commID", Common.negateInt(r.getCurrentCommID()));
+        response.put("commID", r.getCurrentCommID());
 
         r.sendJSON(response);
 
