@@ -26,9 +26,8 @@ OR
   
   
 ## Response
-If the homework was deleted successfully the response will be Status-200  
-And includes an Array of HWObjects.  
-(Note: The objects will also be valid HWObjects but only contain ```id```, ```date```,```subject``` and ```long/short``` as keys)  
+Includes an Array of HWObjects.  
+(Note: If a cap was provided, the objects will also be valid HWObjects but only contain ```id```, ```date```,```subject``` and ```long/short``` as keys)  
   
   
   
