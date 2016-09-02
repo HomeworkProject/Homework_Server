@@ -123,7 +123,7 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                         hws.stream().forEach(hw -> arr.put(
                                 new JSONObject().put("long", hw.getLong())
-                                    .put("id", hw.getJSON().get("id"))
+                                    .put("id", hw.getJSON().getString("id"))
                                     .put("date", hw.getJSON().getJSONArray("date"))
                                     .put("subject", hw.getJSON().getString("subject"))
                         ));

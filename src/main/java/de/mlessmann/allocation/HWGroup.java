@@ -328,7 +328,7 @@ public class HWGroup {
 
                 String fileName = "hw_" + id.get() + ".json";
 
-                hw.put("id", id);
+                hw.put("id", id.get());
 
             } else {
 
