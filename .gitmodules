@@ -1,0 +1,9 @@
+[submodule "configurate"]
+	path = submodules/onfigurate
+	url = https://github.com/MarkL4YG/configurate
+[submodule "submodules/javacommon"]
+	path = submodules/javacommon
+	url = https://github.com/MarkL4YG/javacommon
+[submodule "submodules/appupdater"]
+	path = submodules/appupdater
+	url = https://github.com/MarkL4YG/appupdater

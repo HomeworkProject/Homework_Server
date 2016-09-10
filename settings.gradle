@@ -1,10 +1,10 @@
 rootProject.name = 'Homework_Server'
 
 include 'javacommon'
-project(':javacommon').projectDir = new File('../javacommon')
+project(':javacommon').projectDir = new File('submodules/javacommon')
 
 include 'configurate'
-project(':configurate').projectDir = new File('../configurate')
+project(':configurate').projectDir = new File('submodules/configurate')
 
 include 'appupdater'
-project(':appupdater').projectDir = new File('../appupdater')
+project(':appupdater').projectDir = new File('submodules/appupdater')
