@@ -1,7 +1,7 @@
 package main;
 
+import de.mlessmann.common.apparguments.AppArgument;
 import de.mlessmann.hwserver.HWServer;
-import de.mlessmann.util.apparguments.AppArgument;
 
 import java.io.FileWriter;
 import java.io.IOException;

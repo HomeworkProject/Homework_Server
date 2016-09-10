@@ -1,10 +1,13 @@
 package de.mlessmann.hwserver;
 
 import de.mlessmann.allocation.HWGroup;
+import de.mlessmann.common.apparguments.AppArgument;
 import de.mlessmann.config.ConfigNode;
 import de.mlessmann.config.JSONConfigLoader;
 import de.mlessmann.config.api.ConfigLoader;
 import de.mlessmann.hwserver.services.sessionsvc.SessionMgrSvc;
+import de.mlessmann.hwserver.services.updates.IUpdateSvcReceiver;
+import de.mlessmann.hwserver.services.updates.UpdateSvc;
 import de.mlessmann.logging.HWConsoleHandler;
 import de.mlessmann.logging.HWLogFormatter;
 import de.mlessmann.network.HWTCPServer;
@@ -12,15 +15,10 @@ import de.mlessmann.reflections.AuthLoader;
 import de.mlessmann.reflections.AuthProvider;
 import de.mlessmann.reflections.CommHandProvider;
 import de.mlessmann.reflections.CommandLoader;
-import de.mlessmann.updates.IAppRelease;
-import de.mlessmann.updates.UpdateManager;
-import de.mlessmann.util.apparguments.AppArgument;
 
 import javax.net.ssl.SSLServerSocketFactory;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.*;
 import java.util.logging.FileHandler;
@@ -31,17 +29,21 @@ import java.util.logging.Logger;
  * Created by Life4YourGames on 29.04.16.
  * @author Life4YourGames
  */
-public class HWServer {
+public class HWServer implements IUpdateSvcReceiver {
 
-    public static final String VERSION = "0.0.0.2";
+    public static String VERSION = "0.0.0.3";
 
     /**
      * Updater - well everyone knows what this is
      */
-    private UpdateManager updater;
-    private int updateMode = 1;
+    private UpdateSvc updateSvc;
     //Collect start arguments to pass them through to the updater
     private ArrayList<AppArgument> startArgs = new ArrayList<AppArgument>();
+
+    /**
+     * CommandLine Handler
+     */
+    CommandLine commandLine;
 
     /**
      * TCPServerWorker used for TCPCommunication
@@ -142,7 +144,7 @@ public class HWServer {
 
         logFileHandler.setLevel(Level.FINEST);
 
-        LOG.setLevel(Level.FINEST);
+        //LOG.setLevel(Level.FINEST);
 
         LOG.setUseParentHandlers(false);
 
@@ -288,7 +290,13 @@ public class HWServer {
 
         LOG.info("------Entering post-initialization------");
 
-        updater = new UpdateManager();
+        LOG.fine("Initializing and starting UpdateSvc in full mode");
+        updateSvc = new UpdateSvc(this);
+        updateSvc.registerListener(this);
+
+        if (!updateSvc.full().start())
+            LOG.severe("Startup update check failed: UpdateSvc#Start returned false!");
+        /*updater = new Updater(this, "http://dev.mlessmann.de/hwserver/updateConfig.json");
 
         try {
 
@@ -324,9 +332,12 @@ public class HWServer {
             e.printStackTrace();
 
         }
-
+        */
         LOG.info("Initializing SessionMgrSvc");
         sessionMgrSvc = new SessionMgrSvc(this);
+
+        LOG.info("Initializing commandLine");
+        commandLine = new CommandLine(this);
 
         return this;
 
@@ -350,6 +361,8 @@ public class HWServer {
      */
 
     public HWServer start() {
+        if (hwtcpServer != null && !hwtcpServer.isStopped())
+            return this;
 
         hwtcpServer= new HWTCPServer(this);
 
@@ -362,28 +375,16 @@ public class HWServer {
 
         hwtcpServer.start();
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        commandLine.run();
 
-        loop: while (true) {
+        return this;
 
-            try {
+    }
 
-                String command = reader.readLine();
+    public HWServer stop() {
 
-                switch (command) {
-                    case "stop": ;
-                    case "quit": ;
-                    case "exit": break loop;
-                    default: System.out.println("Unknown command: " + command); break;
-                }
-
-            } catch (IOException ex) {
-
-                LOG.throwing(this.getClass().toString(), "start", ex);
-
-            }
-        }
-
+        if (hwtcpServer.isStopped())
+            return this;
         hwtcpServer.stop();
 
         //hwGroups.forEach((k, v) -> v.flushToFiles());
@@ -397,7 +398,6 @@ public class HWServer {
         }
 
         return this;
-
     }
 
     /**
@@ -463,6 +463,7 @@ public class HWServer {
 
             switch (key) {
                 case "--config": confFile = value; break;
+                case "--mimic-version": VERSION = value; break;
                 default: LOG.warning("Unsupported argument: " + key); break;
             }
 
@@ -552,6 +553,42 @@ public class HWServer {
 
         return Optional.ofNullable(ssf);
 
+    }
+
+    // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    // --- --- --- --- --- --- --- --- --- --- ---  Interfaces --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    public void onUpdate_SelfCheckDone(boolean success) {
+        LOG.log(success ? Level.FINE : Level.WARNING, "Update self check done: " + (success ? "Success!" : "Failed!"));
+    }
+
+    public void onUpdate_CheckDone(boolean success) {
+        LOG.log(success ? Level.FINE : Level.WARNING, "Update check done: " + (success ? "Success!" : "Failed!"));
+    }
+
+    public void onUpdate_SelfUpdateDownloaded(int fails, int success) {
+        LOG.log(fails<1 ? Level.FINE : Level.WARNING, "SelfUpdateDownload result: Failed " + fails + " - " + success + " Success");
+    }
+
+    public void onUpdate_UpdateDownloaded(int fails, int success) {
+        LOG.log(fails<1 ? Level.FINE : Level.WARNING, "UpdateDownload result: Failed " + fails + " - " + success + " Success");
+    }
+
+    public void onUpdate_Done() {
+        synchronized (LOG) {
+            LOG.info("------------------------------------------");
+            LOG.info("Update check done");
+            LOG.info("Updater: " + (updateSvc.hasSelfUpdate() ?
+                    "Update available:" + updateSvc.getSelfUpdate().version() :
+                    "Up to date"
+            ));
+            LOG.info("Server: " + (updateSvc.hasUpdate() ?
+                    "Update available:" + updateSvc.getUpdate().version() :
+                    "Up to date"
+            ));
+            LOG.info("------------------------------------------");
+        }
     }
 
 }

@@ -1,9 +1,8 @@
 package de.mlessmann.util;
 
-import org.junit.Test;
+import de.mlessmann.common.Common;
 import org.junit.Assert;
-
-import java.util.logging.Logger;
+import org.junit.Test;
 
 /**
  * Created by Life4YourGames on 05.07.16.

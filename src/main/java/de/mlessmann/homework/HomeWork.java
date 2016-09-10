@@ -1,7 +1,9 @@
 package de.mlessmann.homework;
 
 import de.mlessmann.hwserver.HWServer;
-import org.json.*;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.*;
 
@@ -163,6 +165,7 @@ public class HomeWork {
                 } else {
 
                     master.getLogger().warning("Unable to read HomeWork \"" + filePath + "\": Invalid HomeWork");
+                    isLoaded = true;
 
                 }
 
@@ -212,9 +215,9 @@ public class HomeWork {
 
         try {
 
-            validity = any.getString("type").equalsIgnoreCase("HomeWork")
-                    && (any.getJSONObject("short") != null)
-                    && (any.getJSONObject("long") != null);
+            validity = any.optString("type", "null").equalsIgnoreCase("HomeWork")
+                    && (any.optString("title", null) != null)
+                    && (any.optString("desc", null) != null);
 
             if (validity) {
 
@@ -294,6 +297,10 @@ public class HomeWork {
 
         return res;
 
+    }
+
+    public boolean isValid() {
+        return HomeWork.checkValidity(this.getJSON());
     }
 
 }

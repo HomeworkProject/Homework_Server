@@ -104,33 +104,14 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                 JSONArray arr = new JSONArray();
 
-                if (!context.getRequest().has("cap")) {
+                hws.forEach(hw ->
+                        {
+                            if (hw.read() && hw.isValid()) {
+                                arr.put(hw.getJSON());
+                            }
+                        }
+                );
 
-                    hws.stream().forEach(hw -> arr.put(hw.getJSON()));
-
-                } else {
-
-                    if (context.getRequest().getString("cap").equals("short")) {
-
-                        hws.stream().forEach(hw -> arr.put(
-                                new JSONObject().put("short", hw.getShort())
-                                    .put("id", hw.getJSON().getString("id"))
-                                    .put("date", hw.getJSON().getJSONArray("date"))
-                                    .put("subject", hw.getJSON().getString("subject"))
-                        ));
-
-                    } else if (context.getRequest().getString("cap").equals("long")) {
-
-                        hws.stream().forEach(hw -> arr.put(
-                                new JSONObject().put("long", hw.getLong())
-                                    .put("id", hw.getJSON().get("id"))
-                                    .put("date", hw.getJSON().getJSONArray("date"))
-                                    .put("subject", hw.getJSON().getString("subject"))
-                        ));
-
-                    }
-
-                }
                 response.put("payload_type", "JSONArray");
                 response.put("array_type", "HWObject");
                 response.put("payload", arr);
@@ -214,7 +195,7 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                 JSONArray arr = new JSONArray();
 
-                hws.stream().forEach(hw -> arr.put(hw.getJSON()));
+                hws.forEach(hw -> arr.put(hw.getJSON()));
 
                 response.put("payload_type", "JSONArray");
                 response.put("array_type", "HWObject");

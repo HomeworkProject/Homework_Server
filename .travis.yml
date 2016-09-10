@@ -1,0 +1,12 @@
+language: java
+jdk:
+- oraclejdk7
+before_install:
+- chmod +x gradlew
+- git clone --depth=50 --branch=bleeding https://github.com/MarkL4YG/javacommon.git ../javacommon
+- git clone --depth=50 --branch=bleeding https://github.com/MarkL4YG/configurate.git ../configurate
+- git clone --depth=50 --branch=bleeding https://github.com/MarkL4YG/appupdater.git ../appupdater
+notifications:
+  email:
+    on_success: never
+    on_failure: never

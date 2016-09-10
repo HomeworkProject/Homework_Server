@@ -1,7 +1,7 @@
 package de.mlessmann.homework;
 
+import de.mlessmann.common.L4YGRandom;
 import de.mlessmann.hwserver.HWServer;
-import de.mlessmann.util.L4YGRandom;
 
 import java.io.File;
 import java.io.FileWriter;

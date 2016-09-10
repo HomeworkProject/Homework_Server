@@ -1,10 +1,10 @@
 package de.mlessmann.network;
 
 import de.mlessmann.allocation.HWUser;
+import de.mlessmann.common.L4YGRandom;
 import de.mlessmann.hwserver.services.sessionsvc.SessionMgrSvc;
 import de.mlessmann.network.commands.ICommandHandler;
 import de.mlessmann.network.commands._nativeCommTCPCHDummy;
-import de.mlessmann.util.L4YGRandom;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.logging.Level;
 
-import static de.mlessmann.util.Common.negateInt;
+import static de.mlessmann.common.Common.negateInt;
 
 /**
  * Created by MarkL4YG on 08.05.2016.
@@ -333,7 +333,9 @@ public class HWTCPClientHandler {
                 for (ICommandHandler h : handlers) {
 
                     currentCommHandler = h;
-                    h.onMessage(c);
+                    if (!h.onMessage(c)) {
+                        master.sendLog(this, Level.FINE, "Handler: " + h.getIdentifier() + " reported processing failure");
+                    }
 
                 }
 

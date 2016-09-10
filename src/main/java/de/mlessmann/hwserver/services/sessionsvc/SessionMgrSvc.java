@@ -1,7 +1,7 @@
 package de.mlessmann.hwserver.services.sessionsvc;
 
+import de.mlessmann.common.L4YGRandom;
 import de.mlessmann.hwserver.HWServer;
-import de.mlessmann.util.L4YGRandom;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;

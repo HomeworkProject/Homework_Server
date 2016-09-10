@@ -1,6 +1,7 @@
 package de.mlessmann.allocation;
 
 import de.mlessmann.authentication.IAuthMethod;
+import de.mlessmann.config.ConfigNode;
 import de.mlessmann.homework.HomeWork;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -89,6 +90,10 @@ public class HWUser {
 
     }
 
+    public HWUser(ConfigNode node, HWGroup group) {
+        this.myGroup = group;
+    }
+
     public String getUserName() {
 
         return userName;
@@ -147,6 +152,11 @@ public class HWUser {
 
         return myGroup.delHW(date, id, this);
 
+    }
+
+    public boolean isValid() {
+        //TODO: NEW USER CLASS
+        return false;
     }
 
     public IAuthMethod getAuth() { return myAuthMethod; }

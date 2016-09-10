@@ -48,7 +48,10 @@ repositories {
 dependencies {
 	compile 'org.json:json:20160212'
 	compile 'org.reflections:reflections:0.9.10'
-	compile name: 'configurate-0.0.0.1'
+
+	compile project(':javacommon')
+	compile project(':configurate')
+	compile project(':appupdater')
 
 	compile 'junit:junit:4.11'
 }

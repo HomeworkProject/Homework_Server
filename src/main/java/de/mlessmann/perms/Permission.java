@@ -1,5 +1,10 @@
 package de.mlessmann.perms;
 
+import de.mlessmann.allocation.HWPermission;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Life4YourGames on 17.06.16.
  */
@@ -43,5 +48,22 @@ public class Permission {
      *
      */
     public static String PROCESS_MANAGE = "proc_manage";
+
+    public static List<HWPermission> adminDefaults = new ArrayList<HWPermission>();
+    public static List<HWPermission> defaults = new ArrayList<HWPermission>();
+
+    public static void nativeInitDefaults() {
+        defaults.add(new HWPermission(HW_ADD_NEW, 1, 0 , 1));
+        defaults.add(new HWPermission(HW_ADD_EDIT, 1, 0, 1));
+        defaults.add(new HWPermission(HW_DEL, 1, 0, 1));
+
+        adminDefaults.add(new HWPermission(HW_ADD_NEW, 100, 90 , 101));
+        adminDefaults.add(new HWPermission(HW_ADD_EDIT, 100, 90, 101));
+        adminDefaults.add(new HWPermission(HW_DEL, 100, 90, 101));
+        adminDefaults.add(new HWPermission(USR_MANAGE, 100, 90, 101));
+        adminDefaults.add(new HWPermission(GROUP_MANAGE, 100, 90, 101));
+        adminDefaults.add(new HWPermission(INSTANCE_MANAGE, 100, 90, 101));
+        adminDefaults.add(new HWPermission(PROCESS_MANAGE, 100, 90, 101));
+    }
 
 }
