@@ -5,6 +5,9 @@ apply plugin: 'idea'
 //MainClass - run information
 mainClassName = 'main.Main'
 
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
 //Wrapper
 task wrapper(type: Wrapper) {
 	gradleVersion = '2.13'
