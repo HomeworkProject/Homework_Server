@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINER;
+
 /**
  * Created by Life4YourGames on 10.09.16.
  */
@@ -114,7 +117,7 @@ public class UpdateSvc implements Runnable, ILogReceiver {
             files.forEach((k, v) -> {
                 try {
                     File file = new File("cache/updates/updater/" + k);
-                    recvLog(this, Level.FINE, "Downloading \"" + k + "\" from \"" + v + "\"");
+                    recvLog(this, FINE, "Downloading \"" + k + "\" from \"" + v + "\"");
                     HTTP.GETFILE(v, file);
                     count[1]++;
                 } catch (IOException e) {
@@ -138,21 +141,37 @@ public class UpdateSvc implements Runnable, ILogReceiver {
                 List<IIndexType> types = updater.getSucceededTypes();
 
                 String v = HWServer.VERSION;
+                recvLog(this, FINER, "Initial version: " + v);
 
+                if (types.isEmpty()) {
+                    recvLog(this, Level.WARNING, "No indexType reported success!");
+                }
                 for (IIndexType t : types) {
-                    if (branch != null && !t.supportsBranching())
+                    if (branch != null && !t.supportsBranching()) {
+                        recvLog(this, Level.FINEST, "skipping type for not supporting branches");
                         continue;
-                    for (IRelease r : t.releases()) {
-                        if (r.isDraft() && !drafts)
-                            continue;
-                        if (r.isPreRelease() && !preReleases)
-                            continue;
-                        if (branch != null && !r.branch().equals(branch))
-                            continue;
+                    }
+                    if (t.releases().isEmpty())
+                        recvLog(this, FINER, t.getIdentifier() + " has no release");
 
+                    for (IRelease r : t.releases()) {
+                        if (r.isDraft() && !drafts) {
+                            recvLog(this, Level.WARNING, "skipping draft");
+                            continue;
+                        }
+                        if (r.isPreRelease() && !preReleases) {
+                            recvLog(this, Level.WARNING, "skipping preRelease");
+                            continue;
+                        }
+                        if (branch != null && !r.branch().equals(branch)) {
+                            recvLog(this, Level.WARNING, "skipping unselected branch");
+                            continue;
+                        }
+
+                        recvLog(this, Level.FINEST, r.version());
                         if (r.compareTo(v) == -1) {
                             v = r.version();
-                            selfUpdate = r;
+                            update = r;
                         }
                     }
                 }
@@ -168,7 +187,7 @@ public class UpdateSvc implements Runnable, ILogReceiver {
             files.forEach((k, v) -> {
                 try {
                     File file = new File("cache/updates/server/" + k);
-                    recvLog(this, Level.FINE, "Downloading \"" + k + "\" from \"" + v + "\"");
+                    recvLog(this, FINE, "Downloading \"" + k + "\" from \"" + v + "\"");
                     HTTP.GETFILE(v, file);
                     count[1]++;
                 } catch (IOException e) {

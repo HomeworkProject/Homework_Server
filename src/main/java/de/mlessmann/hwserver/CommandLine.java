@@ -42,6 +42,9 @@ public class CommandLine {
                     case "start":
                         server.start();
                         break;
+                    case "updatecheck":
+                        server.checkForUpdate();
+                        break;
                     default: System.out.println("Unknown command: " + command); break;
                 }
 

@@ -294,7 +294,7 @@ public class HWServer implements IUpdateSvcReceiver {
         updateSvc = new UpdateSvc(this);
         updateSvc.registerListener(this);
 
-        if (!updateSvc.full().start())
+        if (!updateSvc.full().includePreReleases().start())
             LOG.severe("Startup update check failed: UpdateSvc#Start returned false!");
         /*updater = new Updater(this, "http://dev.mlessmann.de/hwserver/updateConfig.json");
 
@@ -558,6 +558,11 @@ public class HWServer implements IUpdateSvcReceiver {
     // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     // --- --- --- --- --- --- --- --- --- --- ---  Interfaces --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    public void checkForUpdate() {
+        LOG.info(updateSvc.full().includePreReleases().start() ?
+        "Checking for updates..." : "Update check still running, please wait a moment.");
+    }
 
     public void onUpdate_SelfCheckDone(boolean success) {
         LOG.log(success ? Level.FINE : Level.WARNING, "Update self check done: " + (success ? "Success!" : "Failed!"));
