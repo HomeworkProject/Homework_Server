@@ -1,5 +1,5 @@
 [submodule "submodle/configurate"]
-	path = submodules/onfigurate
+	path = submodules/configurate
 	url = https://github.com/MarkL4YG/configurate
 [submodule "submodules/javacommon"]
 	path = submodules/javacommon
