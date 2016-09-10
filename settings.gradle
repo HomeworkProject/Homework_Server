@@ -8,3 +8,4 @@ project(':configurate').projectDir = new File('submodules/configurate')
 
 include 'appupdater'
 project(':appupdater').projectDir = new File('submodules/appupdater')
+
