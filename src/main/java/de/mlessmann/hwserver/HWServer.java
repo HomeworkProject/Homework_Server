@@ -564,6 +564,11 @@ public class HWServer implements IUpdateSvcReceiver {
         "Checking for updates..." : "Update check still running, please wait a moment.");
     }
 
+    public void upgrade() {
+        LOG.info(updateSvc.excludeSelfCheck().excludeCheck().upgrade().start() ?
+                "Trying to upgrade server" : "A task is still running, please wait");
+    }
+
     public void onUpdate_SelfCheckDone(boolean success) {
         LOG.log(success ? Level.FINE : Level.WARNING, "Update self check done: " + (success ? "Success!" : "Failed!"));
     }

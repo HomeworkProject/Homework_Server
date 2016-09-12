@@ -45,6 +45,8 @@ public class CommandLine {
                     case "update":
                         server.checkForUpdate();
                         break;
+                    case "upgrade":
+                        server.upgrade();
                     default: System.out.println("Unknown command: " + command); break;
                 }
 
