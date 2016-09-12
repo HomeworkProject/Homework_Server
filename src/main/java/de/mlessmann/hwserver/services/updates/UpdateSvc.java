@@ -6,18 +6,20 @@ import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.updating.indices.IIndexType;
 import de.mlessmann.updating.indices.IRelease;
 import de.mlessmann.updating.logging.ILogReceiver;
-import de.mlessmann.updating.updater.INFO;
 import de.mlessmann.updating.updater.Updater;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
-import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.FINER;
+import static java.util.logging.Level.*;
 
 /**
  * Created by Life4YourGames on 10.09.16.
@@ -44,6 +46,7 @@ public class UpdateSvc implements Runnable, ILogReceiver {
     private boolean drafts = false;
     private boolean preReleases = false;
     private IRelease update;
+    private boolean upgrade;
 
     //Callbacks
     private List<IUpdateSvcReceiver> listeners;
@@ -77,6 +80,11 @@ public class UpdateSvc implements Runnable, ILogReceiver {
 
         if (autoGetUpdate)
             downloadUpdate();
+
+        if (upgrade) {
+            doUpgrade();
+            upgrade = false;
+        }
         notifyDone();
     }
 
@@ -92,7 +100,7 @@ public class UpdateSvc implements Runnable, ILogReceiver {
 
                 List<IIndexType> types = updater.getSucceededTypes();
 
-                String v = INFO.updaterVersion;
+                String v = de.mlessmann.updating.updater.INFO.updaterVersion;
 
                 for (IIndexType t : types) {
                     for (IRelease r : t.releases()) {
@@ -111,6 +119,7 @@ public class UpdateSvc implements Runnable, ILogReceiver {
     private void downloadSelfUpdate() {
         int[] count = new int[]{0,0};
         if (selfUpdate != null) {
+            new File("cache/updates/updater").mkdirs();
 
             Map<String, String> files = selfUpdate.files();
 
@@ -182,8 +191,10 @@ public class UpdateSvc implements Runnable, ILogReceiver {
 
     private void downloadUpdate() {
         int[] count = new int[]{0,0};
-        if (selfUpdate != null) {
-            Map<String, String> files = selfUpdate.files();
+        if (update != null) {
+            new File("cache/updates/server").mkdirs();
+
+            Map<String, String> files = update.files();
             files.forEach((k, v) -> {
                 try {
                     File file = new File("cache/updates/server/" + k);
@@ -198,6 +209,67 @@ public class UpdateSvc implements Runnable, ILogReceiver {
             });
         }
         notifyUpdateDownloaded(count[0], count[1]);
+    }
+
+    private void doUpgrade() {
+        if (update == null) {
+            recvLog(this, WARNING, "No upgrade found.");
+            return;
+        }
+
+        File zipFile = new File("cache/updates/server/update_" + update.version());
+
+        if (!zipFile.isFile()){
+            recvLog(this, SEVERE, "Upgrade not cached.");
+            return;
+        }
+
+        File dir = new File("test").getParentFile();
+
+        unzipFile(dir, zipFile);
+    }
+
+    // --- --- --- --- --- --- --- --- Archives --- --- --- --- --- --- --- --- --- ---
+
+    public void unzipFile(File directory, File zipFile) {
+
+        byte[] buffer = new byte[1024];
+
+        if (!directory.isDirectory())
+            directory.mkdirs();
+
+        if (!zipFile.isFile()) {
+            recvLog(this, SEVERE, "Unable to ");
+        }
+
+        try {
+            ZipInputStream ziStrm = new ZipInputStream(new FileInputStream(zipFile));
+
+            ZipEntry e = ziStrm.getNextEntry();
+
+            while (e != null) {
+                String name = e.getName();
+                File fil = new File(directory, name);
+
+                if (!e.isDirectory()) {
+                    FileOutputStream outStrm = new FileOutputStream(fil);
+
+                    int len;
+                    while ((len = ziStrm.read(buffer)) > 0)
+                        outStrm.write(buffer, 0, len);
+                    outStrm.close();
+                } else {
+                    fil.mkdirs();
+                }
+                ziStrm.closeEntry();
+                e = ziStrm.getNextEntry();
+            }
+            ziStrm.close();
+
+        } catch (IOException e) {
+            recvLog(this, SEVERE, "Unable to unpack file \"" + zipFile.getAbsolutePath() + "\": " + e.toString());
+            recvExc(e);
+        }
     }
 
     // --- --- --- --- --- --- --- --- ILogReceiver --- --- --- --- --- --- --- --- ---
@@ -256,6 +328,8 @@ public class UpdateSvc implements Runnable, ILogReceiver {
     public UpdateSvc excludeCheck() { check = false; return this; }
     public UpdateSvc downlUpdate() { autoGetUpdate = true; return this; }
     public UpdateSvc notGetUpdate() { autoGetUpdate = false; return this; }
+
+    public UpdateSvc upgrade() { upgrade = true; return this; }
 
     public UpdateSvc branch(@Nullable String branch) {
         this.branch = branch;

@@ -49,9 +49,7 @@ public class CommandLine {
                 }
 
             } catch (IOException ex) {
-
                 LOG.throwing(this.getClass().toString(), "start", ex);
-
             }
         }
     }
