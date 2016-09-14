@@ -565,7 +565,12 @@ public class HWServer implements IUpdateSvcReceiver {
     }
 
     public void upgrade() {
-        LOG.info(updateSvc.excludeSelfCheck().excludeCheck().upgrade().start() ?
+        LOG.info(updateSvc
+                .excludeSelfCheck()
+                .notGetSelfUpdate()
+                .excludeCheck()
+                .notGetUpdate()
+                .upgrade().start() ?
                 "Trying to upgrade server" : "A task is still running, please wait");
     }
 

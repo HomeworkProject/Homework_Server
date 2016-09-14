@@ -54,7 +54,7 @@ dependencies {
 
 	compile project(':javacommon')
 	compile project(':configurate')
-	compile project(':appupdater')
+	//compile project(':appupdater')
 
 	compile 'junit:junit:4.11'
 }
