@@ -2,7 +2,6 @@ package main;
 
 import de.mlessmann.common.apparguments.AppArgument;
 import de.mlessmann.hwserver.HWServer;
-import de.mlessmann.updating.reflect.IndexType;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -30,15 +29,6 @@ public class Main {
             aa.forEach(hwServer::setArg);
 
             hwServer.initialize();
-
-            Class<?> c = Class.forName("de.mlessmann.updating.indices.GitHubRel");
-
-            Logger.getGlobal().info(
-                    c != null ?
-                            ("Class exists and " +
-                                    (c.isAnnotationPresent(IndexType.class) ?
-                            "annotated" : "not annotated")): "Class not found or not annotated"
-            );
 
             hwServer.start();
 

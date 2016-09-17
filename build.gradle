@@ -54,7 +54,8 @@ dependencies {
 
 	compile project(':javacommon')
 	compile project(':configurate')
-	//compile project(':appupdater')
+	compile project(':hwserver_installer');
+
 
 	compile 'junit:junit:4.11'
 }

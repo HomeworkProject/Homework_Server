@@ -6,10 +6,12 @@ import de.mlessmann.config.ConfigNode;
 import de.mlessmann.config.JSONConfigLoader;
 import de.mlessmann.config.api.ConfigLoader;
 import de.mlessmann.hwserver.services.sessionsvc.SessionMgrSvc;
-import de.mlessmann.hwserver.services.updates.IUpdateSvcReceiver;
+import de.mlessmann.hwserver.services.updates.IRelease;
+import de.mlessmann.hwserver.services.updates.IUpdateSvcListener;
 import de.mlessmann.hwserver.services.updates.UpdateSvc;
 import de.mlessmann.logging.HWConsoleHandler;
 import de.mlessmann.logging.HWLogFormatter;
+import de.mlessmann.logging.ILogReceiver;
 import de.mlessmann.network.HWTCPServer;
 import de.mlessmann.reflections.AuthLoader;
 import de.mlessmann.reflections.AuthProvider;
@@ -29,16 +31,17 @@ import java.util.logging.Logger;
  * Created by Life4YourGames on 29.04.16.
  * @author Life4YourGames
  */
-public class HWServer implements IUpdateSvcReceiver {
+public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
     public static String VERSION = "0.0.0.3";
 
-    /**
-     * Updater - well everyone knows what this is
-     */
-    private UpdateSvc updateSvc;
     //Collect start arguments to pass them through to the updater
     private ArrayList<AppArgument> startArgs = new ArrayList<AppArgument>();
+
+    /**
+     * Updater
+     */
+    private UpdateSvc updateSvc;
 
     /**
      * CommandLine Handler
@@ -290,57 +293,17 @@ public class HWServer implements IUpdateSvcReceiver {
 
         LOG.info("------Entering post-initialization------");
 
-        LOG.fine("Initializing and starting UpdateSvc in full mode");
-        updateSvc = new UpdateSvc(this);
-        updateSvc.registerListener(this);
-
-        if (!updateSvc.full().includePreReleases().start())
-            LOG.severe("Startup update check failed: UpdateSvc#Start returned false!");
-        /*updater = new Updater(this, "http://dev.mlessmann.de/hwserver/updateConfig.json");
-
-        try {
-
-            updater.setLogger(LOG);
-            updater.setMode(updateMode);
-
-            updater.setArgs(startArgs);
-
-            updater.run();
-
-            if (updater.isUpdateAvailable()) {
-
-                IAppRelease r = updater.getLastResult().get();
-
-                LOG.info("#########################################");
-                LOG.info("There's an update available: " + r.getVersion());
-                LOG.info("#########################################");
-
-            } else {
-
-                if (updater.getErrorCode() == 0)
-                    LOG.info("Instance up to date! :)");
-                else
-                    LOG.warning("Unable to check for updates! Updater returned code: " + updater.getErrorCode());
-
-            }
-
-            LOG.info("------Exiting initialization phase------");
-
-        } catch (Exception e) {
-
-            LOG.severe("Unable to check for updates!");
-            e.printStackTrace();
-
-        }
-        */
         LOG.info("Initializing SessionMgrSvc");
         sessionMgrSvc = new SessionMgrSvc(this);
+
+        LOG.info("Initializing UpdateSvc");
+        updateSvc = new UpdateSvc(this);
+        updateSvc.registerListener(this);
 
         LOG.info("Initializing commandLine");
         commandLine = new CommandLine(this);
 
         return this;
-
     }
 
     /**
@@ -559,51 +522,65 @@ public class HWServer implements IUpdateSvcReceiver {
     // --- --- --- --- --- --- --- --- --- --- ---  Interfaces --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
+    //ILogReceiver
+    @Override
+    public void onMessage(Object sender, Level level, String message) {
+        LOG.log(level, message);
+    }
+
+    @Override
+    public void onException(Object sender, Level level, Exception e) {
+        e.printStackTrace();
+    }
+
+    //UpdateSvcListener
     public void checkForUpdate() {
-        LOG.info(updateSvc.full().includePreReleases().start() ?
-        "Checking for updates..." : "Update check still running, please wait a moment.");
-    }
-
-    public void upgrade() {
-        LOG.info(updateSvc
-                .excludeSelfCheck()
-                .notGetSelfUpdate()
-                .excludeCheck()
-                .notGetUpdate()
-                .upgrade().start() ?
-                "Trying to upgrade server" : "A task is still running, please wait");
-    }
-
-    public void onUpdate_SelfCheckDone(boolean success) {
-        LOG.log(success ? Level.FINE : Level.WARNING, "Update self check done: " + (success ? "Success!" : "Failed!"));
-    }
-
-    public void onUpdate_CheckDone(boolean success) {
-        LOG.log(success ? Level.FINE : Level.WARNING, "Update check done: " + (success ? "Success!" : "Failed!"));
-    }
-
-    public void onUpdate_SelfUpdateDownloaded(int fails, int success) {
-        LOG.log(fails<1 ? Level.FINE : Level.WARNING, "SelfUpdateDownload result: Failed " + fails + " - " + success + " Success");
-    }
-
-    public void onUpdate_UpdateDownloaded(int fails, int success) {
-        LOG.log(fails<1 ? Level.FINE : Level.WARNING, "UpdateDownload result: Failed " + fails + " - " + success + " Success");
-    }
-
-    public void onUpdate_Done() {
-        synchronized (LOG) {
-            LOG.info("------------------------------------------");
-            LOG.info("Update check done");
-            LOG.info("Updater: " + (updateSvc.hasSelfUpdate() ?
-                    "Update available:" + updateSvc.getSelfUpdate().version() :
-                    "Up to date"
-            ));
-            LOG.info("Server: " + (updateSvc.hasUpdate() ?
-                    "Update available:" + updateSvc.getUpdate().version() :
-                    "Up to date"
-            ));
-            LOG.info("------------------------------------------");
+        if (updateSvc.prepare()) {
+            LOG.info("Checking for updates...");
+        } else {
+            LOG.warning("Unable to check for updates: Wait for svc to finish");
         }
     }
 
+    public void upgrade() {
+        if (updateSvc.upgrade()) {
+            LOG.info("Starting upgrade...");
+        } else {
+            LOG.warning("Unable to start upgrade: Wait for svc to finish");
+        }
+    }
+
+
+    @Override
+    public void onSvcStart() {
+        LOG.info("UpdateSvc started: Update commands locked");
+    }
+
+
+    @Override
+    public void onSvcDone(boolean failed) {
+        LOG.info("UpdateSvc reported exit("+(failed?"FAIL":"SUCCESS")+"): Update commands now available again");
+    }
+
+    @Override
+    public void onUpdateAvailable(IRelease r) {
+        LOG.severe("AN UPDATE IS AVAILABLE: " + r.getVersion());
+    }
+
+    @Override
+    public void onUpdateDownloaded() {
+        LOG.severe("An update has been downloaded.");
+    }
+
+    @Override
+    public void onUpgradeAboutToStart(boolean immediate) {
+        if (immediate) {
+            commandLine.exit(true);
+        }
+    }
+
+    @Override
+    public void onUpgradeFailed() {
+        LOG.severe("An upgrade FAILED! You may need to resolve this!");
+    }
 }

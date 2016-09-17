@@ -12,6 +12,8 @@ public class CommandLine {
 
     private HWServer server;
     private final Logger LOG;
+    private boolean exited;
+    private BufferedReader reader;
 
     public CommandLine(HWServer server) {
         this.server = server;
@@ -19,9 +21,9 @@ public class CommandLine {
     }
 
     public void run() {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
-        loop: while (true) {
+        reader = new BufferedReader(new InputStreamReader(System.in));
+        exited = false;
+        loop: while (!exited) {
 
             try {
 
@@ -33,9 +35,8 @@ public class CommandLine {
                         break;
                     case "quit": ;
                     case "exit":
-                        server.stop();
-                        break loop;
-                        //break;
+                        exit(false);
+                        break;
                     case "reload":
                         server.stop().start();
                         break;
@@ -54,6 +55,14 @@ public class CommandLine {
             } catch (IOException ex) {
                 LOG.throwing(this.getClass().toString(), "start", ex);
             }
+        }
+    }
+
+    public void exit(boolean forced) {
+        server.stop();
+        exited = true;
+        if (forced) {
+            System.exit(0);
         }
     }
 

@@ -6,6 +6,5 @@ project(':javacommon').projectDir = new File('submodules/javacommon')
 include 'configurate'
 project(':configurate').projectDir = new File('submodules/configurate')
 
-include 'appupdater'
-project(':appupdater').projectDir = new File('submodules/appupdater')
-
+include 'hwserver_installer'
+project(':hwserver_installer').projectDir = new File('submodules/Homework_Server_Installer')

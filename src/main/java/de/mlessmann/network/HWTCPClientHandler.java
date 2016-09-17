@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import javax.net.ssl.SSLException;
 import java.io.*;
 import java.net.Socket;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -26,7 +27,7 @@ public class HWTCPClientHandler {
 
     private static ICommandHandler HANDLER_NATIVE = new _nativeCommTCPCHDummy();
 
-
+    private boolean aprilFirst;
     private HWTCPServer master;
     private Socket mySock;
     private BufferedReader reader;
@@ -44,7 +45,7 @@ public class HWTCPClientHandler {
         this.mySock = clientSock;
         this.master = tcpServer;
         this.myReference = new HWTCPClientReference(this);
-
+        aprilFirst = (LocalDate.now().getMonthValue() == 1 && LocalDate.now().getDayOfMonth() == 1);
     }
 
     public boolean setUp() {
@@ -199,7 +200,10 @@ public class HWTCPClientHandler {
             message.put("type", "message");
             message.put("message", "This server is currently NOT meeting the full requirements of the hw protocol!");
             message.put("messagetype", "devinfo");
-
+        if (aprilFirst) {
+            int afterSophie = LocalDate.now().getYear() - 2014;
+            message.put("currentDate", afterSophie + "ASophie");
+        }
 
         response.put("payload", message);
         response.put("commID", 1);
