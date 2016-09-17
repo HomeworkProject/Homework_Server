@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  */
 public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
-    public static String VERSION = "0.0.0.3";
+    public static String VERSION = "0.0.0.4";
 
     //Collect start arguments to pass them through to the updater
     private ArrayList<AppArgument> startArgs = new ArrayList<AppArgument>();
