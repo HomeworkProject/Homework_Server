@@ -21,6 +21,7 @@ Or even personally if you live near Henstedt-Ulzburg (Germany) by contacting our
 
 ## Progress  
 The best place to get information about pending features, pending fixed, current target, etc. can be obtained in the [issues section](https://github.com/MarkL4YG/Homework_Server/issues)  
+You may also want to take a look at the [projects-section](https://github.com/MarkL4YG/Homework_Server/projects) for even more detailed information.  
 ### Markers  
 #### Status of progress:  
 * ```In progress``` - Assignee is currently working on it  
