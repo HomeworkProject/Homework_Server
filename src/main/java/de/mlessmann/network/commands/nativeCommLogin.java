@@ -1,6 +1,6 @@
 package de.mlessmann.network.commands;
 
-import de.mlessmann.allocation.HWGroup;
+import de.mlessmann.allocation.GroupSvc;
 import de.mlessmann.allocation.HWUser;
 import de.mlessmann.hwserver.services.sessionsvc.ClientSession;
 import de.mlessmann.hwserver.services.sessionsvc.SessionMgrSvc;
@@ -60,7 +60,7 @@ public class nativeCommLogin extends nativeCommandParent {
             cs = s.get();
             if (cs.getToken().isValid()) {
                 Optional<HWUser> u = cs.getUser();
-                Optional<HWGroup> g = cs.getGroup();
+                Optional<GroupSvc> g = cs.getGroup();
                 if (u.isPresent() && g.isPresent()) {
                     context.getHandler().setUser(u.get());
                     valid = true;
@@ -148,10 +148,9 @@ public class nativeCommLogin extends nativeCommandParent {
             }
         }
 
-        Optional<HWGroup> hwGroup = context.getHandler().requestGroup(group);
+        Optional<GroupSvc> hwGroup = context.getHandler().requestGroup(group);
 
         if (!hwGroup.isPresent()) {
-
             context.getHandler().setUser(null);
 
             JSONObject response = Status.state_ERROR(
@@ -166,13 +165,30 @@ public class nativeCommLogin extends nativeCommandParent {
 
             sendJSON(context.getHandler(), response);
             return false;
-
         }
 
-        Optional<HWUser> hwUser = hwGroup.get().getUser(user, auth);
+        Optional<HWUser> hwUser = hwGroup.get().getUser(user);
 
         if (!hwUser.isPresent()) {
+            context.getHandler().setUser(null);
 
+            JSONObject response = Status.state_ERROR(
+                    Status.NOTFOUND,
+                    Status.state_genError(
+                            Error.NotFound,
+                            "User " + user + " wasn't found",
+                            "User \"" + user + "\" does not exist"
+                    ));
+
+            response.put("commID", context.getHandler().getCurrentCommID());
+
+            sendJSON(context.getHandler(), response);
+            return false;
+        }
+
+        boolean authorized = hwUser.get().authorize(auth);
+
+        if (!authorized) {
             context.getHandler().setUser(null);
 
             JSONObject response = Status.state_ERROR(
@@ -187,7 +203,6 @@ public class nativeCommLogin extends nativeCommandParent {
 
             sendJSON(context.getHandler(), response);
             return false;
-
         }
 
         SessionMgrSvc svc = context.getHandler().getSessionMgr();

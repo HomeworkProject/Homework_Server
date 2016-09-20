@@ -1,6 +1,6 @@
 package de.mlessmann.hwserver.services.sessionsvc;
 
-import de.mlessmann.allocation.HWGroup;
+import de.mlessmann.allocation.GroupSvc;
 import de.mlessmann.allocation.HWUser;
 
 import java.net.Socket;
@@ -18,7 +18,7 @@ public class ClientSession {
     private SessionToken token = null;
     private SessionMgrSvc sessionMgr;
     private HWUser user;
-    private HWGroup group;
+    private GroupSvc group;
 
     public ClientSession(SessionMgrSvc sessionMgr) {
         this.sessionMgr = sessionMgr;
@@ -57,12 +57,12 @@ public class ClientSession {
         this.user = user;
     }
 
-    public void setGroup(HWGroup group) {
+    public void setGroup(GroupSvc group) {
         this.group = group;
     }
 
     public Optional<HWUser> getUser() { return Optional.of(user); }
 
-    public Optional<HWGroup> getGroup() { return Optional.of(group); }
+    public Optional<GroupSvc> getGroup() { return Optional.of(group); }
 
 }

@@ -1,6 +1,6 @@
 package de.mlessmann.network;
 
-import de.mlessmann.allocation.HWGroup;
+import de.mlessmann.allocation.GroupSvc;
 import de.mlessmann.allocation.HWUser;
 import de.mlessmann.hwserver.services.sessionsvc.SessionMgrSvc;
 import org.json.JSONObject;
@@ -39,9 +39,9 @@ public class HWTCPClientReference {
 
     }
 
-    public Optional<HWGroup> requestGroup(String name) {
+    public Optional<GroupSvc> requestGroup(String name) {
 
-        return myHandler.getMaster().getMaster().getGroup(name);
+        return myHandler.getMaster().getMaster().getGroupManager().getGroup(name);
 
     }
 

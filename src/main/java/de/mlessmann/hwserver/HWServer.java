@@ -1,6 +1,6 @@
 package de.mlessmann.hwserver;
 
-import de.mlessmann.allocation.HWGroup;
+import de.mlessmann.allocation.GroupMgrSvc;
 import de.mlessmann.common.apparguments.AppArgument;
 import de.mlessmann.config.ConfigNode;
 import de.mlessmann.config.JSONConfigLoader;
@@ -22,7 +22,8 @@ import javax.net.ssl.SSLServerSocketFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -98,10 +99,10 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
     private ConfigNode config;
 
     /**
-     * HashMap to store groups
+     * Service to manage groups
      * @see #getGroup(String)
      */
-    private Map<String, HWGroup> hwGroups = new HashMap<String, HWGroup>();
+    private GroupMgrSvc groupMgrSvc;
 
     /**
      * Provider for commandHandlers
@@ -253,9 +254,7 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
         node = config.getNode("groups");
         if (node.isVirtual()) {
-            ArrayList<String> groups = new ArrayList<String>();
-            groups.add("default");
-            node.setList(groups);
+            LOG.info("No group node present: Will be initialized");
         }
         //--------------------------- END Config Init ---------------------------------------
         //-----------------------------------------------------------------------------------
@@ -280,12 +279,13 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
         }
 
-
-        List<String> l = config.getNode("groups").getList();
-
-        l.stream().filter(s -> !s.isEmpty()).forEach(this::loadGroup);
-
-        LOG.info(hwGroups.size() + " groups registered");
+        groupMgrSvc = new GroupMgrSvc(this);
+        if (!groupMgrSvc.init(config.getNode("groups"))) {
+            String msg = "Unable to initialize groups!";
+            LOG.severe(msg);
+            throw new IOException(msg);
+        }
+        LOG.info(groupMgrSvc.getGroups().size() + " groups loaded");
 
         // -------------------------------- POST INIT --------------------------------
         // -------------------------------- POST INIT --------------------------------
@@ -304,19 +304,6 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
         commandLine = new CommandLine(this);
 
         return this;
-    }
-
-    /**
-     * Load files for a specific group
-     */
-    private void loadGroup(String gName) {
-
-        HWGroup newGroup = new HWGroup(gName, this);
-
-        newGroup.init();
-
-        hwGroups.put(gName, newGroup);
-
     }
 
     /**
@@ -486,18 +473,8 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
     public SessionMgrSvc getSessionMgr() { return sessionMgrSvc; }
 
-    public synchronized Optional<HWGroup> getGroup(String group) {
-
-        HWGroup hwGroup = null;
-
-        if (hwGroups.containsKey(group)) {
-
-            hwGroup = hwGroups.get(group);
-
-        }
-
-        return Optional.ofNullable(hwGroup);
-
+    public GroupMgrSvc getGroupManager() {
+        return groupMgrSvc;
     }
 
     public Optional<SSLServerSocketFactory> getSecureSocketFactory() {

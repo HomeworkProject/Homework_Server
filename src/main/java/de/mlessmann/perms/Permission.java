@@ -1,7 +1,5 @@
 package de.mlessmann.perms;
 
-import de.mlessmann.allocation.HWPermission;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,21 +47,20 @@ public class Permission {
      */
     public static String PROCESS_MANAGE = "proc_manage";
 
-    public static List<HWPermission> adminDefaults = new ArrayList<HWPermission>();
-    public static List<HWPermission> defaults = new ArrayList<HWPermission>();
 
-    public static void nativeInitDefaults() {
-        defaults.add(new HWPermission(HW_ADD_NEW, 1, 0 , 1));
-        defaults.add(new HWPermission(HW_ADD_EDIT, 1, 0, 1));
-        defaults.add(new HWPermission(HW_DEL, 1, 0, 1));
+    /**
+     * Some indices
+     */
+    public static int HASVALUE = 0;
+    public static int GIVEVALUE = 1;
+    public static int HASTOHAVETOCHANGE = 2;
 
-        adminDefaults.add(new HWPermission(HW_ADD_NEW, 100, 90 , 101));
-        adminDefaults.add(new HWPermission(HW_ADD_EDIT, 100, 90, 101));
-        adminDefaults.add(new HWPermission(HW_DEL, 100, 90, 101));
-        adminDefaults.add(new HWPermission(USR_MANAGE, 100, 90, 101));
-        adminDefaults.add(new HWPermission(GROUP_MANAGE, 100, 90, 101));
-        adminDefaults.add(new HWPermission(INSTANCE_MANAGE, 100, 90, 101));
-        adminDefaults.add(new HWPermission(PROCESS_MANAGE, 100, 90, 101));
+    public static List<String> defPerms() {
+        List<String> l = new ArrayList<String>();
+        l.add(HW_ADD_EDIT);
+        l.add(HW_ADD_NEW);
+        l.add(HW_DEL);
+        return l;
     }
 
 }

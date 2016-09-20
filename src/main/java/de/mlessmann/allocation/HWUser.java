@@ -3,7 +3,8 @@ package de.mlessmann.allocation;
 import de.mlessmann.authentication.IAuthMethod;
 import de.mlessmann.config.ConfigNode;
 import de.mlessmann.homework.HomeWork;
-import org.json.JSONArray;
+import de.mlessmann.hwserver.HWServer;
+import de.mlessmann.hwserver.services.hwsvcs.HWMgrSvc;
 import org.json.JSONObject;
 
 import java.time.LocalDate;
@@ -11,147 +12,122 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Level;
 
 /**
  * Created by Life4YourGames on 08.06.16.
  */
 public class HWUser {
 
-    public static HWUser getDefaultUser(HWGroup g) {
-
-        JSONObject obj = new JSONObject();
-
-        JSONArray perms = new JSONArray();
-
-        obj.put("permissions", perms);
-        obj.put("name", DEFNAME);
-        obj.put("password", DEFPASS);
-        obj.put("authMethod", DEFAUTH);
-
-        return new HWUser(obj, g);
-
-    }
-
     public static final String DEFNAME = "default";
     public static final String DEFPASS = "default";
-    public static final String DEFAUTH = "default";
-
 
     //Authentication
-    private String authMethod = DEFAUTH;
     private String userName = DEFNAME;
-    private String passData = DEFPASS;
-    private IAuthMethod myAuthMethod;
+    private String authData = DEFPASS;
+    private IAuthMethod authMethod;
 
     private Map<String, HWPermission> permissions;
 
-    private JSONObject json;
+    private ConfigNode node;
 
-    private HWGroup myGroup;
+    private GroupSvc group;
+    private HWServer server;
 
-    public HWUser(JSONObject obj, HWGroup group) {
-
-        permissions = new HashMap<String, HWPermission>();
-
-        json = obj;
-
-        if (json.has("permissions")) {
-
-            JSONArray arr = json.getJSONArray("permissions");
-
-            for (Object o : arr) {
-
-                HWPermission perm = new HWPermission((JSONArray) o);
-                permissions.put(perm.getName(), perm);
-
-            }
-
-        }
-
-        userName = json.getString("name");
-        passData = json.getString("password");
-        myGroup = group;
-
-        if (json.has("authMethod")) {
-
-            authMethod = json.getString("authMethod");
-
-            Optional<IAuthMethod> m = myGroup.getHwServer().getAuthProvider().getMethod(authMethod);
-
-            if (m.isPresent()) {
-                myAuthMethod = m.get();
-            } else {
-                authMethod = "default";
-                myAuthMethod = myGroup.getHwServer().getAuthProvider().getDefault();
-                myGroup.getLogger().warning("User \"" + userName + "\" wants an invalid authMethod: \"" + authMethod + "\" using \"" + getAuthIdent() + "\"");
-            }
-
-        }
-
+    public HWUser(GroupSvc group, HWServer server) {
+        this.permissions = new HashMap<String, HWPermission>();
+        this.group = group;
+        this.server = server;
     }
 
-    public HWUser(ConfigNode node, HWGroup group) {
-        this.myGroup = group;
+    public boolean init(ConfigNode node) {
+
+        boolean valid = !node.getKey().isEmpty()
+                && node.hasNode("auth")
+                && node.getNode("auth").isHub()
+                && node.getNode("auth").hasNode("method")
+                && node.getNode("auth", "method").isType(String.class)
+                && node.hasNode("permissions")
+                && node.getNode("permissions").isHub();
+        if (!valid) {
+            return false;
+        }
+        Optional<IAuthMethod> m = server.getAuthProvider().getMethod(node.getNode("auth", "method").getString());
+        if (!m.isPresent()) {
+            server.onMessage(this, Level.SEVERE, "Unable to initialize user \"" + node.getKey()
+                    + "\": Auth method not present!");
+            return false;
+        }
+        authMethod = m.get();
+        this.node = node;
+        return true;
     }
 
     public String getUserName() {
-
-        return userName;
-
+        return node.getKey();
     }
 
-    public String getPassData() {
-
-        return passData;
-
+    public String getAuthData() {
+        return node.getNode("auth", node.getNode("auth", "method").getString()).getString();
     }
 
-    public boolean authenticate(String auth) {
-
-        return myAuthMethod.authorize(passData, auth);
-
+    public boolean authorize(String auth) {
+        return authMethod.authorize(getAuthData(), auth);
     }
 
-    public int getPermissionValue(String permissionName) {
-
-        if (permissions.containsKey(permissionName)) {
-
-            return permissions.get(permissionName).hasValue();
-
+    public Optional<HWPermission> getPermission(String permissionName) {
+        ConfigNode perms = node.getNode("permissions");
+        HWPermission perm = null;
+        if (perms.hasNode(permissionName)) {
+            HWPermission p = new HWPermission(this, server);
+            if (p.readFrom(perms.getNode(permissionName)))
+                perm = p;
         }
-
-        return HWPermission.DEFAULT.hasValue();
-
+        return Optional.ofNullable(perm);
     }
 
     public void addPermission(HWPermission perm) {
-
-        permissions.put(perm.getName(), perm);
-
+        node.addNode(perm.getNode());
     }
 
     public int addHW(JSONObject obj) {
-
-        return myGroup.addHW(obj, this);
-
+        Optional<HWMgrSvc> svc = group.getHWMgr();
+        if (svc.isPresent()) {
+            return svc.get().addHW(obj, this);
+        } else {
+            server.onMessage(this, Level.SEVERE, "Unable to add HW: No HWMgr found!");
+            return -1;
+        }
     }
 
     public ArrayList<HomeWork> getHWOn(LocalDate date, ArrayList<String> subjectFilter) {
-
-        return myGroup.getHWOn(date, subjectFilter);
-
+        Optional<HWMgrSvc> svc = group.getHWMgr();
+        if (svc.isPresent()) {
+            return svc.get().getHWOn(date, subjectFilter);
+        } else {
+            server.onMessage(this, Level.SEVERE, "Unable to search for HW: No HWMgr found!");
+            return new ArrayList<>();
+        }
     }
 
     public ArrayList<HomeWork> getHWBetween(LocalDate from, LocalDate to, ArrayList<String> subjectFilter, boolean overrideLimit) {
-
-        return myGroup.getHWBetween(from, to, subjectFilter, overrideLimit);
-
+        Optional<HWMgrSvc> svc = group.getHWMgr();
+        if (svc.isPresent()) {
+            return svc.get().getHWBetween(from, to, subjectFilter, overrideLimit);
+        } else {
+            server.onMessage(this, Level.SEVERE, "Unable to search for HW: No HWMgr found!");
+            return new ArrayList<>();
+        }
     }
 
     public int delHW(LocalDate date, String id) {
-
-        return myGroup.delHW(date, id, this);
-
+        Optional<HWMgrSvc> svc = group.getHWMgr();
+        if (svc.isPresent()) {
+            return svc.get().delHW(date, id, this);
+        } else {
+            server.onMessage(this, Level.SEVERE, "Unable to delete HW: No HWMgr found!");
+            return -1;
+        }
     }
 
     public boolean isValid() {
@@ -159,10 +135,8 @@ public class HWUser {
         return false;
     }
 
-    public IAuthMethod getAuth() { return myAuthMethod; }
+    public IAuthMethod getAuth() { return authMethod; }
 
-    public String getAuthIdent() { return myAuthMethod.getIdentifier(); }
-
-    public JSONObject getJSON() { return json; }
+    public String getAuthIdent() { return authMethod.getIdentifier(); }
 
 }

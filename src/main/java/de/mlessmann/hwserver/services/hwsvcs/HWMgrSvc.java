@@ -1,6 +1,8 @@
-package de.mlessmann.allocation;
+package de.mlessmann.hwserver.services.hwsvcs;
 
-import de.mlessmann.config.HWConfig;
+import de.mlessmann.allocation.GroupMgrSvc;
+import de.mlessmann.allocation.HWPermission;
+import de.mlessmann.allocation.HWUser;
 import de.mlessmann.homework.HomeWork;
 import de.mlessmann.homework.HomeWorkTree;
 import de.mlessmann.hwserver.HWServer;
@@ -11,136 +13,42 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
- * Created by Life4YourGames on 04.05.16.
- * @author Life4YourGames
+ * Created by Life4YourGames on 02.09.16.
  */
-public class HWGroup {
+public class HWMgrSvc {
 
-    public static JSONObject getDefaultConfig(HWGroup g) {
+    private HWServer server;
+    private Logger logger;
+    private GroupMgrSvc groupMgrSvc;
+    private String group;
 
-        JSONObject defaultConfig = new JSONObject();
-
-        defaultConfig.put("type", "config");
-
-        defaultConfig.put("configVersion", HWConfig.confVersion);
-
-        defaultConfig.put("users", new JSONArray().put(HWUser.getDefaultUser(g).getJSON()));
-
-        return defaultConfig;
-
-    }
-
-    private String gName;
     private String storeFolder;
+    private HomeWorkTree parentDir;
 
-    private HWServer hwServer;
-    private Logger LOG;
-
-    private boolean initialized;
-
-    private HomeWorkTree hwTree;
-
-    //---Begin users---
-    private HWConfig userConf;
-    private Map<String, HWUser> users;
-    //-----End users---
-
-    public HWGroup (String groupName, HWServer hwserver) {
-
-        gName = groupName;
-        storeFolder = (new StringBuilder("groups")
-                .append(File.separator)
-                .append(gName))
-                .toString();
-        hwServer = hwserver;
-
-        LOG = hwserver.getLogger();
-        LOG.finest("Group \"" + gName + "\" created");
-
-        users = new HashMap<String, HWUser>();
-
+    public HWMgrSvc(GroupMgrSvc groupMgrSvc, HWServer server) {
+        this.server = server;
+        this.logger = server.getLogger();
+        this.groupMgrSvc = groupMgrSvc;
     }
 
-    public HWGroup (HWServer hwserver) {
-
-        this("Unnamed" + LocalDateTime.now().toString(), hwserver);
-
+    public void setGroupName(String name) {
+        this.group = name;
     }
 
-    public void init() {
-
-        hwTree = new HomeWorkTree(hwServer, storeFolder);
-
-        hwTree.analyze();
-
-        File fil = new File(storeFolder + File.separator + "users.conf");
-
-        //if (fil.exists()) {
-
-            //TODO: Finish user integration
-
-            userConf = new HWConfig(hwServer);
-
-            userConf.defaultConf = getDefaultConfig(this);
-
-            userConf.createIfNotFound(fil);
-
-            userConf.open((File) null); // ?! xD
-
-            JSONArray jUsers = userConf.getJSON().getJSONArray("users");
-
-            LOG.finest("G:" + gName + " found " + jUsers.length() + " users");
-
-            if (jUsers.length() > 0) {
-
-                for (Object o : jUsers) {
-
-                    HWUser u = new HWUser((JSONObject) o, this);
-
-                    users.put(u.getUserName(), u);
-
-                    LOG.finest("G:" + gName + " registered user \"" + u.getUserName() + "\" using auth \"" + u.getAuthIdent() + "\"");
-
-                }
-
-            } else {
-
-                HWUser defUser = HWUser.getDefaultUser(this);
-
-                users.put(defUser.getUserName(), defUser);
-
-                LOG.finest("G:" + gName + " registered user \"" + defUser.getUserName() + "\" using auth \"" + defUser.getAuthIdent() + "\"");
-
-            }
-
-        //}
-
+    public boolean init(String directory) {
+        storeFolder = directory;
+        parentDir = new HomeWorkTree(server, directory);
+        parentDir.analyze();
+        return true;
     }
 
-    public Optional<HWUser> getUser(String username, String auth) {
-
-        HWUser user = null;
-
-        if (users.containsKey(username)) {
-
-            HWUser u = users.get(username);
-
-            if (u.authenticate(auth)) {
-
-                user = u;
-
-            }
-
-        }
-
-        return Optional.ofNullable(user);
-
-    }
+    //----------------------------------- IMPORTED FROM HWGroup --------------------------------------------------------
 
     public synchronized ArrayList<HomeWork> getHWOn(LocalDate date, ArrayList<String> subjectFilter) {
 
@@ -148,7 +56,7 @@ public class HWGroup {
 
         String subPath = date.getYear() + File.separator + date.getMonthValue() + File.separator + date.getDayOfMonth();
 
-        Optional<HomeWorkTree> tree = hwTree.getChild(subPath);
+        Optional<HomeWorkTree> tree = parentDir.getChild(subPath);
 
         if (tree.isPresent()) {
 
@@ -161,12 +69,12 @@ public class HWGroup {
             if (subjectFilter == null || subjectFilter.size() == 0) {
                 list.stream()
                         .filter(s -> s.startsWith("hw_"))
-                        .forEach(name -> tempRes.add(HomeWork.newByPath(pathWithoutName + name, hwServer)));
+                        .forEach(name -> tempRes.add(HomeWork.newByPath(pathWithoutName + name, server)));
             } else {
 
                 list.stream()
                         .filter(s -> s.startsWith("hw_"))
-                        .forEach(name -> tempRes.add(HomeWork.newByPath(pathWithoutName + name, hwServer)));
+                        .forEach(name -> tempRes.add(HomeWork.newByPath(pathWithoutName + name, server)));
 
                 HomeWork[] arr = (HomeWork[]) res.stream()
                         .filter(hw -> hw.getJSON().has("subject"))
@@ -189,7 +97,7 @@ public class HWGroup {
 
         ArrayList<HomeWork> res = new ArrayList<HomeWork>();
 
-        LOG.finest("HWSearch#START # " + from.toString() + " -> " + to.toString());
+        logger.finest("HWSearch#START # " + from.toString() + " -> " + to.toString());
 
         for (int cYear = from.getYear(); cYear <= to.getYear() && !kill; cYear++) {
 
@@ -197,13 +105,13 @@ public class HWGroup {
 
                 if (cYear == from.getYear() && cMonth < from.getMonthValue()) {
 
-                    LOG.finest("HWSearch#SKIP # MM_" + cYear + '-' + cMonth);
+                    logger.finest("HWSearch#SKIP # MM_" + cYear + '-' + cMonth);
 
                     continue;
                 }
                 if (cYear == to.getYear() && cMonth > to.getMonthValue()) {
 
-                    LOG.finest("HWSearch#BREAK # MM_" + cYear + '-' + cMonth);
+                    logger.finest("HWSearch#BREAK # MM_" + cYear + '-' + cMonth);
 
                     break;
                 }
@@ -212,13 +120,13 @@ public class HWGroup {
 
                     if (cYear == from.getYear() && cMonth == from.getMonthValue() && cDay < from.getDayOfMonth()) {
 
-                        LOG.finest("HWSearch#SKIP # dd_" + cYear + '-' + cMonth + '-' + cDay);
+                        logger.finest("HWSearch#SKIP # dd_" + cYear + '-' + cMonth + '-' + cDay);
 
                         continue;
                     }
                     if (cYear == to.getYear() && cMonth == to.getMonthValue() && cDay >= to.getDayOfMonth()) {
 
-                        LOG.finest("HWSearch#BREAK # dd_" + cYear + '-' + cMonth + '-' + cDay);
+                        logger.finest("HWSearch#BREAK # dd_" + cYear + '-' + cMonth + '-' + cDay);
 
                         break;
                     }
@@ -233,7 +141,7 @@ public class HWGroup {
                             .append(cMonth).append(File.separator)
                             .append(cDay);
 
-                    Optional<HomeWorkTree> tree = hwTree.getChild(childPath.toString());
+                    Optional<HomeWorkTree> tree = parentDir.getChild(childPath.toString());
 
                     if (tree.isPresent()) {
 
@@ -241,19 +149,19 @@ public class HWGroup {
 
                         String pathWithoutName = storeFolder + File.separator + childPath + File.separator;
 
-                        LOG.finest("HWSearch#ADD # " + childPath);
+                        logger.finest("HWSearch#ADD # " + childPath);
 
                         ArrayList<HomeWork> tempRes = res;
 
                         if (subjectFilter == null || subjectFilter.size() == 0) {
                             list.stream()
                                     .filter(s -> s.startsWith("hw_"))
-                                    .forEach(name -> tempRes.add(HomeWork.newByPath(pathWithoutName + name, hwServer)));
+                                    .forEach(name -> tempRes.add(HomeWork.newByPath(pathWithoutName + name, server)));
                         } else {
 
                             list.stream()
                                     .filter(s -> s.startsWith("hw_"))
-                                    .forEach(name -> tempRes.add(HomeWork.newByPath(pathWithoutName + name, hwServer)));
+                                    .forEach(name -> tempRes.add(HomeWork.newByPath(pathWithoutName + name, server)));
 
                             HomeWork[] arr = (HomeWork[]) res.stream()
                                     .filter(hw -> hw.getJSON().has("subject"))
@@ -265,7 +173,7 @@ public class HWGroup {
 
                     } else {
 
-                        LOG.finest("HWSearch#SKIP # " + childPath + " not present");
+                        logger.finest("HWSearch#SKIP # " + childPath + " not present");
 
                     }
 
@@ -280,19 +188,12 @@ public class HWGroup {
     }
 
     public synchronized int addHW(JSONObject hw, HWUser withUser) {
-
         JSONArray date = null;
-
         try {
-
             date = hw.getJSONArray("date");
-
         } catch (JSONException ex) {
-
-            LOG.warning("Reached JSONEx while adding hw -> unchecked parameter passed ?");
-
+            logger.warning("Reached JSONEx while adding hw -> unchecked parameter passed ?");
             return -1;
-
         }
 
         if (date != null && date.length() >= 3) {
@@ -302,49 +203,34 @@ public class HWGroup {
                     .append(date.getInt(1)).append(File.separator)
                     .append(date.getInt(2));
 
-            Optional<HomeWorkTree> tree = hwTree.getOrCreateChild(path.toString());
+            Optional<HomeWorkTree> tree = parentDir.getOrCreateChild(path.toString());
 
             if (!tree.isPresent()) {
-
-                LOG.warning("Unable to add hw: Tree for \"" + path.toString() + "\" is missing!");
-
+                logger.warning("Unable to add hw: Tree for \"" + path.toString() + "\" is missing!");
                 return -1;
-
             }
 
             Optional<String> id;
 
             if (!hw.has("id")) {
-
                 id = tree.get().genFreeID("hw_", ".json", 20, 200, false);
-
                 if (!id.isPresent()) {
-
-                    LOG.warning("genFreeID reached null for \"" + path.toString() + "\": Max IDs reached ?");
-
+                    logger.warning("genFreeID reached null for \"" + path.toString() + "\": Max IDs reached ?");
                     return -1;
-
                 }
-
                 String fileName = "hw_" + id.get() + ".json";
-
                 hw.put("id", id.get());
-
             } else {
-
                 id = Optional.of(hw.getString("id"));
-
             }
 
             String fileName = "hw_" + id.get() + ".json";
-
             if (withUser != null) {
-
                 boolean e = tree.get().fileExists(fileName);
-
-                int crVal = withUser.getPermissionValue(Permission.HW_ADD_NEW);
-                int eVal = withUser.getPermissionValue(Permission.HW_ADD_EDIT);
-
+                Optional<HWPermission> optCr = withUser.getPermission(Permission.HW_ADD_NEW);
+                int crVal = optCr.isPresent() ? optCr.get().getValue(Permission.HASVALUE) : 0;
+                Optional<HWPermission> optE = withUser.getPermission(Permission.HW_ADD_EDIT);
+                int eVal = optE.isPresent() ? optE.get().getValue(Permission.HASVALUE) : 0;
                 if (e && eVal == 0) {
                     return 2;
                 }
@@ -354,43 +240,24 @@ public class HWGroup {
             }
 
             boolean res = tree.get().flushOrCreateFile(fileName, hw.toString(2));
-
-            LOG.finest("HWG#addHW$" + gName + "{FlushRes}: " + fileName + " -> " + res);
-
+            logger.finest("HWG#addHW$" + group + "{FlushRes}: " + fileName + " -> " + res);
             return res ? 0 : -1;
-
         }
-
         return -1;
-
     }
 
     public synchronized int delHW(LocalDate date, String id, HWUser withUser) {
-
         String subPath = date.getYear() + File.separator + date.getMonthValue() + File.separator + date.getDayOfMonth();
-
-        Optional<HomeWorkTree> tree = hwTree.getChild(subPath);
-
+        Optional<HomeWorkTree> tree = parentDir.getChild(subPath);
         if (!tree.isPresent()) {
             return 0;
         }
-
         if (withUser != null) {
-
-            int dVal = withUser.getPermissionValue(Permission.HW_DEL);
-
+            Optional<HWPermission> optD = withUser.getPermission(Permission.HW_DEL);
+            int dVal = optD.isPresent() ? optD.get().getValue(Permission.HASVALUE) : 0;
             if (dVal == 0) return 2;
-
         }
-
         return tree.get().deleteFile("hw_" + id + ".json") ? 0 : 1;
-
     }
-
-    public String getName() { return gName; }
-
-    public Logger getLogger() { return LOG; }
-
-    public HWServer getHwServer() { return hwServer; }
 
 }
