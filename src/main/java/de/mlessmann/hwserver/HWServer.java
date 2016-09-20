@@ -5,6 +5,7 @@ import de.mlessmann.common.apparguments.AppArgument;
 import de.mlessmann.config.ConfigNode;
 import de.mlessmann.config.JSONConfigLoader;
 import de.mlessmann.config.api.ConfigLoader;
+import de.mlessmann.hwserver.services.sessionsvc.ScheduledUpdateTask;
 import de.mlessmann.hwserver.services.sessionsvc.SessionMgrSvc;
 import de.mlessmann.hwserver.services.updates.IRelease;
 import de.mlessmann.hwserver.services.updates.IUpdateSvcListener;
@@ -24,6 +25,9 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,7 +38,7 @@ import java.util.logging.Logger;
  */
 public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
-    public static String VERSION = "0.0.0.4";
+    public static String VERSION = "0.0.0.5";
 
     //Collect start arguments to pass them through to the updater
     private ArrayList<AppArgument> startArgs = new ArrayList<AppArgument>();
@@ -47,7 +51,7 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
     /**
      * CommandLine Handler
      */
-    CommandLine commandLine;
+    private CommandLine commandLine;
 
     /**
      * TCPServerWorker used for TCPCommunication
@@ -100,7 +104,8 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
     /**
      * Service to manage groups
-     * @see #getGroup(String)
+     * @see #getGroupManager()
+     * @see GroupMgrSvc#getGroup(String)
      */
     private GroupMgrSvc groupMgrSvc;
 
@@ -118,6 +123,10 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
      * Management of Sessions
      */
     private SessionMgrSvc sessionMgrSvc;
+
+    private ScheduledFuture<?> updateSchedule;
+    private IRelease update;
+    private ScheduledThreadPoolExecutor scheduledUpdateExecutor;
 
     /**
      * Create a new Server instance
@@ -300,6 +309,12 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
         updateSvc = new UpdateSvc(this);
         updateSvc.registerListener(this);
 
+        scheduledUpdateExecutor = new ScheduledThreadPoolExecutor(1);
+        scheduledUpdateExecutor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+        scheduledUpdateExecutor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+        scheduledUpdateExecutor.setRemoveOnCancelPolicy(true);
+        scheduleUpdate();
+
         LOG.info("Initializing commandLine");
         commandLine = new CommandLine(this);
 
@@ -317,18 +332,13 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
         hwtcpServer= new HWTCPServer(this);
 
         if (!hwtcpServer.setUp()) {
-
             LOG.severe("An error occurred while setting up the tcp connections, this instance is going silent now!");
             return this;
-
         }
 
         hwtcpServer.start();
-
         commandLine.run();
-
         return this;
-
     }
 
     public HWServer stop() {
@@ -346,7 +356,8 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
             confLoader.getError().printStackTrace();
             LOG.severe("Unable to save configuration!");
         }
-
+        scheduledUpdateExecutor.shutdown();
+        updateSchedule.cancel(true);
         return this;
     }
 
@@ -399,10 +410,8 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
     public HWServer setArg(AppArgument a) {
 
         if (a.getKey().startsWith("--u:")) {
-
             startArgs.add(new AppArgument("--" + a.getKey().substring(4), a.getValue()));
             return this;
-
         }
 
 
@@ -511,7 +520,7 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
     }
 
     //UpdateSvcListener
-    public void checkForUpdate() {
+    public synchronized void checkForUpdate() {
         if (updateSvc.prepare()) {
             LOG.info("Checking for updates...");
         } else {
@@ -519,14 +528,17 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
         }
     }
 
-    public void upgrade() {
+    public synchronized void upgrade() {
+        if (update==null) {
+            LOG.info("Unable to upgrade: No upgrade available.");
+            return;
+        }
         if (updateSvc.upgrade()) {
             LOG.info("Starting upgrade...");
         } else {
             LOG.warning("Unable to start upgrade: Wait for svc to finish");
         }
     }
-
 
     @Override
     public void onSvcStart() {
@@ -535,14 +547,23 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
 
     @Override
-    public void onSvcDone(boolean failed) {
-        LOG.info("UpdateSvc reported exit("+(failed?"FAIL":"SUCCESS")+"): Update commands now available again");
+    public void onSvcDone(boolean success) {
+        LOG.info("UpdateSvc reported exit("+(success?"FAIL":"SUCCESS")+"): Update commands now available again");
     }
 
     @Override
     public void onUpdateAvailable(IRelease r) {
         LOG.severe("AN UPDATE IS AVAILABLE: " + r.getVersion());
+        update = r;
     }
+
+    @Override
+    public void onNoUpdateAvailable() {
+        LOG.info("----------------------------");
+        LOG.info("Server: Up to date");
+        LOG.info("----------------------------");
+    }
+
 
     @Override
     public void onUpdateDownloaded() {
@@ -560,4 +581,17 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
     public void onUpgradeFailed() {
         LOG.severe("An upgrade FAILED! You may need to resolve this!");
     }
+
+    public synchronized void scheduleUpdate() {
+        int del = config.getNode("updateSchedule").optInt(60*60);
+        updateSchedule = scheduledUpdateExecutor.schedule(new ScheduledUpdateTask(this), del, TimeUnit.SECONDS);
+        onMessage(this, Level.FINE, "Update scheduled in " + del + " seconds.");
+    }
+
+    public synchronized void autoUpgrade() {
+        if (config.getNode("autoUpdate").optBoolean(true)) {
+            upgrade();
+        }
+    }
+
 }

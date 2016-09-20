@@ -35,6 +35,8 @@ public class UpdateSvc implements Runnable {
     private List<IRelease> releases = new ArrayList<IRelease>();
     private IRelease latest;
 
+    private boolean scheduleDownload;
+
     public UpdateSvc(HWServer server) {
         this.server = server;
     }
@@ -54,21 +56,27 @@ public class UpdateSvc implements Runnable {
             return;
         }
         boolean failed = false;
+        scheduleDownload = false;
 
         switch (mode) {
             case UPDATE: failed = !doUpdate(); break;
-            case DOWNLOAD: failed = !doDownload(); break;
+            case DOWNLOAD: scheduleDownload = true; break;
             case UPGRADE: failed = !doUpgrade(); break;
-            case PREPARE: failed = (!doUpdate() & !doDownload()); break;
+            case PREPARE: failed = !doUpdate(); break;
             default: failed=true; break;
         }
 
+        if (scheduleDownload)
+            failed = failed || !doDownload();
+
         myThread = null;
-        sendStateDone(failed);
-        if (!failed && (mode == UpdateSvcMode.DOWNLOAD || mode == UpdateSvcMode.PREPARE))
+        sendStateDone(!failed);
+        if (!failed && scheduleDownload)
             sendStateDownloaded();
         if (failed && mode == UpdateSvcMode.UPGRADE)
             sendStateUpgradeFailed();
+        if (!failed && (mode == UpdateSvcMode.UPDATE || mode == UpdateSvcMode.PREPARE) && latest == null)
+            sendNoUpdateAvailable();
     }
 
     public boolean update() {
@@ -122,14 +130,18 @@ public class UpdateSvc implements Runnable {
             listeners.get(i).onSvcStart();
     }
 
-    private void sendStateDone(boolean failed) {
+    private void sendStateDone(boolean success) {
         for (int i = listeners.size() - 1; i>=0; i--)
-            listeners.get(i).onSvcDone(failed);
+            listeners.get(i).onSvcDone(success);
     }
 
     private void sendUpdateAvailable(IRelease r) {
         for (int i = listeners.size() - 1; i>=0; i--)
             listeners.get(i).onUpdateAvailable(r);
+    }
+    private void sendNoUpdateAvailable() {
+        for (int i = listeners.size() - 1; i>=0; i--)
+            listeners.get(i).onNoUpdateAvailable();
     }
 
     private void sendStateDownloaded() {
@@ -186,6 +198,9 @@ public class UpdateSvc implements Runnable {
         });
         if (latest!=null) {
             sendUpdateAvailable(latest);
+            if (mode == UpdateSvcMode.PREPARE) {
+                scheduleDownload = true;
+            }
         }
         return true;
     }

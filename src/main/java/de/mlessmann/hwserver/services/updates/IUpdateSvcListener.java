@@ -7,9 +7,11 @@ public interface IUpdateSvcListener {
 
     void onSvcStart();
 
-    void onSvcDone(boolean failed);
+    void onSvcDone(boolean success);
 
     void onUpdateAvailable(IRelease r);
+
+    void onNoUpdateAvailable();
 
     void onUpdateDownloaded();
 

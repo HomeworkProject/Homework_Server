@@ -24,10 +24,8 @@ public class nativeCommLogin extends nativeCommandParent {
     public static final String COMMAND = "login";
 
     public nativeCommLogin() {
-
         setID(IDENTIFIER);
         setCommand(COMMAND);
-
     }
 
     public boolean onMessage(HWClientCommandContext context) {
@@ -195,8 +193,8 @@ public class nativeCommLogin extends nativeCommandParent {
                     Status.UNAUTHORIZED,
                     Status.state_genError(
                             Error.InvalidCred,
-                            "User not found or password wrong",
-                            "Invalid user or password supplied"
+                            "Invalid credentials",
+                            "Invalid credentials"
                     ));
 
             response.put("commID", context.getHandler().getCurrentCommID());
