@@ -38,4 +38,4 @@ Includes an Array of HWObjects.
   
   
 ## References:  
-* Code implementation: [nativeCommGetHW.java](https://github.com/MarkL4YG/Homework_Server/blob/Latest/src/main/java/de/mlessmann/network/commands/nativeCommGetHW.java)  
+* Code implementation: [nativeCommGetHW.java](https://github.com/MarkL4YG/Homework_Server/blob/bleeding/src/main/java/de/mlessmann/network/commands/nativeCommGetHW.java)  

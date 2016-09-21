@@ -16,10 +16,8 @@ public class nativeCommGetProtocolVersion extends nativeCommandParent {
     public static final String COMMAND = "getinfo";
 
     public nativeCommGetProtocolVersion() {
-
         setID(IDENTIFIER);
         setCommand(COMMAND);
-
     }
 
     @Override

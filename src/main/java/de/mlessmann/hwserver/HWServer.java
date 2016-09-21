@@ -32,6 +32,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static java.util.logging.Level.*;
 /**
  * Created by Life4YourGames on 29.04.16.
  * @author Life4YourGames
@@ -199,11 +200,11 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
         // -------------------------------- INIT --------------------------------
         // -------------------------------- INIT --------------------------------
         // -------------------------------- INIT --------------------------------
-        LOG.info("------Entering initialization------");
+        onMessage(this, INFO, "------Entering initialization------");
 
         // --- Command Handler ---
 
-        LOG.fine("Trying to load CommandHandler");
+        onMessage(this, FINE, "Attempting to load CommandHandler");
 
         myCommHandProvider = new CommHandProvider();
         myCommHandProvider.setLogger(LOG);
@@ -216,11 +217,11 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
         cLoader.loadAll();
 
-        LOG.fine(myCommHandProvider.getHandler().size() + " handler registered.");
+        onMessage(this, FINE, myCommHandProvider.getHandler().size() + " handler registered.");
 
         // --- Auth Methods ---
 
-        LOG.fine("Trying to load Authmethods");
+        onMessage(this, FINE, "Attempting to load AuthMethods");
 
         myAuthProvider = new AuthProvider();
         myAuthProvider.setLogger(LOG);
@@ -233,11 +234,11 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
         aLoader.loadAll();
 
-        LOG.fine(myAuthProvider.getMethods().size() + " methods registered.");
+        onMessage(this, FINE, myAuthProvider.getMethods().size() + " methods registered.");
 
         // --- Config ---
 
-        LOG.fine("Trying to load configuration");
+        onMessage(this, FINE, "Trying to load configuration");
 
         File confDir = new File("conf");
 
@@ -245,13 +246,13 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
             if (!confDir.mkdir()) {
 
-                LOG.severe("Unable to create dir \"conf\"!");
+                onMessage(this, SEVERE, "Unable to create dir \"conf\"!");
 
                 throw new IOException("Cannot create directory: "+ confDir.getAbsolutePath());
 
             } else {
 
-                LOG.fine("Created default conf dir");
+                onMessage(this, INFO, "Created default configuration directory");
 
             }
 
@@ -263,7 +264,7 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
         node = config.getNode("groups");
         if (node.isVirtual()) {
-            LOG.info("No group node present: Will be initialized");
+            onMessage(this, INFO, "No group node present: Will be initialized");
         }
         //--------------------------- END Config Init ---------------------------------------
         //-----------------------------------------------------------------------------------
@@ -271,41 +272,35 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
         File groupDir = new File("groups");
 
         if (groupDir.isFile()) {
-
             String msg = "File \"groups\" is occupying the groups directory! Delete or move the file before starting the server";
-
-            LOG.severe(msg);
+            onMessage(this, SEVERE, msg);
             throw new FileAlreadyExistsException(msg);
-
         }
 
         if (!groupDir.isDirectory() && !groupDir.mkdirs()) {
-
             String msg = "Unable to create group directory!";
-
-            LOG.severe(msg);
+            onMessage(this, SEVERE, msg);
             throw new IOException(msg);
-
         }
 
         groupMgrSvc = new GroupMgrSvc(this);
         if (!groupMgrSvc.init(config.getNode("groups"))) {
-            String msg = "Unable to initialize groups!";
-            LOG.severe(msg);
+            String msg = "Unable to initialize GroupMgrSvc!";
+            onMessage(this, SEVERE, msg);
             throw new IOException(msg);
         }
-        LOG.info(groupMgrSvc.getGroups().size() + " groups loaded");
+        onMessage(this, INFO, groupMgrSvc.getGroups().size() + " groups loaded");
 
         // -------------------------------- POST INIT --------------------------------
         // -------------------------------- POST INIT --------------------------------
         // -------------------------------- POST INIT --------------------------------
 
-        LOG.info("------Entering post-initialization------");
+        onMessage(this, INFO, "------Entering post-initialization------");
 
-        LOG.info("Initializing SessionMgrSvc");
+        onMessage(this, INFO, "Initializing SessionMgrSvc");
         sessionMgrSvc = new SessionMgrSvc(this);
 
-        LOG.info("Initializing UpdateSvc");
+        onMessage(this, INFO, "Initializing UpdateSvc");
         updateSvc = new UpdateSvc(this);
         updateSvc.registerListener(this);
 
@@ -315,7 +310,7 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
         scheduledUpdateExecutor.setRemoveOnCancelPolicy(true);
         scheduleUpdate();
 
-        LOG.info("Initializing commandLine");
+        onMessage(this, INFO, "Initializing commandLine");
         commandLine = new CommandLine(this);
 
         return this;
@@ -328,14 +323,11 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
     public HWServer start() {
         if (hwtcpServer != null && !hwtcpServer.isStopped())
             return this;
-
         hwtcpServer= new HWTCPServer(this);
-
         if (!hwtcpServer.setUp()) {
-            LOG.severe("An error occurred while setting up the tcp connections, this instance is going silent now!");
+            onMessage(this, SEVERE, "An error occurred while setting up the tcp connections, this instance is going silent now!");
             return this;
         }
-
         hwtcpServer.start();
         commandLine.run();
         return this;
@@ -350,11 +342,10 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
         //hwGroups.forEach((k, v) -> v.flushToFiles());
         //HomeWorks are flushed on addition, this is currently not needed
         //However caching may come back-> This is a reminder
-
         confLoader.save(config);
         if (confLoader.hasError()) {
             confLoader.getError().printStackTrace();
-            LOG.severe("Unable to save configuration!");
+            onMessage(this, SEVERE, "Unable to save configuration!");
         }
         scheduledUpdateExecutor.shutdown();
         updateSchedule.cancel(true);
@@ -365,11 +356,8 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
      * @param args This should be the start arguments (of the application)
      */
     public HWServer setArgs(String[] args) {
-
         ArrayList<AppArgument> arguments = AppArgument.fromArray(args);
-
         arguments.forEach(this::setArg);
-
         return this;
     }
 
@@ -379,9 +367,7 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
      * @return this
      */
     public HWServer setArg(String arg) {
-
         if (arg.contains("=")) {
-
             String key = arg.substring(0, arg.indexOf('='));
             String value = arg.substring(arg.indexOf('='));
 
@@ -397,7 +383,6 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
                 default: LOG.warning("Unsupported argument: " + arg); break;
             }
         }
-
         return this;
     }
 
@@ -408,15 +393,11 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
      * @return this
      */
     public HWServer setArg(AppArgument a) {
-
         if (a.getKey().startsWith("--u:")) {
             startArgs.add(new AppArgument("--" + a.getKey().substring(4), a.getValue()));
             return this;
         }
-
-
         if (a.getValue() != null && !a.getValue().equals("")) {
-
             String key = a.getKey();
             String value = a.getValue();
 
@@ -425,7 +406,6 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
                 case "--mimic-version": VERSION = value; break;
                 default: LOG.warning("Unsupported argument: " + key); break;
             }
-
         } else {
             switch (a.getKey()) {
                 case "--debug": enableDebug(); break;
@@ -433,7 +413,6 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
                 default: LOG.warning("Unsupported argument: " + a.getKey()); break;
             }
         }
-
         return this;
     }
 
@@ -442,13 +421,10 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
      * @return this
      */
     public HWServer enableDebug() {
-
         LOG.setLevel(Level.FINEST);
         LOGFORMATTER.setDebug(true);
         HCONSOLESTD.setLevel(Level.FINEST);
-
-        LOG.fine("Debug mode enabled");
-
+        onMessage(this, INFO, "Debug mode enabled");
         return this;
     }
 
@@ -488,18 +464,12 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
     public Optional<SSLServerSocketFactory> getSecureSocketFactory() {
         //I know, Optional is currently optional itself, but this code may change in future updates
-
         SSLServerSocketFactory ssf = null;
-
         if (!getConfig().getNode("secure_tcp_key").isVirtual() && !getConfig().getNode("secure_tcp_password").isVirtual()) {
-
             System.setProperty("javax.net.ssl.keyStore", getConfig().getNode("secure_tcp_key").optString(null));
             System.setProperty("javax.net.ssl.keyStorePassword", getConfig().getNode("secure_tcp_password").optString(null));
-
         }
-
         ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-
         return Optional.ofNullable(ssf);
 
     }
@@ -511,7 +481,8 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
     //ILogReceiver
     @Override
     public void onMessage(Object sender, Level level, String message) {
-        LOG.log(level, message);
+        String name = sender.getClass().getSimpleName();
+        LOG.log(level, name + ' ' + message);
     }
 
     @Override
@@ -522,7 +493,7 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
     //UpdateSvcListener
     public synchronized void checkForUpdate() {
         if (updateSvc.prepare()) {
-            LOG.info("Checking for updates...");
+            onMessage(this, INFO, "Checking for updates...");
         } else {
             LOG.warning("Unable to check for updates: Wait for svc to finish");
         }
@@ -534,9 +505,9 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
             return;
         }
         if (updateSvc.upgrade()) {
-            LOG.info("Starting upgrade...");
+            onMessage(this, INFO, "Starting upgrade...");
         } else {
-            LOG.warning("Unable to start upgrade: Wait for svc to finish");
+            onMessage(this, WARNING, "Unable to start upgrade: Wait for svc to finish");
         }
     }
 
@@ -548,12 +519,12 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
     @Override
     public void onSvcDone(boolean success) {
-        LOG.info("UpdateSvc reported exit("+(success?"FAIL":"SUCCESS")+"): Update commands now available again");
+        onMessage(this, INFO, "UpdateSvc reported exit("+(success?"FAIL":"SUCCESS")+"): Update commands now available again");
     }
 
     @Override
     public void onUpdateAvailable(IRelease r) {
-        LOG.severe("AN UPDATE IS AVAILABLE: " + r.getVersion());
+        onMessage(this, SEVERE, "AN UPDATE IS AVAILABLE: " + r.getVersion());
         update = r;
     }
 
@@ -585,7 +556,7 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
     public synchronized void scheduleUpdate() {
         int del = config.getNode("updateSchedule").optInt(60*60);
         updateSchedule = scheduledUpdateExecutor.schedule(new ScheduledUpdateTask(this), del, TimeUnit.SECONDS);
-        onMessage(this, Level.FINE, "Update scheduled in " + del + " seconds.");
+        onMessage(this, FINE, "Update scheduled in " + del + " seconds.");
     }
 
     public synchronized void autoUpgrade() {

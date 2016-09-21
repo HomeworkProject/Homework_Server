@@ -25,4 +25,4 @@ If the homework was deleted successfully the response will be Status-200
   
   
 ## References:  
-* Code implementation: [nativeCommDelHW.java](https://github.com/MarkL4YG/Homework_Server/blob/Latest/src/main/java/de/mlessmann/network/commands/nativeCommDelHW.java)  
+* Code implementation: [nativeCommDelHW.java](https://github.com/MarkL4YG/Homework_Server/blob/bleeding/src/main/java/de/mlessmann/network/commands/nativeCommDelHW.java)  

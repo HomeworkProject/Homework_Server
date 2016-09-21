@@ -21,4 +21,4 @@ If the credentials are correct the response will be Status-200
 * _ProtocolError_ - The request was invalid  
   
 ## References:  
-* Code implementation: [nativeCommLogin.java](https://github.com/MarkL4YG/Homework_Server/blob/Latest/src/main/java/de/mlessmann/network/commands/nativeCommLogin.java)  
+* Code implementation: [nativeCommLogin.java](https://github.com/MarkL4YG/Homework_Server/blob/bleeding/src/main/java/de/mlessmann/network/commands/nativeCommLogin.java)  

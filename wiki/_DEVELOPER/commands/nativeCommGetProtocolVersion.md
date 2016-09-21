@@ -29,4 +29,4 @@
   
   
 ## References:  
-* Code implementation: [nativeCommGetProtocolVersion.java](https://github.com/MarkL4YG/Homework_Server/blob/Latest/src/main/java/de/mlessmann/network/commands/nativeCommGetProtocolVersion.java)  
+* Code implementation: [nativeCommGetProtocolVersion.java](https://github.com/MarkL4YG/Homework_Server/blob/bleeding/src/main/java/de/mlessmann/network/commands/nativeCommGetProtocolVersion.java)  

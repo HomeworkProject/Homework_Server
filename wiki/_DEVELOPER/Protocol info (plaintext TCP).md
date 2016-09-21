@@ -12,7 +12,7 @@ This is the Syntax and command information for unencrypted TCP connections to th
 ## Status:
 The server provides status information in every response  
 As expected it will be embedded into JSON with two fields:  
-- "status"\<int\> from [Status.java](https://github.com/MarkL4YG/Homework_Server/blob/Latest/src/main/java/de/mlessmann/network/Status.java)  
+- "status"\<int\> from [Status.java](https://github.com/MarkL4YG/Homework_Server/blob/bleeding/src/main/java/de/mlessmann/network/Status.java)  
 
 ## Responses:  
 Any response of the server will follow this pattern:  
@@ -47,7 +47,7 @@ If the type is an array, the response will include the key "array_type"\<String\
   
 ### Type: HWObject  
   
-see [HWObject type definition](https://github.com/MarkL4YG/Homework_Server/blob/Latest/wiki/types/HWObject.md)  
+see [HWObject type definition](https://github.com/MarkL4YG/Homework_Server/blob/bleeding/wiki/_DEVELOPER/types/HWObject.md)  
   
 ### Type: Message  
   
@@ -69,5 +69,5 @@ ___currently unimplemented___
 ```
 (THIS is the ONLY case in which non-json is accepted!)
 #### Response:
-Refer to [nativeCommGetProtocolVersion.md](https://github.com/MarkL4YG/Homework_Server/blob/Latest/wiki/commands/nativeCommGetProtocolVersion.md)
+Refer to [nativeCommGetProtocolVersion.md](https://github.com/MarkL4YG/Homework_Server/blob/bleeding/wiki/_DEVELOPER/commands/nativeCommGetProtocolVersion.md)
 

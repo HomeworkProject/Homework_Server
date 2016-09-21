@@ -4,10 +4,7 @@ import de.mlessmann.config.ConfigNode;
 import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.hwserver.services.hwsvcs.HWMgrSvc;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Level;
 
 /**
@@ -83,5 +80,11 @@ public class GroupSvc {
         if (myUsers.containsKey(userName))
             u = myUsers.get(userName);
         return Optional.ofNullable(u);
+    }
+
+    public List<HWUser> getUsers() {
+        List<HWUser> l = new ArrayList<>();
+        myUsers.forEach((k,v) -> l.add(v));
+        return l;
     }
 }
