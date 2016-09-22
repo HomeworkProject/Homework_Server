@@ -173,21 +173,23 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
         //PreInit config so the reference is correct
         confLoader = new JSONConfigLoader();
-
         config = confLoader.loadFromFile(confFile);
 
         if (confLoader.hasError()) {
-
-            confLoader.getError().printStackTrace();
-            LOG.severe("Unable to read JSON-Conf: Falling back to defaults...");
+            File f = new File(confFile);
+            if (f.isFile()) {
+                onMessage(this, SEVERE, "Unable to read JSON-Conf: Falling back to defaults...");
+                onException(this, SEVERE, confLoader.getError());
+            } else {
+                onMessage(this, WARNING, "Configuration not found: Falling back to defaults.");
+                confLoader.resetError();
+            }
             config = new ConfigNode();
-            LOG.severe("Attempting to save an empty root node configuration...");
+            onMessage(this, INFO, "Attempting to save an empty root node configuration...");
             confLoader.save(config);
             //This save does not have to be successful
             confLoader.resetError();
-
         }
-
         return this;
     }
 
@@ -519,7 +521,7 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
     @Override
     public void onSvcDone(boolean success) {
-        onMessage(this, INFO, "UpdateSvc reported exit("+(success?"FAIL":"SUCCESS")+"): Update commands now available again");
+        onMessage(this, INFO, "UpdateSvc reported exit("+(!success?"FAIL":"SUCCESS")+"): Update commands now available again");
     }
 
     @Override

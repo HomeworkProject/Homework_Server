@@ -8,6 +8,8 @@ import de.mlessmann.hwserver.services.hwsvcs.HWMgrSvc;
 import java.util.*;
 import java.util.logging.Level;
 
+import static java.util.logging.Level.FINE;
+
 /**
  * Created by Life4YourGames on 23.08.16.
  */
@@ -64,11 +66,12 @@ public class GroupMgrSvc {
         List<String> groups = oG.get();
         int[] failed = {0};
         groups.forEach(s -> {
+            server.onMessage(this, FINE, "Loading group \"" + s + '\"');
             if (!loadGroup(s))
                 failed[0]++;
         });
         server.onMessage(this,
-                failed[0] == 0 ? Level.FINE : Level.WARNING,
+                failed[0] == 0 ? FINE : Level.WARNING,
                 failed[0] + " groups failed to load."
         );
         return failed[0]!=groups.size();

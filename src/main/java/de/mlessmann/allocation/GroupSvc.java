@@ -42,6 +42,7 @@ public class GroupSvc {
         List<String> users = oU.get();
         int[] failed = {0};
         users.forEach(s -> {
+            server.onMessage(this, Level.FINER, "Loading user \"" + s + '\"');
             if (!loadUser(s, node))
                 failed[0]++;
         });
