@@ -1,5 +1,6 @@
 package de.mlessmann.allocation;
 
+import de.mlessmann.common.annotations.Nullable;
 import de.mlessmann.config.ConfigNode;
 import de.mlessmann.config.api.ConfigLoader;
 import de.mlessmann.hwserver.HWServer;
@@ -77,17 +78,33 @@ public class GroupMgrSvc {
         return failed[0]!=groups.size();
     }
 
-    private boolean loadGroup(String name) {
+    public boolean loadGroup(String name) {
         if (!config.hasNode(name)){
             server.onMessage(this, Level.WARNING, "Unable to load group \"" + name + "\": Config not found");
             return false;
         }
-        GroupSvc group = new GroupSvc(this, server);
+        GroupSvc group = getGroupNullable(name);
+        if (group!=null) {
+            server.onMessage(this, FINE, "Reloading group \"" + name + '\"');
+            return group.init(group.getNode());
+        }
+        group = new GroupSvc(this, server);
         if (group.init(config.getNode(name))) {
             myGroups.add(group);
             return true;
         }
         return false;
+    }
+
+    public boolean createGroup(String name) {
+        ConfigNode newGroup = config.getNode(name);
+
+        ConfigNode newUser = newGroup.getNode("users", "default");
+        newUser.getNode("name").setString("default");
+        newUser.getNode("auth", "method").setString("default");
+        newUser.getNode("auth", "default").setString("default");
+        HWPermission.setDefaults(newUser);
+        return true;
     }
 
     public synchronized Optional<HWMgrSvc> getHWMgrFor(String groupName) {
@@ -109,9 +126,14 @@ public class GroupMgrSvc {
     }
 
     public synchronized Optional<GroupSvc> getGroup(String name) {
+        return Optional.ofNullable(getGroupNullable(name));
+    }
+
+    @Nullable
+    public synchronized GroupSvc getGroupNullable(String name) {
         GroupSvc[] g = {null};
         myGroups.stream().filter(grp -> grp.getName().equals(name)).forEach(grp2 -> g[0] = grp2);
-        return Optional.ofNullable(g[0]);
+        return g[0];
     }
 
 }

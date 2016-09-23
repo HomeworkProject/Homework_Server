@@ -25,6 +25,8 @@ public class GroupSvc {
         myUsers = new HashMap<String, HWUser>();
     }
 
+    public ConfigNode getNode() { return node; }
+
     public boolean init(ConfigNode node) {
         myUsers.clear();
         boolean valid =
@@ -87,5 +89,15 @@ public class GroupSvc {
         List<HWUser> l = new ArrayList<>();
         myUsers.forEach((k,v) -> l.add(v));
         return l;
+    }
+
+    public boolean createUser(String name) {
+        ConfigNode newUser = node.getNode("users", name);
+        newUser.getNode("name").setString("default");
+        newUser.getNode("auth", "method").setString("default");
+        newUser.getNode("auth", "default").setString("default");
+        HWPermission.setDefaults(newUser);
+        node.getNode("users").delNode("default");
+        return true;
     }
 }

@@ -566,5 +566,4 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
             upgrade();
         }
     }
-
 }
