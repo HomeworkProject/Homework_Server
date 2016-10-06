@@ -37,7 +37,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
 
         if (!require(request, "date", context.getHandler()) || !require(request, "id", context.getHandler())
                 || !requireUser(context.getHandler())) {
-            return false;
+            return true;
         }
 
         //IsPresent checked in #requireUser(HWTCPClientReference) above
@@ -103,7 +103,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
 
                 sendJSON(context.getHandler(), response);
 
-                return false;
+                return true;
 
             }
 
@@ -124,7 +124,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
 
             sendJSON(context.getHandler(), response);
 
-            return false;
+            return true;
 
         } catch (DateTimeException ex) {
 
@@ -143,7 +143,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
 
             sendJSON(context.getHandler(), response);
 
-            return false;
+            return true;
 
         }
 

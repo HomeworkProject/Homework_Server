@@ -39,7 +39,7 @@ import static java.util.logging.Level.*;
  */
 public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
-    public static String VERSION = "0.0.0.5";
+    public static String VERSION = "0.0.0.6";
 
     //Collect start arguments to pass them through to the updater
     private ArrayList<AppArgument> startArgs = new ArrayList<AppArgument>();
@@ -314,6 +314,8 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
         onMessage(this, INFO, "Initializing commandLine");
         commandLine = new CommandLine(this);
+        commandLine.setIn(System.in);
+        commandLine.setOut(System.out);
 
         return this;
     }
@@ -365,31 +367,6 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
     /**
      * Sets one specific argument. Remember: Args cannot be removed, just adjusted
-     * @param arg The argument in for: <code>"argument=key"</code>
-     * @return this
-     */
-    public HWServer setArg(String arg) {
-        if (arg.contains("=")) {
-            String key = arg.substring(0, arg.indexOf('='));
-            String value = arg.substring(arg.indexOf('='));
-
-            switch (key) {
-                case "-config": confFile = value; break;
-                default: LOG.warning("Unsupported argument: " + key);
-            }
-
-        } else {
-            switch (arg) {
-                case "-debug": enableDebug(); break;
-                case "--log-no-trace": LOGFORMATTER.setDebug(false); break;
-                default: LOG.warning("Unsupported argument: " + arg); break;
-            }
-        }
-        return this;
-    }
-
-    /**
-     * Sets one specific argument. Remember: Args cannot be removed, just adjusted
      * @param a The argument as AppArgument
      *          @see AppArgument;
      * @return this
@@ -406,11 +383,12 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
             switch (key) {
                 case "--config": confFile = value; break;
                 case "--mimic-version": VERSION = value; break;
+                case "--debug": enableDebug(a.getValue()); break;
                 default: LOG.warning("Unsupported argument: " + key); break;
             }
         } else {
             switch (a.getKey()) {
-                case "--debug": enableDebug(); break;
+                case "--debug": enableDebug(null); break;
                 case "--log-no-trace": LOGFORMATTER.setDebug(false); break;
                 default: LOG.warning("Unsupported argument: " + a.getKey()); break;
             }
@@ -422,12 +400,49 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
      * Enable debug mode for this instance
      * @return this
      */
-    public HWServer enableDebug() {
-        LOG.setLevel(Level.FINEST);
-        LOGFORMATTER.setDebug(true);
-        HCONSOLESTD.setLevel(Level.FINEST);
-        onMessage(this, INFO, "Debug mode enabled");
+    public HWServer enableDebug(String val) {
+        if (val == null || val.isEmpty()) {
+            setDebugLevel(Level.FINEST);
+            onMessage(this, INFO, "Debug mode enabled");
+        } else {
+            switch (val) {
+                case "FINEST":
+                    setDebugLevel(Level.FINEST);
+                    break;
+                case "FINER":
+                    setDebugLevel(Level.FINER);
+                    break;
+                case "FINE":
+                    setDebugLevel(Level.FINE);
+                    break;
+                case "INFO":
+                    setDebugLevel(Level.INFO);
+                    break;
+                case "WARN":
+                    setDebugLevel(Level.WARNING);
+                    break;
+                case "ERR":
+                    setDebugLevel(Level.SEVERE);
+                    break;
+                default:
+                    onMessage(this, INFO, "Unknown debug level: Falling to FINEST");
+                    setDebugLevel(FINEST);
+                    break;
+            }
+        }
         return this;
+
+    }
+
+    private void setDebugLevel(Level level) {
+        LOG.setLevel(level);
+        if (level.intValue() >= Level.FINE.intValue()) {
+            LOGFORMATTER.setDebug(true);
+        } else {
+            LOGFORMATTER.setDebug(false);
+        }
+        HCONSOLESTD.setLevel(level);
+        onMessage(this, INFO, "Debug mode enabled");
     }
 
     /**

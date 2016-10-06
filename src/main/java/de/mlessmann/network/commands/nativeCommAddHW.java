@@ -33,11 +33,11 @@ public class nativeCommAddHW extends nativeCommandParent {
 
 
         if (!require(context.getRequest(), "homework", context.getHandler())) {
-            return false;
+            return true;
         }
 
         if (!requireUser(context.getHandler())) {
-            return false;
+            return true;
         }
 
         JSONObject hwObj = context.getRequest().getJSONObject("homework");
@@ -61,7 +61,7 @@ public class nativeCommAddHW extends nativeCommandParent {
 
             sendJSON(context.getHandler(), response);
 
-            return false;
+            return true;
 
         }
 
@@ -89,7 +89,7 @@ public class nativeCommAddHW extends nativeCommandParent {
 
             sendJSON(context.getHandler(), response);
 
-            return false;
+            return true;
 
         } else if (success == 0) {
 
@@ -120,7 +120,7 @@ public class nativeCommAddHW extends nativeCommandParent {
 
             sendJSON(context.getHandler(), response);
 
-            return false;
+            return true;
 
         } else if (success == 2) {
 
@@ -139,7 +139,7 @@ public class nativeCommAddHW extends nativeCommandParent {
 
             sendJSON(context.getHandler(), response);
 
-            return false;
+            return true;
 
         }
 

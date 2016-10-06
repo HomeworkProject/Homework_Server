@@ -2,9 +2,9 @@ package de.mlessmann.allocation;
 
 import de.mlessmann.authentication.IAuthMethod;
 import de.mlessmann.config.ConfigNode;
+import de.mlessmann.homework.HWMgrSvc;
 import de.mlessmann.homework.HomeWork;
 import de.mlessmann.hwserver.HWServer;
-import de.mlessmann.hwserver.services.hwsvcs.HWMgrSvc;
 import org.json.JSONObject;
 
 import java.time.LocalDate;
@@ -69,6 +69,20 @@ public class HWUser {
 
     public String getAuthData() {
         return node.getNode("auth", node.getNode("auth", "method").getString()).getString();
+    }
+
+    public boolean setAuthInfo(String method, String plaintextPW) {
+        ConfigNode n = node.getNode("auth");
+
+        Optional<IAuthMethod> optM = server.getAuthProvider().getMethod(method);
+        if (!optM.isPresent()) {
+            return false;
+        }
+        IAuthMethod m = optM.get();
+
+        n.getNode("method").setString(method);
+        n.getNode(method).setString(m.masqueradePass(plaintextPW));
+        return true;
     }
 
     public boolean authorize(String auth) {

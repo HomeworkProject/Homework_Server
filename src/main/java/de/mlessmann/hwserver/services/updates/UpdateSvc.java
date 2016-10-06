@@ -299,6 +299,7 @@ public class UpdateSvc implements Runnable {
         insC.add("-jar");
         insC.add("installer.jar");
         insC.add("--delay=10000");
+        insC.add("--update");
 
         ProcessBuilder pb = new ProcessBuilder();
         pb.command(insC);

@@ -3,9 +3,8 @@ package de.mlessmann.hwserver;
 import de.mlessmann.allocation.GroupMgrSvc;
 import de.mlessmann.allocation.GroupSvc;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import static java.util.logging.Level.INFO;
@@ -15,6 +14,9 @@ import static java.util.logging.Level.WARNING;
  * Created by Life4YourGames on 02.09.16.
  */
 public class CommandLine {
+
+    private PrintStream out;
+    private InputStream in;
 
     private HWServer server;
     private final Logger LOG;
@@ -26,8 +28,24 @@ public class CommandLine {
         LOG = server.getLogger();
     }
 
+    public InputStream getIn() {
+        return in;
+    }
+
+    public void setIn(InputStream in) {
+        this.in = in;
+    }
+
+    public PrintStream getOut() {
+        return out;
+    }
+
+    public void setOut(PrintStream out) {
+        this.out = out;
+    }
+
     public void run() {
-        reader = new BufferedReader(new InputStreamReader(System.in));
+        reader = new BufferedReader(new InputStreamReader(in));
         exited = false;
         loop: while (!exited) {
 
@@ -57,11 +75,8 @@ public class CommandLine {
                         break;
 
                     default:
-                        if (command.startsWith("create")) {
-                            create(command);
-                            break;
-                        }
-                        System.out.println("Unknown command: " + command); break;
+                        if (!processCommand(command))
+                            out.println("Unknown command: " + command); break;
                 }
 
 
@@ -77,6 +92,39 @@ public class CommandLine {
         if (forced) {
             System.exit(0);
         }
+    }
+
+    public boolean processCommand(String command) {
+        String[] c = command.split(" ");
+
+        switch (c[0]) {
+            case "group": groupComm(c); break;
+            case "user": userComm(c); break;
+            default: return false;
+        }
+        return true;
+    }
+
+    private void groupComm(String[] c) {
+        if (c.length < 3) {
+            out.println("Invalid usage: group <group> <action>");
+        }
+        Optional<GroupSvc> optG = server.getGroupManager().getGroup(c[1]);
+        if (c[2].equals("create")) {
+            if (optG.isPresent()) {
+                out.println("Group already exists");
+                return;
+            }
+            if (c[1].isEmpty()) {
+                out.println("Empty group name not allowed");
+                return;
+            }
+            server.getGroupManager().createGroup(c[1]);
+        }
+
+    }
+
+    private void userComm(String[] c) {
     }
 
     private void create(String command) {

@@ -41,7 +41,7 @@ public class nativeCommGetHW extends nativeCommandParent {
         }
 
         if (!requireUser(context.getHandler())) {
-            return false;
+            return true;
         }
 
 
@@ -53,10 +53,10 @@ public class nativeCommGetHW extends nativeCommandParent {
         if (!context.getRequest().has("date")) {
 
             if (!require(context.getRequest(), "dateFrom", context.getHandler())) {
-                return false;
+                return true;
             }
             if (!require(context.getRequest(), "dateTo", context.getHandler())) {
-                return false;
+                return true;
             }
 
             try {
@@ -138,7 +138,7 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                 sendJSON(context.getHandler(), response);
 
-                return false;
+                return true;
 
             } catch (DateTimeException ex) {
 
@@ -157,7 +157,7 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                 sendJSON(context.getHandler(), response);
 
-                return false;
+                return true;
 
             }
 
@@ -223,7 +223,7 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                 sendJSON(context.getHandler(), response);
 
-                return false;
+                return true;
 
             } catch (DateTimeException ex) {
 
@@ -242,7 +242,7 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                 sendJSON(context.getHandler(), response);
 
-                return false;
+                return true;
 
             }
 

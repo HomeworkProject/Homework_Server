@@ -1,10 +1,8 @@
-package de.mlessmann.hwserver.services.hwsvcs;
+package de.mlessmann.homework;
 
 import de.mlessmann.allocation.GroupMgrSvc;
 import de.mlessmann.allocation.HWPermission;
 import de.mlessmann.allocation.HWUser;
-import de.mlessmann.homework.HomeWork;
-import de.mlessmann.homework.HomeWorkTree;
 import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.perms.Permission;
 import org.json.JSONArray;
@@ -173,7 +171,7 @@ public class HWMgrSvc {
 
                     } else {
 
-                        logger.finest("HWSearch#SKIP # " + childPath + " not present");
+                        logger.finer("HWSearch#SKIP # " + childPath + " not present");
 
                     }
 

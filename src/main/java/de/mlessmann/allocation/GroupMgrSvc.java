@@ -3,8 +3,8 @@ package de.mlessmann.allocation;
 import de.mlessmann.common.annotations.Nullable;
 import de.mlessmann.config.ConfigNode;
 import de.mlessmann.config.api.ConfigLoader;
+import de.mlessmann.homework.HWMgrSvc;
 import de.mlessmann.hwserver.HWServer;
-import de.mlessmann.hwserver.services.hwsvcs.HWMgrSvc;
 
 import java.util.*;
 import java.util.logging.Level;

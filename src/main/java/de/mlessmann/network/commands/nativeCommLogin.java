@@ -88,15 +88,12 @@ public class nativeCommLogin extends nativeCommandParent {
 
             sendJSON(context.getHandler(), response);
         }
-        return valid;
+        return true;
     }
 
     public boolean byAuth(HWClientCommandContext context) {
-
         if (!require(context.getRequest(), "parameters", context.getHandler())) {
-
-            return false;
-
+            return true;
         }
 
         JSONArray arr = context.getRequest().getJSONArray("parameters");
@@ -106,11 +103,8 @@ public class nativeCommLogin extends nativeCommandParent {
         String auth = null;
 
         if (arr.length() >= 1) {
-
             group = arr.getString(0);
-
         } else {
-
             JSONObject response = Status.state_ERROR(
                     Status.BADREQUEST,
                     Status.state_genError(
@@ -122,8 +116,7 @@ public class nativeCommLogin extends nativeCommandParent {
             response.put("commID", context.getHandler().getCurrentCommID());
 
             sendJSON(context.getHandler(), response);
-            return false;
-
+            return true;
         }
 
         if (arr.length() > 2) {
@@ -162,7 +155,7 @@ public class nativeCommLogin extends nativeCommandParent {
             response.put("commID", context.getHandler().getCurrentCommID());
 
             sendJSON(context.getHandler(), response);
-            return false;
+            return true;
         }
 
         Optional<HWUser> hwUser = hwGroup.get().getUser(user);
@@ -181,7 +174,7 @@ public class nativeCommLogin extends nativeCommandParent {
             response.put("commID", context.getHandler().getCurrentCommID());
 
             sendJSON(context.getHandler(), response);
-            return false;
+            return true;
         }
 
         boolean authorized = hwUser.get().authorize(auth);
@@ -200,7 +193,7 @@ public class nativeCommLogin extends nativeCommandParent {
             response.put("commID", context.getHandler().getCurrentCommID());
 
             sendJSON(context.getHandler(), response);
-            return false;
+            return true;
         }
 
         SessionMgrSvc svc = context.getHandler().getSessionMgr();

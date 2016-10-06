@@ -35,15 +35,11 @@ public class TCPServerRunnable implements Runnable {
         while (!this.stopped) {
 
             try {
-
                 Socket clientSock = socket.accept();
-
                 HWTCPClientWorker newCC = new HWTCPClientWorker(clientSock, server);
-
                 server.addClient(newCC);
-
                 newCC.start();
-
+                server.sendLog(this, Level.FINE, "New connection: " + clientSock.getRemoteSocketAddress());
             } catch (SSLException sslEx) {
 
                 server.sendLog(this, Level.FINER, "Denying incoming connection: " + sslEx);
