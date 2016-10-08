@@ -98,7 +98,8 @@ public class HWUpgrade {
         jvmArgs.forEach(command::put);
         command.put("-cp");
         //command.put(System.getProperty("java.class.path"));
-        command.put("libraries/*;Homework_Server.jar");
+        String delim = System.getProperty("java.class.path").contains(":") ? ":" : ";";
+        command.put("libraries/*"+delim+"Homework_Server.jar");
         Arrays.stream(comm).forEach(command::put);
         runTask.put("command", command);
         actions.put(runTask);

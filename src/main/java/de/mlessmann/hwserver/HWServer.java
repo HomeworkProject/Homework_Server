@@ -215,6 +215,8 @@ public class HWServer implements ILogReceiver, IFutureListener {
         CommandLoader.loader = CLASSLOADER;
         AuthLoader.loader = CLASSLOADER;
         IndexTypeProvider.loader = CLASSLOADER;
+        onMessage(this, FINEST, "Classpath entries:");
+        onMessage(this, FINEST, System.getProperty("java.class.path"));
 
         // --- Command Handler ---
 
