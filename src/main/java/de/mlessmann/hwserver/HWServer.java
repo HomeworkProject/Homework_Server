@@ -325,6 +325,9 @@ public class HWServer implements ILogReceiver, IFutureListener {
         scheduledUpdateExecutor.setRemoveOnCancelPolicy(true);
         scheduleUpdate();
 
+        onMessage(this, INFO, "Starting install-cleanup task");
+        new FSCleanTask(this).setFiles(FSCleanTask.getInstallRemnants()).run();
+
         onMessage(this, INFO, "Initializing commandLine");
         commandLine = new CommandLine(this);
         commandLine.setIn(System.in);

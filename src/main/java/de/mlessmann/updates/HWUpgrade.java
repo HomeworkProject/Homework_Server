@@ -1,6 +1,7 @@
 package de.mlessmann.updates;
 
 import de.mlessmann.common.Common;
+import de.mlessmann.common.FileUtils;
 import de.mlessmann.common.HTTP;
 import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.updates.indices.IRelease;
@@ -122,7 +123,7 @@ public class HWUpgrade {
         File newInstaller = new File("installer.jar");
         server.onMessage(this, Level.FINE, "Copying installer");
         try {
-            Common.copyFile(fInstaller, newInstaller);
+            FileUtils.copyFile(fInstaller, newInstaller);
         } catch (IOException e) {
             server.onMessage(this, Level.SEVERE, "Unable to set up installer: " + e.toString());
             server.onException(this, Level.SEVERE, e);
