@@ -3,18 +3,30 @@ package de.mlessmann.homework;
 import de.mlessmann.allocation.GroupMgrSvc;
 import de.mlessmann.allocation.HWPermission;
 import de.mlessmann.allocation.HWUser;
+import de.mlessmann.tasks.FSCleanTask;
 import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.perms.Permission;
+import de.mlessmann.tasks.ITask;
+import de.mlessmann.tasks.TaskManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import static java.time.temporal.ChronoUnit.DAYS;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINEST;
+import static java.util.logging.Level.INFO;
 
 /**
  * Created by Life4YourGames on 02.09.16.
@@ -28,6 +40,7 @@ public class HWMgrSvc {
 
     private String storeFolder;
     private HomeWorkTree parentDir;
+    private int maxHWAge = 60;
 
     public HWMgrSvc(GroupMgrSvc groupMgrSvc, HWServer server) {
         this.server = server;
@@ -43,6 +56,10 @@ public class HWMgrSvc {
         storeFolder = directory;
         parentDir = new HomeWorkTree(server, directory);
         parentDir.analyze();
+
+        maxHWAge = server.getConfig().getNode("cleanup", "hw_database", "maxAgeDays").optInt(60);
+        if (server.getConfig().getNode("cleanup", "hw_database", "enable").optBoolean(false))
+            cleanup(true);
         return true;
     }
 
@@ -258,4 +275,79 @@ public class HWMgrSvc {
         return tree.get().deleteFile("hw_" + id + ".json") ? 0 : 1;
     }
 
+    //--- --- --- --- --- --- --- --- Cleanup --- --- --- --- --- --- --- --- ---
+
+    public void cleanup(boolean scheduleOnly) {
+        if (scheduleOnly) {
+            server.getTaskMgr().schedule(new ITask() {
+                @Override
+                public int getInterval() {
+                    return server.getConfig().getNode("cleanup", "hw_database", "interval").optInt(1);
+                }
+
+                @Override
+                public TimeUnit getTimeUnit() {
+                    return TimeUnit.valueOf(server.getConfig().getNode("cleanup", "hw_database", "intervalTimeUnit").optString("HOURS"));
+                }
+
+                @Override
+                public void reportTaskManager(TaskManager mgr) {
+
+                }
+
+                @Override
+                public void run() {
+                    cleanup(false);
+                }
+            });
+            return;
+        }
+        server.onMessage(this, FINE, "Starting cleanup for dir: " + parentDir.getFile().getName());
+        FSCleanTask t = new FSCleanTask(server);
+        List<HomeWorkTree> years = parentDir.getChilds();
+        years.forEach(y -> {
+            try {
+                Integer year = Integer.parseInt(y.getFile().getName());
+                int[] date = {0,0,0};
+
+                List<HomeWorkTree> months = y.getChilds();
+                if (months.isEmpty()) {
+                    t.addFile(y.getFile().getAbsolutePath());
+                } else {
+                    date[0] = year;
+                    months.forEach(m -> {
+                        try {
+                            Integer month = Integer.parseInt(m.getFile().getName());
+                            List<HomeWorkTree> days = m.getChilds();
+                            if (days.isEmpty()) {
+                                t.addFile(m.getFile().getAbsolutePath());
+                            } else {
+                                date[1] = month;
+                                days.forEach(d -> {
+                                    try {
+                                        Integer day = Integer.parseInt(d.getFile().getName());
+                                        date[2] = day;
+                                        long age = DAYS.between(LocalDate.of(date[0], date[1], date[2]), LocalDate.now());
+                                        if (age > maxHWAge) {
+                                            t.addFile(d.getFile().getAbsolutePath());
+                                        }
+                                    } catch (NumberFormatException | DateTimeException e) {
+                                        server.onMessage(this, FINEST, "Skipping: " + d.getFile().getAbsolutePath() + ':' + e.getClass().getSimpleName());
+                                    }
+                                });
+                            }
+
+                        } catch (NumberFormatException e) {
+                            server.onMessage(this, FINEST, "Skipping: " + m.getFile().getAbsolutePath() + ':' + e.getClass().getSimpleName());
+                        }
+                    });
+                }
+            } catch (NumberFormatException e) {
+                server.onMessage(this, FINEST, "Skipping: " + y.getFile().getAbsolutePath() + ':' + e.getClass().getSimpleName());
+            }
+        });
+        server.onMessage(this, INFO, "Startup FSCleanTask for: " + parentDir.getFile().getName());
+        t.run();
+        cleanup(true);
+    }
 }

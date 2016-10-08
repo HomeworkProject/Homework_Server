@@ -54,6 +54,8 @@ public class HomeWorkTree {
 
     }
 
+    public File getFile() { return file; }
+
     public HomeWorkTree analyze() {
 
         if (file == null) {

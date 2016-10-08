@@ -89,7 +89,7 @@ public class GroupMgrSvc {
             return group.init(group.getNode());
         }
         group = new GroupSvc(this, server);
-        if (group.init(config.getNode(name))) {
+        if (group.init(config.getNode(name)) && getHWMgrFor(name).isPresent()) {
             myGroups.add(group);
             return true;
         }
@@ -135,5 +135,4 @@ public class GroupMgrSvc {
         myGroups.stream().filter(grp -> grp.getName().equals(name)).forEach(grp2 -> g[0] = grp2);
         return g[0];
     }
-
 }

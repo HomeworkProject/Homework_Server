@@ -1,6 +1,7 @@
 package de.mlessmann.hwserver;
 
 import de.mlessmann.allocation.GroupMgrSvc;
+import de.mlessmann.tasks.FSCleanTask;
 import de.mlessmann.common.apparguments.AppArgument;
 import de.mlessmann.common.parallel.IFuture;
 import de.mlessmann.common.parallel.IFutureListener;
@@ -16,6 +17,8 @@ import de.mlessmann.reflections.AuthLoader;
 import de.mlessmann.reflections.AuthProvider;
 import de.mlessmann.reflections.CommHandProvider;
 import de.mlessmann.reflections.CommandLoader;
+import de.mlessmann.tasks.ITask;
+import de.mlessmann.tasks.TaskManager;
 import de.mlessmann.updates.HWUpdateManager;
 import de.mlessmann.updates.indices.IRelease;
 import de.mlessmann.updates.indices.IndexTypeProvider;
@@ -55,6 +58,11 @@ public class HWServer implements ILogReceiver, IFutureListener {
      */
     private HWUpdateManager updateMgr;
     private boolean updateWasScheduled = false;
+
+    /**
+     * Scheduled Tasks
+     */
+    private TaskManager taskMgr;
 
     /**
      * CommandLine Handler
@@ -178,6 +186,7 @@ public class HWServer implements ILogReceiver, IFutureListener {
 
         LOG.info("------Entering preInitialization------");
 
+        onMessage(this, FINE, "Preparing configuration");
         //PreInit config so the reference is correct
         confLoader = new JSONConfigLoader();
         config = confLoader.loadFromFile(confFile);
@@ -197,6 +206,10 @@ public class HWServer implements ILogReceiver, IFutureListener {
             //This save does not have to be successful
             confLoader.resetError();
         }
+
+        onMessage(this, INFO, "Initializing TaskManager");
+        taskMgr = new TaskManager(this);
+
         return this;
     }
 
@@ -278,10 +291,26 @@ public class HWServer implements ILogReceiver, IFutureListener {
         //--------------------------- Config Init -------------------------------------------
         ConfigNode node;
 
+        //Groups
         node = config.getNode("groups");
         if (node.isVirtual()) {
             onMessage(this, INFO, "No group node present: Will be initialized");
         }
+        //Update
+        node = config.getNode("update", "enable");
+        if (node.isVirtual()) node.setBoolean(true);
+        node = config.getNode("update", "interval");
+        if (node.isVirtual()) node.setInt(1);
+        node = config.getNode("update", "intervalTimeUnit");
+        if (node.isVirtual()) node.setString("HOURS");
+        //Cleanup
+        node = config.getNode("cleanup", "hw_database", "enable");
+        if (node.isVirtual()) node.setBoolean(false);
+        node = config.getNode("cleanup", "hw_database", "maxAgeDays");
+        if (node.isVirtual()) node.setInt(60);
+        node = config.getNode("cleanup", "hw_database", "interval");
+        if (node.isVirtual()) node.setInt(1);
+        confLoader.save(config);
         //--------------------------- END Config Init ---------------------------------------
         //-----------------------------------------------------------------------------------
 
@@ -316,17 +345,13 @@ public class HWServer implements ILogReceiver, IFutureListener {
         onMessage(this, INFO, "Initializing SessionMgrSvc");
         sessionMgrSvc = new SessionMgrSvc(this);
 
-        onMessage(this, INFO, "Initializing UpdateSvc");
+        onMessage(this, INFO, "Initializing UpdateSvc and scheduling update if enabled");
         updateMgr = new HWUpdateManager(this);
-
-        scheduledUpdateExecutor = new ScheduledThreadPoolExecutor(1);
-        scheduledUpdateExecutor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
-        scheduledUpdateExecutor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-        scheduledUpdateExecutor.setRemoveOnCancelPolicy(true);
         scheduleUpdate();
 
         onMessage(this, INFO, "Starting install-cleanup task");
         new FSCleanTask(this).setFiles(FSCleanTask.getInstallRemnants()).run();
+
 
         onMessage(this, INFO, "Initializing commandLine");
         commandLine = new CommandLine(this);
@@ -359,6 +384,8 @@ public class HWServer implements ILogReceiver, IFutureListener {
             return this;
         hwtcpServer.stop();
 
+        taskMgr.shutdown(false);
+
         //hwGroups.forEach((k, v) -> v.flushToFiles());
         //HomeWorks are flushed on addition, this is currently not needed
         //However caching may come back-> This is a reminder
@@ -367,8 +394,6 @@ public class HWServer implements ILogReceiver, IFutureListener {
             confLoader.getError().printStackTrace();
             onMessage(this, SEVERE, "Unable to save configuration!");
         }
-        scheduledUpdateExecutor.shutdown();
-        updateSchedule.cancel(true);
         return this;
     }
 
@@ -507,6 +532,8 @@ public class HWServer implements ILogReceiver, IFutureListener {
 
     }
 
+    public TaskManager getTaskMgr() { return taskMgr; }
+
     // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     // --- --- --- --- --- --- --- --- --- --- ---  Interfaces --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -624,30 +651,52 @@ public class HWServer implements ILogReceiver, IFutureListener {
     }
 
     public synchronized void scheduleUpdate() {
-        int del = config.getNode("updateSchedule").optInt(60*60);
-        updateSchedule = scheduledUpdateExecutor.schedule(() -> {
+        if (!config.getNode("update", "enable").optBoolean(true)) return;
 
-            updateWasScheduled = true;
-            IFuture<IRelease> uFuture = updateMgr.getUpdateFuture();
-            if (uFuture==null) {
-                onMessage(this, FINE, "Never checked for updates before: check will be performed");
-                startUpdateCheck();
-                return;
-            } else {
-                IRelease release = uFuture.getOrElse(null);
-                if (release==null) {
-                    onMessage(this, FINE, "No update previously found: check will be performed");
+        int del = config.getNode("update", "interval").optInt(60*60);
+        TimeUnit tU = TimeUnit.valueOf(config.getNode("update", "intervalTimeUnit").optString("SECONDS"));
+        if (del == 0)
+            return;
+        taskMgr.schedule(new ITask() {
+            @Override
+            public int getInterval() {
+                return del;
+            }
+
+            @Override
+            public TimeUnit getTimeUnit() {
+                return tU;
+            }
+
+            @Override
+            public void reportTaskManager(TaskManager mgr) {
+
+            }
+
+            @Override
+            public void run() {
+                updateWasScheduled = true;
+                IFuture<IRelease> uFuture = updateMgr.getUpdateFuture();
+                if (uFuture == null) {
+                    onMessage(this, FINE, "Never checked for updates before: check will be performed");
                     startUpdateCheck();
                     return;
                 } else {
+                    IRelease release = uFuture.getOrElse(null);
+                    if (release == null) {
+                        onMessage(this, FINE, "No update previously found: check will be performed");
+                        startUpdateCheck();
+                        return;
+                    } else {
 
+                    }
                 }
+
+                scheduleUpdate();
             }
+        });
 
-            scheduleUpdate();
-        }, del, TimeUnit.SECONDS);
-
-        onMessage(this, FINE, "Update scheduled in " + del + " seconds.");
+        onMessage(this, FINE, "Update scheduled in " + del + ' ' + tU.toString());
     }
 
     @Override
