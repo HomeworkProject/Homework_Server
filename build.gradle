@@ -17,13 +17,7 @@ task wrapper(type: Wrapper) {
 sourceSets {
 	main {
 		java {
-			srcDirs = ["src/main/java", "src/updater/java", "src/test/java"]
-		}
-	}
-
-	test {
-		java {
-//			srcDirs = ["test", "main"]
+			srcDirs = ["src/main/java", "src/test/java"]
 		}
 	}
 }
@@ -34,7 +28,7 @@ repositories {
 }
 
 dependencies {
-	compile 'org.json:json:20160212'
+	compile 'org.json:json:20160810'
 	compile 'org.reflections:reflections:0.9.10'
 
 	compile project(':javacommon')
@@ -48,8 +42,8 @@ dependencies {
 jar {
 	name = 'Homework_Server.jar'
 	manifest {
-		attributes 'Main-Class': 'main.Main'
-		attributes 'Class-Path': configurations.compile.collect { "libraries/" + it.getName() }.join(' ')
+		attributes 'Main-Class': 'hwserver.Main'
+		//attributes 'Class-Path': configurations.runtime.collect { "libraries/" + it.getName() }.join(' ')
 	}
 }
 

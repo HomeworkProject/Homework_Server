@@ -17,6 +17,8 @@ import java.util.logging.Logger;
  */
 public class CommandLoader {
 
+    public static URLClassLoader loader = (URLClassLoader) CommandLoader.class.getClassLoader();
+
     private Logger myLogger = Logger.getGlobal();
     private CommHandProvider myProvider;
     private HWServer myMaster;
@@ -25,14 +27,7 @@ public class CommandLoader {
 
         if (myProvider == null) return;
 
-        ClassLoader loader = getClass().getClassLoader();
-
-        URLClassLoader ucl;
-
-        if (loader instanceof URLClassLoader) ucl = (URLClassLoader) loader;
-        else throw new RuntimeException("HWCommandLoader: Classloader is not an instance of URLClassLoader - Unable to load command handler");
-
-        URL[] urls = ucl.getURLs();
+        URL[] urls = loader.getURLs();
 
         //Set up filters
         //String partPkgName = "/^.*(commands).*$/ig";

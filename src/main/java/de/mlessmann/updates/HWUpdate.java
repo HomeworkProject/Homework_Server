@@ -13,10 +13,12 @@ import java.util.List;
 public class HWUpdate {
 
     public static final String DEFURL = "http://dev.m-lessmann.de/hwserver/updateConfig.json";
+    public static final String DEFREV = "cv_1";
 
     private HWServer server;
 
     private String confUrl = DEFURL;
+    private String confRev = DEFREV;
 
     private Updater updater;
 
@@ -24,20 +26,24 @@ public class HWUpdate {
         this.server = server;
         updater = new Updater();
         updater.setLogReceiver(server);
+        updater.initProvider();
     }
 
     // --- --- Setter --- ---
 
-    public void setConfUrl(String url) { this.confUrl = confUrl; }
+    public void setConfUrl(String url) { this.confUrl = url; }
+    public void setConfRev(String rev) { this.confRev = rev; }
 
     // --- --- Getter --- ---
 
     public String getConfUrl() { return confUrl; }
+    public String getConfRev() { return confRev; }
 
     // --- --- RUN    --- ---
 
     public boolean check() {
         updater.setConfURI(confUrl);
+        updater.setRevision(confRev);
 
         if (!updater.retrieveConfig()) {
             return false;

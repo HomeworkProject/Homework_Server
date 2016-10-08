@@ -2,14 +2,12 @@ package de.mlessmann.hwserver;
 
 import de.mlessmann.allocation.GroupMgrSvc;
 import de.mlessmann.common.apparguments.AppArgument;
+import de.mlessmann.common.parallel.IFuture;
+import de.mlessmann.common.parallel.IFutureListener;
 import de.mlessmann.config.ConfigNode;
 import de.mlessmann.config.JSONConfigLoader;
 import de.mlessmann.config.api.ConfigLoader;
-import de.mlessmann.hwserver.services.sessionsvc.ScheduledUpdateTask;
 import de.mlessmann.hwserver.services.sessionsvc.SessionMgrSvc;
-import de.mlessmann.hwserver.services.updates.IRelease;
-import de.mlessmann.hwserver.services.updates.IUpdateSvcListener;
-import de.mlessmann.hwserver.services.updates.UpdateSvc;
 import de.mlessmann.logging.HWConsoleHandler;
 import de.mlessmann.logging.HWLogFormatter;
 import de.mlessmann.logging.ILogReceiver;
@@ -18,10 +16,14 @@ import de.mlessmann.reflections.AuthLoader;
 import de.mlessmann.reflections.AuthProvider;
 import de.mlessmann.reflections.CommHandProvider;
 import de.mlessmann.reflections.CommandLoader;
+import de.mlessmann.updates.HWUpdateManager;
+import de.mlessmann.updates.indices.IRelease;
+import de.mlessmann.updates.indices.IndexTypeProvider;
 
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLClassLoader;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -33,11 +35,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.util.logging.Level.*;
+
+//import de.mlessmann.hwserver.services.updates.IRelease;
 /**
  * Created by Life4YourGames on 29.04.16.
  * @author Life4YourGames
  */
-public class HWServer implements ILogReceiver, IUpdateSvcListener {
+public class HWServer implements ILogReceiver, IFutureListener {
+
+    public static final URLClassLoader CLASSLOADER = (URLClassLoader) Thread.currentThread().getContextClassLoader();
 
     public static String VERSION = "0.0.0.6";
 
@@ -47,7 +53,8 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
     /**
      * Updater
      */
-    private UpdateSvc updateSvc;
+    private HWUpdateManager updateMgr;
+    private boolean updateWasScheduled = false;
 
     /**
      * CommandLine Handler
@@ -88,7 +95,7 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
 
     /**
      * Path to the config
-     * @see #setArg(String)
+     * @see #setArg(AppArgument)
      */
     private String confFile = "conf/config.json";
 
@@ -204,6 +211,11 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
         // -------------------------------- INIT --------------------------------
         onMessage(this, INFO, "------Entering initialization------");
 
+        onMessage(this, FINER, "Setting ClassLoaders");
+        CommandLoader.loader = CLASSLOADER;
+        AuthLoader.loader = CLASSLOADER;
+        IndexTypeProvider.loader = CLASSLOADER;
+
         // --- Command Handler ---
 
         onMessage(this, FINE, "Attempting to load CommandHandler");
@@ -303,8 +315,7 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
         sessionMgrSvc = new SessionMgrSvc(this);
 
         onMessage(this, INFO, "Initializing UpdateSvc");
-        updateSvc = new UpdateSvc(this);
-        updateSvc.registerListener(this);
+        updateMgr = new HWUpdateManager(this);
 
         scheduledUpdateExecutor = new ScheduledThreadPoolExecutor(1);
         scheduledUpdateExecutor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
@@ -507,6 +518,7 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
         e.printStackTrace();
     }
 
+    /*
     //UpdateSvcListener
     public synchronized void checkForUpdate() {
         if (updateSvc.prepare()) {
@@ -569,16 +581,103 @@ public class HWServer implements ILogReceiver, IUpdateSvcListener {
     public void onUpgradeFailed() {
         LOG.severe("An upgrade FAILED! You may need to resolve this!");
     }
+    */
+    public synchronized void checkForUpdate() {
+        startUpdateCheck();
+    }
+
+    private void startUpdateCheck() {
+        IFuture<IRelease> f = updateMgr.checkForUpdate();
+        if (f!=null) {
+            onMessage(this, INFO, "Checking for update...");
+            f.registerListener(this);
+        } else
+            onMessage(this, WARNING, "Unable to check for update: Manager busy...");
+    }
+
+    public synchronized void upgrade() {
+        IFuture<IRelease> f = updateMgr.getUpdateFuture();
+        if (f==null) {
+            onMessage(this, WARNING, "Check for update before upgrading!");
+            return;
+        }
+        IRelease r = f.getOrElse(null);
+        if (r == null) {
+            onMessage(this, WARNING, "No upgrade available!");
+            return;
+        }
+        startUpgrade(r);
+    }
+
+    private void startUpgrade(IRelease release) {
+        IFuture<Boolean> f = updateMgr.upgrade(release);
+        if (f!=null) {
+            onMessage(this, INFO, "Starting upgrade...");
+            f.registerListener(this);
+        } else
+            onMessage(this, WARNING, "Unable to start upgrade: Manager busy...");
+    }
 
     public synchronized void scheduleUpdate() {
         int del = config.getNode("updateSchedule").optInt(60*60);
-        updateSchedule = scheduledUpdateExecutor.schedule(new ScheduledUpdateTask(this), del, TimeUnit.SECONDS);
+        updateSchedule = scheduledUpdateExecutor.schedule(() -> {
+
+            updateWasScheduled = true;
+            IFuture<IRelease> uFuture = updateMgr.getUpdateFuture();
+            if (uFuture==null) {
+                onMessage(this, FINE, "Never checked for updates before: check will be performed");
+                startUpdateCheck();
+                return;
+            } else {
+                IRelease release = uFuture.getOrElse(null);
+                if (release==null) {
+                    onMessage(this, FINE, "No update previously found: check will be performed");
+                    startUpdateCheck();
+                    return;
+                } else {
+
+                }
+            }
+
+            scheduleUpdate();
+        }, del, TimeUnit.SECONDS);
+
         onMessage(this, FINE, "Update scheduled in " + del + " seconds.");
     }
 
-    public synchronized void autoUpgrade() {
-        if (config.getNode("autoUpdate").optBoolean(true)) {
-            upgrade();
+    @Override
+    public void onFutureAvailable(IFuture<?> future) {
+        if (future == updateMgr.getUpdateFuture()) {
+            IRelease r = (IRelease)future.getOrElse(null);
+            onMessage(this, INFO, "Update check returned: " +
+                    (r!=null ? r.version() + " is available!" : "No update available."));
+
+            if (r!=null && updateWasScheduled) {
+                boolean autoUpdate = config.getNode("autoUpdate").optBoolean(true);
+                if (!autoUpdate) return;
+                onMessage(this, INFO, "An update has been found! Starting upgrade!");
+                startUpgrade(r);
+                updateWasScheduled = false;
+            }
+            return;
+        }
+        if (future == updateMgr.getUpgradeFuture()) {
+            //nope
+            @SuppressWarnings("unchecked")
+            Boolean readyToStart = ((IFuture<Boolean>)future).getOrElse(Boolean.FALSE);
+            if (!readyToStart) {
+                onMessage(this, SEVERE, "Upgrade setup returned: An error occurred!");
+                return;
+            } else {
+                onMessage(this, SEVERE, "Upgrade setup returned: Ready to upgrade! Starting...");
+                if (!updateMgr.getLastUpgrade().installUpgrade()) {
+                    onMessage(this, SEVERE, "Unable to start upgrade...!");
+                    return;
+                }
+                onMessage(this, SEVERE, "Upgrade imminent: Shutting down!");
+                commandLine.exit(true);
+                return;
+            }
         }
     }
 }

@@ -1,11 +1,14 @@
-package main;
+package hwserver;
 
+import de.mlessmann.common.annotations.IndexType;
 import de.mlessmann.common.apparguments.AppArgument;
 import de.mlessmann.hwserver.HWServer;
+import org.reflections.adapters.JavassistAdapter;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -19,6 +22,10 @@ public class Main {
     public static void main (String[] args) throws IOException {
 
         try {
+            JavassistAdapter.includeInvisibleTag = false;
+            for (Annotation annotation : IndexType.class.getAnnotations()) {
+                System.out.println(annotation.toString());
+            }
 
             ArrayList<AppArgument> aa = AppArgument.fromArray(args);
 

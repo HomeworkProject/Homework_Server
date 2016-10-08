@@ -46,9 +46,13 @@ public class HWUpgrade {
         files.forEach((p, u) -> {
             if (!s[0]) return;
             try {
-                if (!HTTP.GETFILE(u, new File("cache/update/" + p))) {
-                    server.onMessage(this, Level.SEVERE, "Unable to download update file: returned false");
-                    s[0] = false;
+                if (p.startsWith("i_update_") && p.endsWith(".zip")) {
+                    if (!HTTP.GETFILE(u, new File("cache/update/Homework_Server.zip"))) {
+                        server.onMessage(this, Level.SEVERE, "Unable to download update file: returned false");
+                        s[0] = false;
+                    }
+                } else {
+                    server.onMessage(this, Level.FINER, "Skipping non-update file: " + p);
                 }
             } catch (IOException e) {
                 server.onMessage(this, Level.SEVERE, "Unable to download update file: " + e.toString());
@@ -61,10 +65,12 @@ public class HWUpgrade {
 
     public boolean genConfig() {
         File f = new File("install.json");
+        /*
         if (!f.canWrite()) {
             server.onMessage(this, Level.SEVERE, "Upgrade config not writable!");
             return false;
         }
+        */
 
         JSONObject conf = new JSONObject();
         JSONArray actions = new JSONArray();
@@ -90,14 +96,17 @@ public class HWUpgrade {
 
         command.put(java);
         jvmArgs.forEach(command::put);
-        command.put("-jar");
+        command.put("-cp");
+        //command.put(System.getProperty("java.class.path"));
+        command.put("libraries/*");
         Arrays.stream(comm).forEach(command::put);
-        actions.put(command);
+        runTask.put("command", command);
+        actions.put(runTask);
 
         conf.put("actions", actions);
 
         try (FileWriter w = new FileWriter(f)) {
-            w.write(conf.toString());
+            w.write(conf.toString(2));
             w.flush();
         } catch (IOException e) {
             server.onMessage(this, Level.SEVERE, "Unable to write upgradeConfig: " + e.toString());
@@ -125,6 +134,7 @@ public class HWUpgrade {
         command.add("-jar");
         command.add("installer.jar");
         command.add("--upgrade");
+        command.add("--delay=10000");
 
         ProcessBuilder pb = new ProcessBuilder();
         pb.command(command);

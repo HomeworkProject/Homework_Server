@@ -5,6 +5,7 @@ import de.mlessmann.hwserver.HWServer;
 /**
  * Created by Life4YourGames on 20.09.16.
  */
+@Deprecated
 public class ScheduledUpdateTask implements Runnable {
 
     private HWServer server;
@@ -14,7 +15,7 @@ public class ScheduledUpdateTask implements Runnable {
     }
 
     public void run() {
-        try {
+        /*try {
             server.autoUpgrade();
             Thread.sleep(2000);
             server.checkForUpdate();
@@ -23,5 +24,6 @@ public class ScheduledUpdateTask implements Runnable {
         } catch (Exception e) {
 
         }
+        */
     }
 }

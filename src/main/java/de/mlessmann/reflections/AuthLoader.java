@@ -17,6 +17,8 @@ import java.util.logging.Logger;
  */
 public class AuthLoader {
 
+    public static URLClassLoader loader = (URLClassLoader) AuthLoader.class.getClassLoader();
+
     private Logger myLogger = Logger.getGlobal();
     private AuthProvider myProvider;
     private HWServer myMaster;
@@ -25,14 +27,7 @@ public class AuthLoader {
 
         if (myProvider == null) return;
 
-        ClassLoader loader = getClass().getClassLoader();
-
-        URLClassLoader ucl;
-
-        if (loader instanceof URLClassLoader) ucl = (URLClassLoader) loader;
-        else throw new RuntimeException("HWCommandLoader: Classloader is not an instance of URLClassLoader - Unable to load auth methods");
-
-        URL[] urls = ucl.getURLs();
+        URL[] urls = loader.getURLs();
 
         //Set up filters
         //String partPkgName = "/^.*(authentication).*$/ig";
@@ -51,10 +46,8 @@ public class AuthLoader {
 
         Set<Class<?>> classes = ref.getTypesAnnotatedWith(HWAuthMethod.class);
 
-
         classes.stream().filter(c1 -> c1 != null)
                 .forEach(this::loadFromClass);
-
     }
 
     private void loadFromClass(Class<?> c) {
