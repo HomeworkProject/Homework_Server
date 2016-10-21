@@ -1,6 +1,5 @@
 package de.mlessmann.updates;
 
-import de.mlessmann.common.Common;
 import de.mlessmann.common.FileUtils;
 import de.mlessmann.common.HTTP;
 import de.mlessmann.hwserver.HWServer;

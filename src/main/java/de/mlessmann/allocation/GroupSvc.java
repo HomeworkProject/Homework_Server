@@ -100,4 +100,8 @@ public class GroupSvc {
         node.getNode("users").delNode("default");
         return true;
     }
+
+    public boolean reload() {
+        return init(getNode());
+    }
 }

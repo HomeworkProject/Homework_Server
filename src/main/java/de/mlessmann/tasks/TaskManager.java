@@ -2,7 +2,6 @@ package de.mlessmann.tasks;
 
 import de.mlessmann.hwserver.HWServer;
 
-import java.util.Queue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import static java.util.logging.Level.FINER;

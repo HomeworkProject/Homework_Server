@@ -3,9 +3,9 @@ package de.mlessmann.homework;
 import de.mlessmann.allocation.GroupMgrSvc;
 import de.mlessmann.allocation.HWPermission;
 import de.mlessmann.allocation.HWUser;
-import de.mlessmann.tasks.FSCleanTask;
 import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.perms.Permission;
+import de.mlessmann.tasks.FSCleanTask;
 import de.mlessmann.tasks.ITask;
 import de.mlessmann.tasks.TaskManager;
 import org.json.JSONArray;
@@ -19,14 +19,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static java.time.temporal.ChronoUnit.DAYS;
-import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.FINEST;
-import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.*;
 
 /**
  * Created by Life4YourGames on 02.09.16.
