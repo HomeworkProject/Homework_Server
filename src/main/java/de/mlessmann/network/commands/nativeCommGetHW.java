@@ -26,10 +26,8 @@ public class nativeCommGetHW extends nativeCommandParent {
     public static final String COMMAND = "gethw";
 
     public nativeCommGetHW() {
-
         setID(IDENTIFIER);
         setCommand(COMMAND);
-
     }
 
     @Override

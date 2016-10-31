@@ -1,5 +1,5 @@
 # Command: nativeCommAddHW
-##### ID: de.mlessmann.commands.addHW
+##### ID: de.mlessmann.commands.addhw
 
 ## Request
 ```  

@@ -1,5 +1,5 @@
 # Command: nativeCommDelHW
-##### ID: de.mlessmann.commands.delHW
+##### ID: de.mlessmann.commands.delhw
 
 ## Request
 ```  

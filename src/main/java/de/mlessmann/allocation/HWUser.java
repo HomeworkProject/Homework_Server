@@ -114,6 +114,16 @@ public class HWUser {
         }
     }
 
+    public int editHW(LocalDate oldDate, String oldID, JSONObject newHW) {
+        Optional<HWMgrSvc> svc = group.getHWMgr();
+        if (svc.isPresent()) {
+            return svc.get().editHW(oldDate, oldID, newHW, this);
+        } else {
+            server.onMessage(this, Level.SEVERE, "Unable to edit HW: No HWMgr found!");
+            return -1;
+        }
+    }
+
     public ArrayList<HomeWork> getHWOn(LocalDate date, ArrayList<String> subjectFilter) {
         Optional<HWMgrSvc> svc = group.getHWMgr();
         if (svc.isPresent()) {

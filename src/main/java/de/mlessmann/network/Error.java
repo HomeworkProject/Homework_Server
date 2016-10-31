@@ -19,6 +19,8 @@ public class Error {
 
     public static String DelHWError = "DelHWError";
 
+    public static String EditHWError = "EditHWError";
+
     public static String DateTimeError = "DateTimeError";
 
 }

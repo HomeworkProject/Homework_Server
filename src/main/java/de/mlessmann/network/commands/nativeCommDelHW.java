@@ -85,7 +85,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
 
                 return true;
 
-            } else if (success == 2) {
+            } else if (success == 3) {
 
                 JSONObject response = new JSONObject();
 

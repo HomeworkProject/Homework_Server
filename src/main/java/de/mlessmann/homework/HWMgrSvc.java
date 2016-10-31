@@ -3,6 +3,7 @@ package de.mlessmann.homework;
 import de.mlessmann.allocation.GroupMgrSvc;
 import de.mlessmann.allocation.HWPermission;
 import de.mlessmann.allocation.HWUser;
+import de.mlessmann.common.annotations.Nullable;
 import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.perms.Permission;
 import de.mlessmann.tasks.FSCleanTask;
@@ -63,13 +64,9 @@ public class HWMgrSvc {
     //----------------------------------- IMPORTED FROM HWGroup --------------------------------------------------------
 
     public synchronized ArrayList<HomeWork> getHWOn(LocalDate date, ArrayList<String> subjectFilter) {
-
         ArrayList<HomeWork> res = new ArrayList<HomeWork>();
-
         String subPath = date.getYear() + File.separator + date.getMonthValue() + File.separator + date.getDayOfMonth();
-
         Optional<HomeWorkTree> tree = parentDir.getChild(subPath);
-
         if (tree.isPresent()) {
 
             ArrayList<String> list = tree.get().getFileNames();
@@ -83,7 +80,6 @@ public class HWMgrSvc {
                         .filter(s -> s.startsWith("hw_"))
                         .forEach(name -> tempRes.add(HomeWork.newByPath(pathWithoutName + name, server)));
             } else {
-
                 list.stream()
                         .filter(s -> s.startsWith("hw_"))
                         .forEach(name -> tempRes.add(HomeWork.newByPath(pathWithoutName + name, server)));
@@ -95,11 +91,9 @@ public class HWMgrSvc {
 
                 res = new ArrayList<HomeWork>(Arrays.asList(arr));
             }
-
         }
 
         return res;
-
     }
 
     public synchronized ArrayList<HomeWork> getHWBetween(LocalDate from, LocalDate to, ArrayList<String> subjectFilter, boolean overrideLimit) {
@@ -199,7 +193,7 @@ public class HWMgrSvc {
 
     }
 
-    public synchronized int addHW(JSONObject hw, HWUser withUser) {
+    public synchronized int addHW(JSONObject hw, @Nullable HWUser withUser) {
         JSONArray date = null;
         try {
             date = hw.getJSONArray("date");
@@ -258,7 +252,23 @@ public class HWMgrSvc {
         return -1;
     }
 
-    public synchronized int delHW(LocalDate date, String id, HWUser withUser) {
+    public synchronized int editHW(LocalDate oldDate, String oldID, JSONObject newHW, @Nullable HWUser withUser) {
+        if (withUser != null) {
+            Optional<HWPermission> editPerm = withUser.getPermission(Permission.HW_ADD_EDIT);
+            if (!editPerm.isPresent() || editPerm.get().getValue(0) == 0)
+                return 2;
+        }
+
+        int delHWRes = delHW(oldDate, oldID, null);
+
+        if (delHWRes == 1) {
+            return 3;
+        }
+
+        return addHW(newHW, null);
+    }
+
+    public synchronized int delHW(LocalDate date, String id, @Nullable HWUser withUser) {
         String subPath = date.getYear() + File.separator + date.getMonthValue() + File.separator + date.getDayOfMonth();
         Optional<HomeWorkTree> tree = parentDir.getChild(subPath);
         if (!tree.isPresent()) {
@@ -267,7 +277,7 @@ public class HWMgrSvc {
         if (withUser != null) {
             Optional<HWPermission> optD = withUser.getPermission(Permission.HW_DEL);
             int dVal = optD.isPresent() ? optD.get().getValue(Permission.HASVALUE) : 0;
-            if (dVal == 0) return 2;
+            if (dVal == 0) return 3;
         }
         return tree.get().deleteFile("hw_" + id + ".json") ? 0 : 1;
     }
