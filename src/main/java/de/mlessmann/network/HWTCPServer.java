@@ -1,5 +1,6 @@
 package de.mlessmann.network;
 
+import de.mlessmann.config.ConfigNode;
 import de.mlessmann.hwserver.HWServer;
 
 import javax.net.ssl.SSLServerSocketFactory;
@@ -47,12 +48,35 @@ public class HWTCPServer {
         log = hwServer.getLogger();
         master = hwServer;
 
-        plainPort = master.getConfig().getNode("plain_tcp_port").optInt(11900);
-        securePort = master.getConfig().getNode("secure_tcp_port").optInt(plainPort + 1);
+        ConfigNode node;
 
-        enablePlainTCP = master.getConfig().getNode("plain_tcp_enable").optBoolean(true);
-        enableSecureTCP = master.getConfig().getNode("secure_tcp_enable").optBoolean(false);
+        plainPort = 11900;
+        node = master.getConfig().getNode("tcp", "plain", "port");
+        if (node.isVirtual()) {
+            node.setInt(plainPort);
+        } else {
+            plainPort = node.optInt(plainPort);
+        }
 
+        securePort = plainPort + 1;
+        node = master.getConfig().getNode("tcp", "ssl", "port");
+        if (node.isVirtual()) {
+            node.setInt(securePort);
+        } else {
+            securePort = node.optInt(securePort);
+        }
+
+        node = master.getConfig().getNode("tcp", "plain", "enable");
+        if (node.isVirtual()) {
+            node.setBoolean(true);
+        }
+        enablePlainTCP = node.optBoolean(true);
+
+        node = master.getConfig().getNode("tcp", "ssl", "enable");
+        if (node.isVirtual()) {
+            node.setBoolean(false);
+        }
+        enableSecureTCP = node.optBoolean(false);
     }
 
     public boolean setUp() {
@@ -60,32 +84,21 @@ public class HWTCPServer {
         try {
 
             if (enablePlainTCP) {
-
                 plainSock = new ServerSocket(plainPort);
-
                 plainRunnable = new TCPServerRunnable(this, plainSock);
-
                 plainThread = new Thread(plainRunnable);
             }
 
             if (enableSecureTCP) {
-
                 Optional<SSLServerSocketFactory> ssf = master.getSecureSocketFactory();
-
                 if (!ssf.isPresent()) {
-
                     enableSecureTCP = false;
                     sendLog(this, Level.WARNING, "Unable to initialize SecureTCP: Cannot get ServerSocketFactory");
-
                 } else {
-
                     secureSock = ssf.get().createServerSocket(securePort);
-
                     secureRunnable = new TCPServerRunnable(this, secureSock);
-
                     secureThread = new Thread(secureRunnable);
                 }
-
             }
 
             ccList = new ArrayList<HWTCPClientWorker>();
@@ -93,10 +106,8 @@ public class HWTCPServer {
             return true;
 
         } catch (IOException ex) {
-
             log.severe("Unable to create ServerSocket! " + ex.toString());
             return false;
-
         }
 
     }
@@ -104,34 +115,33 @@ public class HWTCPServer {
     public void start() {
 
         if (enablePlainTCP) {
-
             plainThread.start();
-
         }
 
         if (enableSecureTCP) {
-
             secureThread.start();
-
         }
 
     }
 
     public synchronized void sendLog(Object sender, Level level, String message) {
 
-        log.log(level, message);
-
+        if (sender instanceof HWTCPClientHandler) {
+            master.onMessage(sender, level, message);
+        } else {
+            log.log(level, message);
+        }
     }
 
     public void interruptChildren() {
 
-        ccList.stream().forEach(Thread::interrupt);
+        ccList.forEach(Thread::interrupt);
 
     }
 
     public void stopChildren() {
 
-        ccList.stream().forEach(HWTCPClientWorker::closeConnection);
+        ccList.forEach(HWTCPClientWorker::closeConnection);
 
     }
 
@@ -142,50 +152,35 @@ public class HWTCPServer {
             stopped = true;
 
             if (enablePlainTCP) {
-
                 plainThread.interrupt();
-
                 plainSock.close();
-
             }
 
             if (enableSecureTCP) {
-
                 secureThread.interrupt();
-
                 secureSock.close();
-
             }
 
             //interruptChildren();
             stopChildren();
 
         } catch (IOException ex) {
-
             log.warning("Unable to close socket: " + ex.toString());
-
         }
 
     }
 
     public synchronized void addClient(HWTCPClientWorker worker) {
-
         ccList.add(worker);
-
     }
 
     public synchronized void reportRunTermination(TCPServerRunnable runnable) {
-
         if (runnable == null) return;
 
         if (runnable == secureRunnable || runnable == plainRunnable) {
-
             sendLog(this, Level.INFO, "Runnable ended: " + runnable.toString());
-
         } else {
-
             sendLog(this, Level.INFO, "#TCPRunableTermination reported by non-child runnable ?");
-
         }
 
     }
@@ -201,5 +196,4 @@ public class HWTCPServer {
     }
 
     public boolean isStopped() { return stopped; }
-
 }

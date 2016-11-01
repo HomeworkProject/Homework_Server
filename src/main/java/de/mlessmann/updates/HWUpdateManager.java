@@ -36,6 +36,9 @@ public class HWUpdateManager {
         if (updateFuture!=null || updateThread!=null)
             return null;
 
+        String confRev = server.getConfig().getNode("update", "confRev").optString(HWUpdate.DEFREV);
+        String confURI = server.getConfig().getNode("update", "confURI").optString(HWUpdate.DEFURL);
+
         updateResult =null;
         updateFuture = new HWUpdateFuture<IRelease>(future -> updateResult);
         updateThread = new Thread(() -> {
@@ -43,6 +46,8 @@ public class HWUpdateManager {
                 //Ensure that the future has been returned
                 Thread.sleep(1000);
                 lastUpdate = new HWUpdate(server);
+                lastUpdate.setConfRev(confRev);
+                lastUpdate.setConfUrl(confURI);
 
                 if (!lastUpdate.check()) {
                     server.onMessage(this, Level.WARNING, "Update check failed!");

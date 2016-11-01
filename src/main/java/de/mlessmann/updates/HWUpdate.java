@@ -13,7 +13,7 @@ import java.util.List;
 public class HWUpdate {
 
     public static final String DEFURL = "http://dev.m-lessmann.de/hwserver/updateConfig.json";
-    public static final String DEFREV = "cv_1";
+    public static final String DEFREV = null;
 
     private HWServer server;
 

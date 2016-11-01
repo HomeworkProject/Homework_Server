@@ -20,14 +20,11 @@ public class HWTCPClientWorker extends Thread {
     @Override
     public void run() {
         terminated = false;
-
         terminated = !clientHandler.setUp();
 
         while (!terminated) {
-
             //False -> runAction unsuccessful -> Thread can be terminated
             terminated = clientHandler.runAction();
-
         }
     }
 
@@ -41,8 +38,6 @@ public class HWTCPClientWorker extends Thread {
     }
 
     public synchronized void closeConnection () {
-
         clientHandler.closeConnection();
-
     }
 }

@@ -16,33 +16,23 @@ public class HWTCPClientReference {
     private HWTCPClientHandler myHandler = null;
 
     public HWTCPClientReference(HWTCPClientHandler handler) {
-
         myHandler = handler;
-
     }
 
     public void sendMessage(String message) {
-
         myHandler.sendMessage(message);
-
     }
 
     public void sendJSON(JSONObject json) {
-
         myHandler.sendJSON(json);
-
     }
 
     public int getCurrentCommID() {
-
         return myHandler.getCurrentCommID();
-
     }
 
     public Optional<GroupSvc> requestGroup(String name) {
-
         return myHandler.getMaster().getMaster().getGroupManager().getGroup(name);
-
     }
 
     public Optional<HWUser> getUser() { return myHandler.getUser(); }
@@ -55,6 +45,10 @@ public class HWTCPClientReference {
 
     public Socket getRawSocket() {
         return myHandler.getRawSocket();
+    }
+
+    public void runCommand(JSONObject command) {
+        myHandler.processCommand(command);
     }
 
 }

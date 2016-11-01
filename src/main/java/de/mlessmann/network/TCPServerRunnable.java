@@ -16,13 +16,9 @@ public class TCPServerRunnable implements Runnable {
     private boolean stopped;
 
     public TCPServerRunnable(HWTCPServer server, ServerSocket sock) {
-
         super();
-
         this.server = server;
-
         this.socket = sock;
-
     }
 
 
@@ -51,10 +47,8 @@ public class TCPServerRunnable implements Runnable {
                     server.sendLog(this, Level.SEVERE, "Unable to accept connections: " + ex.toString());
 
                 }
-
                 stopped = true;
                 server.reportRunTermination(this);
-
             }
 
         }
@@ -63,9 +57,7 @@ public class TCPServerRunnable implements Runnable {
 
     @Override
     public String toString() {
-
         return "TCPRunnable_" + socket.toString();
-
     }
 
 }

@@ -11,10 +11,8 @@ public class HWClientCommandContext {
     private JSONObject myRequest;
 
     public HWClientCommandContext(JSONObject request, HWTCPClientReference ref) {
-
         myRef = ref;
         myRequest = request;
-
     }
 
     public JSONObject getRequest() { return myRequest; }

@@ -11,23 +11,16 @@ public class HWServerRunnable implements Runnable {
     public Exception lastError;
 
     public HWServerRunnable(HWServer myServer) {
-
         server = myServer;
-
     }
 
     public void run() {
 
         try {
-
             server.preInitialize();
-
             server.start();
-
         } catch (IOException ex) {
-
             lastError = ex;
-
         }
 
     }

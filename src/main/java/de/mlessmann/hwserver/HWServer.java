@@ -1,7 +1,6 @@
 package de.mlessmann.hwserver;
 
 import de.mlessmann.allocation.GroupMgrSvc;
-import de.mlessmann.tasks.FSCleanTask;
 import de.mlessmann.common.apparguments.AppArgument;
 import de.mlessmann.common.parallel.IFuture;
 import de.mlessmann.common.parallel.IFutureListener;
@@ -17,6 +16,7 @@ import de.mlessmann.reflections.AuthLoader;
 import de.mlessmann.reflections.AuthProvider;
 import de.mlessmann.reflections.CommHandProvider;
 import de.mlessmann.reflections.CommandLoader;
+import de.mlessmann.tasks.FSCleanTask;
 import de.mlessmann.tasks.ITask;
 import de.mlessmann.tasks.TaskManager;
 import de.mlessmann.updates.HWUpdateManager;
@@ -439,6 +439,7 @@ public class HWServer implements ILogReceiver, IFutureListener {
 
     /**
      * Enable debug mode for this instance
+     * A level can be specified to limit the verbosity of the output
      * @return this
      */
     public HWServer enableDebug(String val) {
@@ -447,6 +448,7 @@ public class HWServer implements ILogReceiver, IFutureListener {
             onMessage(this, INFO, "Debug mode enabled");
         } else {
             switch (val) {
+                case "DEBUG":
                 case "FINEST":
                     setDebugLevel(Level.FINEST);
                     break;
@@ -462,6 +464,7 @@ public class HWServer implements ILogReceiver, IFutureListener {
                 case "WARN":
                     setDebugLevel(Level.WARNING);
                     break;
+                case "ERROR":
                 case "ERR":
                     setDebugLevel(Level.SEVERE);
                     break;
@@ -523,9 +526,9 @@ public class HWServer implements ILogReceiver, IFutureListener {
     public Optional<SSLServerSocketFactory> getSecureSocketFactory() {
         //I know, Optional is currently optional itself, but this code may change in future updates
         SSLServerSocketFactory ssf = null;
-        if (!getConfig().getNode("secure_tcp_key").isVirtual() && !getConfig().getNode("secure_tcp_password").isVirtual()) {
-            System.setProperty("javax.net.ssl.keyStore", getConfig().getNode("secure_tcp_key").optString(null));
-            System.setProperty("javax.net.ssl.keyStorePassword", getConfig().getNode("secure_tcp_password").optString(null));
+        if (!getConfig().getNode("tcp", "ssl", "key").isVirtual() && !getConfig().getNode("tcp", "ssl", "password").isVirtual()) {
+            System.setProperty("javax.net.ssl.keyStore", getConfig().getNode("tcp", "ssl", "key").optString(null));
+            System.setProperty("javax.net.ssl.keyStorePassword", getConfig().getNode("tcp", "ssl", "password").optString(null));
         }
         ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         return Optional.ofNullable(ssf);
@@ -550,70 +553,8 @@ public class HWServer implements ILogReceiver, IFutureListener {
         e.printStackTrace();
     }
 
-    /*
-    //UpdateSvcListener
-    public synchronized void checkForUpdate() {
-        if (updateSvc.prepare()) {
-            onMessage(this, INFO, "Checking for updates...");
-        } else {
-            LOG.warning("Unable to check for updates: Wait for svc to finish");
-        }
-    }
+    // --- --- --- --- --- --- --- --- --- --- Updates --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    public synchronized void upgrade() {
-        if (update==null) {
-            LOG.info("Unable to upgrade: No upgrade available.");
-            return;
-        }
-        if (updateSvc.upgrade()) {
-            onMessage(this, INFO, "Starting upgrade...");
-        } else {
-            onMessage(this, WARNING, "Unable to start upgrade: Wait for svc to finish");
-        }
-    }
-
-    @Override
-    public void onSvcStart() {
-        LOG.info("UpdateSvc started: Update commands locked");
-    }
-
-
-    @Override
-    public void onSvcDone(boolean success) {
-        onMessage(this, INFO, "UpdateSvc reported exit("+(!success?"FAIL":"SUCCESS")+"): Update commands now available again");
-    }
-
-    @Override
-    public void onUpdateAvailable(IRelease r) {
-        onMessage(this, SEVERE, "AN UPDATE IS AVAILABLE: " + r.getVersion());
-        update = r;
-    }
-
-    @Override
-    public void onNoUpdateAvailable() {
-        LOG.info("----------------------------");
-        LOG.info("Server: Up to date");
-        LOG.info("----------------------------");
-    }
-
-
-    @Override
-    public void onUpdateDownloaded() {
-        LOG.severe("An update has been downloaded.");
-    }
-
-    @Override
-    public void onUpgradeAboutToStart(boolean immediate) {
-        if (immediate) {
-            commandLine.exit(true);
-        }
-    }
-
-    @Override
-    public void onUpgradeFailed() {
-        LOG.severe("An upgrade FAILED! You may need to resolve this!");
-    }
-    */
     public synchronized void checkForUpdate() {
         startUpdateCheck();
     }
@@ -691,7 +632,6 @@ public class HWServer implements ILogReceiver, IFutureListener {
 
                     }
                 }
-
                 scheduleUpdate();
             }
         });

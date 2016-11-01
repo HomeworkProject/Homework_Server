@@ -319,6 +319,11 @@ public class HWTCPClientHandler {
         }
     }
 
+    public synchronized void processCommand(JSONObject command) {
+        master.sendLog(this, Level.FINE, "Processing internal command: " + command.optString("command", "null"));
+        processJSON(command);
+    }
+
     public void closeConnection() {
         isClosed = true;
         try {
