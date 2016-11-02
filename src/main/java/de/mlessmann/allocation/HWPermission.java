@@ -14,15 +14,26 @@ import java.util.logging.Level;
  */
 public class HWPermission {
 
-    public static final Integer[] INITVALS = new Integer[]{0,0,0};
+    public static final Integer[] INITVALS = new Integer[]{1,1,0};
+    public static final Integer[] INITADMINVALS = new Integer[]{100, 100, 99};
     public static List<Integer> INITVALUES() {
         return Arrays.asList(INITVALS);
+    }
+    public static List<Integer> INITADMINVALUES() {
+        return Arrays.asList(INITADMINVALS);
     }
 
     public static void setDefaults(ConfigNode userNode) {
         ConfigNode pNode = userNode.getNode("permissions");
         Permission.defPerms().forEach(s -> {
             pNode.getNode(s).setList(INITVALUES());
+        });
+    }
+
+    public static void setAdminDefaults(ConfigNode userNode) {
+        ConfigNode pNode = userNode.getNode("permissions");
+        Permission.defPerms().forEach(s -> {
+            pNode.getNode(s).setList(INITADMINVALUES());
         });
     }
 

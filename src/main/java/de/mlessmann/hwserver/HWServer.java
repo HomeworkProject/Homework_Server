@@ -22,6 +22,7 @@ import de.mlessmann.tasks.TaskManager;
 import de.mlessmann.updates.HWUpdateManager;
 import de.mlessmann.updates.indices.IRelease;
 import de.mlessmann.updates.indices.IndexTypeProvider;
+import hwserver.Main;
 
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.File;
@@ -100,6 +101,17 @@ public class HWServer implements ILogReceiver, IFutureListener {
      * FileHandler for writing the "latest"-log
      */
     private FileHandler logFileHandler;
+
+    /**
+     * Should we skip the configurator and fall back to defaults when the config is missing?
+     */
+    private boolean skipToDefault = false;
+
+    /**
+     * Should we start the FirstTimeConfigurator on startup?
+     * I do not recommend this...
+     */
+    private boolean forceFirstTimeConfigurator;
 
     /**
      * Path to the config
@@ -194,14 +206,24 @@ public class HWServer implements ILogReceiver, IFutureListener {
         if (confLoader.hasError()) {
             File f = new File(confFile);
             if (f.isFile()) {
-                onMessage(this, SEVERE, "Unable to read JSON-Conf: Falling back to defaults...");
-                onException(this, SEVERE, confLoader.getError());
+                throw new RuntimeException("Unable to read JSON-Conf: Falling back to defaults...", confLoader.getError());
             } else {
-                onMessage(this, WARNING, "Configuration not found: Falling back to defaults.");
                 confLoader.resetError();
+                config = new ConfigNode();
+                if (skipToDefault) {
+                    onMessage(this, WARNING, "Configuration not found: Falling back to empty defaults.");
+                } else {
+                    onMessage(this, WARNING, "Configuration not found: Running setup");
+                    Main.setupConfiguration(config);
+                }
             }
-            config = new ConfigNode();
-            onMessage(this, INFO, "Attempting to save an empty root node configuration...");
+            onMessage(this, INFO, "Attempting to save configuration...");
+            confLoader.save(config);
+            //This save does not have to be successful
+            confLoader.resetError();
+        }
+        if (forceFirstTimeConfigurator) {
+            Main.setupConfiguration(config);
             confLoader.save(config);
             //This save does not have to be successful
             confLoader.resetError();
@@ -272,19 +294,12 @@ public class HWServer implements ILogReceiver, IFutureListener {
         File confDir = new File("conf");
 
         if (!confDir.isDirectory()) {
-
             if (!confDir.mkdir()) {
-
                 onMessage(this, SEVERE, "Unable to create dir \"conf\"!");
-
                 throw new IOException("Cannot create directory: "+ confDir.getAbsolutePath());
-
             } else {
-
                 onMessage(this, INFO, "Created default configuration directory");
-
             }
-
         }
 
         //-----------------------------------------------------------------------------------
@@ -431,6 +446,9 @@ public class HWServer implements ILogReceiver, IFutureListener {
             switch (a.getKey()) {
                 case "--debug": enableDebug(null); break;
                 case "--log-no-trace": LOGFORMATTER.setDebug(false); break;
+                //---HIDDEN DO NOT PUBLISH IN DOCS--
+                case "--force-configurator": forceFirstTimeConfigurator = true; break;
+                //---END HIDDEN DO NOT PUBLISH IN DOCS--
                 default: LOG.warning("Unsupported argument: " + a.getKey()); break;
             }
         }

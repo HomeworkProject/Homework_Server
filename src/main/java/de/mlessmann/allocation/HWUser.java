@@ -1,6 +1,7 @@
 package de.mlessmann.allocation;
 
 import de.mlessmann.authentication.IAuthMethod;
+import de.mlessmann.common.annotations.Nullable;
 import de.mlessmann.config.ConfigNode;
 import de.mlessmann.homework.HWMgrSvc;
 import de.mlessmann.homework.HomeWork;
@@ -42,13 +43,35 @@ public class HWUser {
 
     public boolean init(ConfigNode node) {
 
-        boolean valid = !node.getKey().isEmpty()
+        boolean valid = true;
+        //Should we set up this user?
+        if (node.hasNode("onLoad")) {
+            ConfigNode onLoad = node.getNode("onLoad");
+            if (onLoad.hasNode("passwd")) {
+                String authID = onLoad.getNode("passwd", "method").optString("default");
+                String passwd = onLoad.getNode("passwd", "password").optString("null");
+                valid = valid & setAuthInfo(authID, passwd, node);
+            }
+            if (onLoad.hasNode("perm")) {
+                //Set permissions
+                if (onLoad.getNode("perm").optString("admin").equals("admin")) {
+                    HWPermission.setAdminDefaults(node);
+                } else {
+                    HWPermission.setDefaults(node);
+                }
+            }
+            //Delete processed node
+            node.delNode("onLoad");
+        }
+        valid = valid &&
+                !node.getKey().isEmpty()
                 && node.hasNode("auth")
                 && node.getNode("auth").isHub()
                 && node.getNode("auth").hasNode("method")
                 && node.getNode("auth", "method").isType(String.class)
                 && node.hasNode("permissions")
                 && node.getNode("permissions").isHub();
+
         if (!valid) {
             return false;
         }
@@ -71,8 +94,8 @@ public class HWUser {
         return node.getNode("auth", node.getNode("auth", "method").getString()).getString();
     }
 
-    public boolean setAuthInfo(String method, String plaintextPW) {
-        ConfigNode n = node.getNode("auth");
+    public boolean setAuthInfo(String method, String plaintextPW, @Nullable ConfigNode onNode) {
+        ConfigNode n = onNode == null ? node.getNode("auth") : onNode;
 
         Optional<IAuthMethod> optM = server.getAuthProvider().getMethod(method);
         if (!optM.isPresent()) {
@@ -81,7 +104,9 @@ public class HWUser {
         IAuthMethod m = optM.get();
 
         n.getNode("method").setString(method);
-        n.getNode(method).setString(m.masqueradePass(plaintextPW));
+        n.getNode("auth").setString(m.masqueradePass(plaintextPW));
+        if (n == node)
+            authMethod = m;
         return true;
     }
 
