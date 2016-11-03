@@ -19,6 +19,10 @@ E-Mail: [Me](mailto:github@m-lessmann.de) or [Sebastian](mailto:mail@s-paarmann.
 
 Or even personally if you live near Henstedt-Ulzburg (Germany) by contacting our school <br /> (Alstergymnasium Henstedt-Ulzburg)
 
+## Want to create a client?
+
+There's a _ClientDevelopmentKit_ available: [here](https://github.com/MarkL4YG/Homework_Server_CDK)
+
 ## Progress  
 The best place to get information about pending features, pending fixed, current target, etc. can be obtained in the [issues section](https://github.com/MarkL4YG/Homework_Server/issues)  
 You may also want to take a look at the [projects-section](https://github.com/MarkL4YG/Homework_Server/projects) for even more detailed information.  
