@@ -42,10 +42,12 @@ public class HWTCPClientHandler {
     private int soTimeout = 10000;
     private int timeouts = 0;
     private int currentCommID;
+    private HWTCPClientOverflowLimiter limiter;
 
     public HWTCPClientHandler(Socket clientSock, HWTCPServer tcpServer) {
         this.mySock = clientSock;
         this.master = tcpServer;
+        this.limiter = new HWTCPClientOverflowLimiter(this, tcpServer.getMaster());
         this.myReference = new HWTCPClientReference(this);
         aprilFirst = (LocalDate.now().getMonthValue() == 1 && LocalDate.now().getDayOfMonth() == 1);
         soTimeout = master.getMaster().getConfig().getNode("socketTimeout").optInt(10000);
@@ -57,16 +59,12 @@ public class HWTCPClientHandler {
             writer = new BufferedWriter(new OutputStreamWriter(mySock.getOutputStream()));
             mySock.setSoTimeout(soTimeout);
         } catch (IOException ex) {
-
-            StringBuilder builder = new StringBuilder("Unable to get inputStream of Socket: ");
-            builder.append(ex.toString());
-            master.sendLog(this, Level.WARNING, builder.toString());
+            master.sendLog(this, Level.WARNING, "Unable to get inputStream of Socket: " + ex.getMessage());
+            master.sendExc(this, Level.WARNING, ex);
             return true;
-
         }
-
+        limiter.start();
         return true;
-
     }
 
     public SessionMgrSvc getSessionMgr() { return master.getMaster().getSessionMgr(); }
@@ -101,6 +99,16 @@ public class HWTCPClientHandler {
 
             String message = reader.readLine();
             if (message != null) {
+                int overflowStatus = limiter.newReq();
+                if (overflowStatus == 1) {
+                    sendOverflowMessage();
+                    return terminated;
+                } else if (overflowStatus >=2) {
+                    master.sendLog(this, Level.INFO, "Closing connection due to overflow prevention!");
+                    closeConnection();
+                    return terminated;
+                }
+
                 timeouts = 0;
                 if (message.startsWith("protoInfo")) {
                     sendProtocolInfo();
@@ -212,12 +220,20 @@ public class HWTCPClientHandler {
         sendJSON(response);
     }
 
+    private void sendOverflowMessage() {
+        JSONObject response = new JSONObject();
+        response.put("status", Status.TOOMANYREQUESTS);
+        response.put("payload_type", "null");
+        sendJSON(response);
+    }
+
     private void killConnection() {
         try {
             mySock.close();
         } catch (Exception  e) {
             master.sendLog(this, Level.FINE, "killConnection: " + e.toString());
         }
+        limiter.stop();
         terminated = true;
     }
 
@@ -326,11 +342,7 @@ public class HWTCPClientHandler {
 
     public void closeConnection() {
         isClosed = true;
-        try {
-            mySock.close();
-        } catch (IOException ex) {
-            master.sendLog(this, Level.WARNING, "Unable to close connection: " + ex.toString());
-        }
+        killConnection();
     }
 
 }

@@ -16,6 +16,7 @@ public abstract class nativeCommandParent implements ICommandHandler {
     private String ID = "de.mlessmann.command.native";
     private String COMM = "";
     private boolean critical = false;
+    private HWTCPClientReference currentRef;
 
     protected void setID(String id) { ID = id; }
 
@@ -29,7 +30,10 @@ public abstract class nativeCommandParent implements ICommandHandler {
 
     public boolean isCritical() { return critical; }
 
-    public abstract boolean onMessage(HWClientCommandContext context);
+    public boolean onMessage(HWClientCommandContext context) {
+        this.currentRef = context.getHandler();
+        return true;
+    }
 
     @Override
     public Optional<ICommandHandler> clone() {
@@ -89,7 +93,7 @@ public abstract class nativeCommandParent implements ICommandHandler {
 
             response.put("commID", r.getCurrentCommID());
 
-            sendJSON(r, response);
+            sendJSON(response);
 
             return false;
         }
@@ -98,12 +102,10 @@ public abstract class nativeCommandParent implements ICommandHandler {
 
     }
 
-    protected void sendJSON(HWTCPClientReference r, JSONObject json) {
-
+    protected void sendJSON(JSONObject json) {
         json.put("handler", this.getIdentifier());
-
-        r.sendJSON(json);
-
+        json.put("commID", currentRef.getCurrentCommID());
+        currentRef.sendJSON(json);
     }
 
 }

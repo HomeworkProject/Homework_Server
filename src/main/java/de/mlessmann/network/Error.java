@@ -23,4 +23,8 @@ public class Error {
 
     public static String DateTimeError = "DateTimeError";
 
+    public static String InternalError = "InternalError";
+
+    public static String LimitExceeded = "LimitExceededError";
+
 }

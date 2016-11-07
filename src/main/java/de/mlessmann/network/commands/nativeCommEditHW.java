@@ -25,12 +25,15 @@ public class nativeCommEditHW extends nativeCommandParent{
     public static final String COMMAND = "addhw";
 
     public nativeCommEditHW() {
+        super();
         setID(IDENTIFIER);
         setCommand(COMMAND);
     }
 
     @Override
     public boolean onMessage(HWClientCommandContext context) {
+        super.onMessage(context);
+
         if (!require(context.getRequest(), "homework", context.getHandler())) {
             return true;
         }
@@ -43,7 +46,7 @@ public class nativeCommEditHW extends nativeCommandParent{
 
         JSONObject p = Status.state_PROCESSING();
         p.put("commID", context.getHandler().getCurrentCommID());
-        sendJSON(context.getHandler(), p);
+        sendJSON(p);
 
         if (!HomeWork.checkValidity(hwObj)) {
 
@@ -57,7 +60,7 @@ public class nativeCommEditHW extends nativeCommandParent{
             );
 
             response.put("commID", context.getHandler().getCurrentCommID());
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
             return true;
         }
 
@@ -75,7 +78,7 @@ public class nativeCommEditHW extends nativeCommandParent{
                     )
             );
             resp.put("commID", context.getHandler().getCurrentCommID());
-            sendJSON(context.getHandler(), resp);
+            sendJSON(resp);
             return true;
         }
 
@@ -92,7 +95,7 @@ public class nativeCommEditHW extends nativeCommandParent{
                     )
             );
             resp.put("commID", context.getHandler().getCurrentCommID());
-            sendJSON(context.getHandler(), resp);
+            sendJSON(resp);
             return true;
         }
 
@@ -118,7 +121,7 @@ public class nativeCommEditHW extends nativeCommandParent{
 
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
 
             return true;
 
@@ -130,7 +133,7 @@ public class nativeCommEditHW extends nativeCommandParent{
             response.put("payload_type", "null");
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
 
             return true;
 
@@ -149,7 +152,7 @@ public class nativeCommEditHW extends nativeCommandParent{
 
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
 
             return true;
 
@@ -168,7 +171,7 @@ public class nativeCommEditHW extends nativeCommandParent{
 
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
 
             return true;
 
@@ -187,7 +190,7 @@ public class nativeCommEditHW extends nativeCommandParent{
 
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
 
             return true;
 

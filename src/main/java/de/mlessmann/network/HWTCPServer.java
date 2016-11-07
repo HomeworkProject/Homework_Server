@@ -125,12 +125,15 @@ public class HWTCPServer {
     }
 
     public synchronized void sendLog(Object sender, Level level, String message) {
-
         if (sender instanceof HWTCPClientHandler) {
             master.onMessage(sender, level, message);
         } else {
             log.log(level, message);
         }
+    }
+
+    public synchronized void sendExc(Object sender, Level level, Exception e) {
+        master.onException(sender, level, e);
     }
 
     public void interruptChildren() {

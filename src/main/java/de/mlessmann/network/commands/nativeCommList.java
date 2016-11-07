@@ -26,6 +26,7 @@ public class nativeCommList extends nativeCommandParent {
     private HWServer server;
 
     public nativeCommList(HWServer server) {
+        super();
         this.server = server;
         setID(IDENTIFIER);
         setCommand(COMMAND);
@@ -33,6 +34,8 @@ public class nativeCommList extends nativeCommandParent {
 
     @Override
     public boolean onMessage(HWClientCommandContext ctx) {
+        super.onMessage(ctx);
+
         JSONObject req = ctx.getRequest();
         HWTCPClientReference handler = ctx.getHandler();
 
@@ -60,7 +63,7 @@ public class nativeCommList extends nativeCommandParent {
         resp.put("payload", jGrps);
         resp.put("commID", ctx.getHandler().getCurrentCommID());
 
-        sendJSON(ctx.getHandler(), resp);
+        sendJSON(resp);
         return true;
     }
 
@@ -78,7 +81,7 @@ public class nativeCommList extends nativeCommandParent {
                     ));
 
             response.put("commID", ctx.getHandler().getCurrentCommID());
-            sendJSON(ctx.getHandler(), response);
+            sendJSON(response);
             return false;
         }
         GroupSvc g = oGrp.get();
@@ -90,7 +93,7 @@ public class nativeCommList extends nativeCommandParent {
         resp.put("payload", jGrps);
         resp.put("commID", ctx.getHandler().getCurrentCommID());
 
-        sendJSON(ctx.getHandler(), resp);
+        sendJSON(resp);
         return true;
     }
 }

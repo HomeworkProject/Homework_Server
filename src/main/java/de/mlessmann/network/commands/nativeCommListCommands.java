@@ -21,7 +21,7 @@ public class nativeCommListCommands extends nativeCommandParent {
     private HWServer hwInstance = null;
 
     public nativeCommListCommands(HWServer server) {
-
+        super();
         setID(IDENTIFIER);
         setCommand(COMMAND);
         hwInstance = server;
@@ -29,6 +29,7 @@ public class nativeCommListCommands extends nativeCommandParent {
     }
 
     public boolean onMessage(HWClientCommandContext context) {
+        super.onMessage(context);
 
         ArrayList<ICommandHandler> handler;
 
@@ -61,7 +62,7 @@ public class nativeCommListCommands extends nativeCommandParent {
         r.put("payload", arr);
         r.put("commID", context.getHandler().getCurrentCommID());
 
-        sendJSON(context.getHandler(), r);
+        sendJSON(r);
 
         return true;
 

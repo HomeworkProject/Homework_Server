@@ -24,6 +24,11 @@ public class Permission {
     public static String HW_DEL = "hw_del";
 
     /**
+     * Permission for editing HW-Attachments
+     */
+    public static String HW_ATTACH = "hw_attach";
+
+    /**
      * Permission to manage users
      * (Remember that values really matter here)
      */
@@ -52,8 +57,8 @@ public class Permission {
      * Some indices
      */
     public static int HASVALUE = 0;
-    public static int GIVEVALUE = 1;
-    public static int HASTOHAVETOCHANGE = 2;
+    public static int HASTOHAVETOCHANGE = 1;
+    public static int GIVEVALUE = 2;
 
     public static List<String> defPerms() {
         List<String> l = new ArrayList<String>();

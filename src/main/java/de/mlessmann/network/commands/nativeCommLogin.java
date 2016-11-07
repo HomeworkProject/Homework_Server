@@ -24,11 +24,13 @@ public class nativeCommLogin extends nativeCommandParent {
     public static final String COMMAND = "login";
 
     public nativeCommLogin() {
+        super();
         setID(IDENTIFIER);
         setCommand(COMMAND);
     }
 
     public boolean onMessage(HWClientCommandContext context) {
+        super.onMessage(context);
 
         JSONObject request = context.getRequest();
 
@@ -76,7 +78,7 @@ public class nativeCommLogin extends nativeCommandParent {
             response.put("session", rS);
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
         } else {
             JSONObject response = Status.state_ERROR(Status.EXPIRED,
                     Status.state_genError(
@@ -86,7 +88,7 @@ public class nativeCommLogin extends nativeCommandParent {
                     ));
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
         }
         return true;
     }
@@ -115,7 +117,7 @@ public class nativeCommLogin extends nativeCommandParent {
 
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
             return true;
         }
 
@@ -154,7 +156,7 @@ public class nativeCommLogin extends nativeCommandParent {
 
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
             return true;
         }
 
@@ -173,7 +175,7 @@ public class nativeCommLogin extends nativeCommandParent {
 
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
             return true;
         }
 
@@ -192,7 +194,7 @@ public class nativeCommLogin extends nativeCommandParent {
 
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
             return true;
         }
 
@@ -215,7 +217,7 @@ public class nativeCommLogin extends nativeCommandParent {
             svc.addSession(s);
         }
 
-        sendJSON(context.getHandler(), response);
+        sendJSON(response);
 
         return true;
 

@@ -10,8 +10,7 @@ import org.json.JSONObject;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 
@@ -28,7 +27,7 @@ public class HWUser {
     private String authData = DEFPASS;
     private IAuthMethod authMethod;
 
-    private Map<String, HWPermission> permissions;
+    private List<HWUserListener> listeners;
 
     private ConfigNode node;
 
@@ -36,7 +35,7 @@ public class HWUser {
     private HWServer server;
 
     public HWUser(GroupSvc group, HWServer server) {
-        this.permissions = new HashMap<String, HWPermission>();
+        this.listeners = new ArrayList<HWUserListener>();
         this.group = group;
         this.server = server;
     }
@@ -73,6 +72,7 @@ public class HWUser {
                 && node.getNode("permissions").isHub();
 
         if (!valid) {
+            server.onMessage(this, Level.FINEST, "Invalid User: cannot load!");
             return false;
         }
         Optional<IAuthMethod> m = server.getAuthProvider().getMethod(node.getNode("auth", "method").getString());
@@ -83,6 +83,7 @@ public class HWUser {
         }
         authMethod = m.get();
         this.node = node;
+        notifyOnChange();
         return true;
     }
 
@@ -91,7 +92,7 @@ public class HWUser {
     }
 
     public String getAuthData() {
-        return node.getNode("auth", node.getNode("auth", "method").getString()).getString();
+        return node.getNode("auth", "pass").getString();
     }
 
     public boolean setAuthInfo(String method, String plaintextPW, @Nullable ConfigNode onNode) {
@@ -104,9 +105,11 @@ public class HWUser {
         IAuthMethod m = optM.get();
 
         n.getNode("method").setString(method);
-        n.getNode("auth").setString(m.masqueradePass(plaintextPW));
-        if (n == node)
+        n.getNode("pass").setString(m.masqueradePass(plaintextPW));
+        if (n == node) {
             authMethod = m;
+            notifyOnChange();
+        }
         return true;
     }
 
@@ -126,7 +129,13 @@ public class HWUser {
     }
 
     public void addPermission(HWPermission perm) {
-        node.addNode(perm.getNode());
+        node.getNode("permissions").addNode(perm.getNode());
+        notifyOnChange();
+    }
+
+    public void removePermission(HWPermission perm) {
+        node.getNode("permissions").delNode(perm.getNode().getKey());
+        notifyOnChange();
     }
 
     public int addHW(JSONObject obj) {
@@ -146,6 +155,16 @@ public class HWUser {
         } else {
             server.onMessage(this, Level.SEVERE, "Unable to edit HW: No HWMgr found!");
             return -1;
+        }
+    }
+
+    public Optional<HomeWork> getHW(int yyyy, int MM, int dd, String hwID) {
+        Optional<HWMgrSvc> svc = group.getHWMgr();
+        if (svc.isPresent()) {
+            return svc.get().getHW(yyyy, MM, dd, hwID);
+        } else {
+            server.onMessage(this, Level.SEVERE, "Unable to search for HW: No HWMgr found!");
+            return Optional.empty();
         }
     }
 
@@ -188,4 +207,16 @@ public class HWUser {
 
     public String getAuthIdent() { return authMethod.getIdentifier(); }
 
+    private void notifyOnChange() {
+        for (int i = listeners.size()-1; i>=0; i--)
+            listeners.get(i).onChange(this);
+    }
+
+    public void registerListener(HWUserListener listener) {
+        if (!listeners.contains(listener)) listeners.add(listener);
+    }
+
+    public void unregisterListener(HWUserListener listener) {
+        if (listeners.contains(listener)) listeners.remove(listener);
+    }
 }

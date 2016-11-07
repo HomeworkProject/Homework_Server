@@ -24,7 +24,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
     public static final String COMMAND = "delhw";
 
     public nativeCommDelHW() {
-
+        super();
         setID(IDENTIFIER);
         setCommand(COMMAND);
 
@@ -32,6 +32,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
 
     @Override
     public boolean onMessage(HWClientCommandContext context) {
+        super.onMessage(context);
 
         JSONObject request = context.getRequest();
 
@@ -69,7 +70,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
 
                 response.put("commID", context.getHandler().getCurrentCommID());
 
-                sendJSON(context.getHandler(), response);
+                sendJSON(response);
 
                 return false;
 
@@ -81,7 +82,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
                 response.put("payload_type", "null");
                 response.put("commID", context.getHandler().getCurrentCommID());
 
-                sendJSON(context.getHandler(), response);
+                sendJSON(response);
 
                 return true;
 
@@ -101,7 +102,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
 
                 response.put("commID", context.getHandler().getCurrentCommID());
 
-                sendJSON(context.getHandler(), response);
+                sendJSON(response);
 
                 return true;
 
@@ -122,7 +123,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
 
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
 
             return true;
 
@@ -141,7 +142,7 @@ public class nativeCommDelHW  extends nativeCommandParent {
 
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
 
             return true;
 

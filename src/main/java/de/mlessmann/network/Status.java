@@ -168,6 +168,13 @@ public class Status {
 
     }
 
+    public static JSONObject state_CONTINUE() {
+        JSONObject o = new JSONObject();
+        o.put("status", CONTINUE);
+        o.put("payload_type", "null");
+        return o;
+    }
+
     public static JSONObject state_PROCESSING() {
 
         JSONObject o = new JSONObject();

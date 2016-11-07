@@ -26,16 +26,17 @@ public class nativeCommGetHW extends nativeCommandParent {
     public static final String COMMAND = "gethw";
 
     public nativeCommGetHW() {
+        super();
         setID(IDENTIFIER);
         setCommand(COMMAND);
     }
 
     @Override
     public boolean onMessage(HWClientCommandContext context) {
-
+        super.onMessage(context);
         JSONArray subjects = null;
         if (context.getRequest().has("subjects")) {
-            subjects = context.getRequest().getJSONArray("subjects");
+            subjects = context.getRequest().optJSONArray("subjects");
         }
 
         if (!requireUser(context.getHandler())) {
@@ -73,18 +74,16 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                 JSONObject p = Status.state_PROCESSING();
                 p.put("commID", context.getHandler().getCurrentCommID());
-                sendJSON(context.getHandler(), p);
+                sendJSON(p);
 
                 LocalDate dateFrom = LocalDate.of(fyyyy, fMM, fdd);
                 LocalDate dateTo = LocalDate.of(tyyyy, tMM, tdd);
 
+                //Filter subjects
                 ArrayList<String> subjectFilter = null;
                 if (subjects != null && subjects.length() > 0) {
-
                     subjectFilter = new ArrayList<String>();
-
                     ArrayList<String> finalSubjectFilter = subjectFilter;
-
                     subjects.forEach(s -> {
                                 if (s instanceof String) {
                                     finalSubjectFilter.add((String) s);
@@ -115,7 +114,7 @@ public class nativeCommGetHW extends nativeCommandParent {
                 response.put("payload", arr);
                 response.put("commID", context.getHandler().getCurrentCommID());
 
-                sendJSON(context.getHandler(), response);
+                sendJSON(response);
 
                 return true;
 
@@ -134,7 +133,7 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                 response.put("commID", context.getHandler().getCurrentCommID());
 
-                sendJSON(context.getHandler(), response);
+                sendJSON(response);
 
                 return true;
 
@@ -153,7 +152,7 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                 response.put("commID", context.getHandler().getCurrentCommID());
 
-                sendJSON(context.getHandler(), response);
+                sendJSON(response);
 
                 return true;
 
@@ -169,15 +168,13 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                 JSONObject p = Status.state_PROCESSING();
                 p.put("commID", context.getHandler().getCurrentCommID());
-                sendJSON(context.getHandler(), p);
+                sendJSON(p);
 
+                //Subject filter
                 ArrayList<String> subjectFilter = null;
                 if (subjects != null && subjects.length() > 0) {
-
                     subjectFilter = new ArrayList<String>();
-
                     ArrayList<String> finalSubjectFilter = subjectFilter;
-
                     subjects.forEach(s -> {
                         if (s instanceof String) {
                             finalSubjectFilter.add((String) s);
@@ -200,7 +197,7 @@ public class nativeCommGetHW extends nativeCommandParent {
                 response.put("payload", arr);
                 response.put("commID", context.getHandler().getCurrentCommID());
 
-                sendJSON(context.getHandler(), response);
+                sendJSON(response);
 
                 return true;
 
@@ -219,7 +216,7 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                 response.put("commID", context.getHandler().getCurrentCommID());
 
-                sendJSON(context.getHandler(), response);
+                sendJSON(response);
 
                 return true;
 
@@ -238,7 +235,7 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                 response.put("commID", context.getHandler().getCurrentCommID());
 
-                sendJSON(context.getHandler(), response);
+                sendJSON(response);
 
                 return true;
 

@@ -268,6 +268,20 @@ public class HWMgrSvc {
         return addHW(newHW, null);
     }
 
+    public Optional<HomeWork> getHW(int yyyy, int MM, int dd, String hwID) {
+        HomeWork hw = null;
+        Optional<HomeWorkTree> tree =
+                parentDir.getChild(Integer.valueOf(yyyy).toString() + File.separatorChar + MM + File.separatorChar + dd);
+        if (tree.isPresent()) {
+            HomeWorkTree t = tree.get();
+            File f = new File(t.getFile(), hwID + ".json");
+            if (f.isFile()) {
+                hw = new HomeWork(f.getAbsolutePath(), server);
+            }
+        }
+        return Optional.ofNullable(hw);
+    }
+
     public synchronized int delHW(LocalDate date, String id, @Nullable HWUser withUser) {
         String subPath = date.getYear() + File.separator + date.getMonthValue() + File.separator + date.getDayOfMonth();
         Optional<HomeWorkTree> tree = parentDir.getChild(subPath);

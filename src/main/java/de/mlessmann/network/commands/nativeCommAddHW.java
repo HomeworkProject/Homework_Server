@@ -22,14 +22,14 @@ public class nativeCommAddHW extends nativeCommandParent {
     public static final String COMMAND = "addhw";
 
     public nativeCommAddHW() {
-
+        super();
         setID(IDENTIFIER);
         setCommand(COMMAND);
-
     }
 
     @Override
     public boolean onMessage(HWClientCommandContext context) {
+        super.onMessage(context);
 
         if (!require(context.getRequest(), "homework", context.getHandler())) {
             return true;
@@ -43,7 +43,7 @@ public class nativeCommAddHW extends nativeCommandParent {
 
         JSONObject p = Status.state_PROCESSING();
         p.put("commID", context.getHandler().getCurrentCommID());
-        sendJSON(context.getHandler(), p);
+        sendJSON(p);
 
         if (!HomeWork.checkValidity(hwObj)) {
 
@@ -58,7 +58,7 @@ public class nativeCommAddHW extends nativeCommandParent {
 
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
 
             return true;
 
@@ -86,7 +86,7 @@ public class nativeCommAddHW extends nativeCommandParent {
 
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
 
             return true;
 
@@ -98,7 +98,7 @@ public class nativeCommAddHW extends nativeCommandParent {
             response.put("payload_type", "null");
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
 
             return true;
 
@@ -117,7 +117,7 @@ public class nativeCommAddHW extends nativeCommandParent {
 
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
 
             return true;
 
@@ -136,7 +136,7 @@ public class nativeCommAddHW extends nativeCommandParent {
 
             response.put("commID", context.getHandler().getCurrentCommID());
 
-            sendJSON(context.getHandler(), response);
+            sendJSON(response);
 
             return true;
 
