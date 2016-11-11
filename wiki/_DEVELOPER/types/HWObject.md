@@ -4,14 +4,17 @@
 {  
 	"type": "homework",  
 	"subject": NameOfSubject<String>,  
-	"long": LongInfo<JSONObject>,  
-	"short": ShortInfo<JSONObject>,  
+    "desc": Description<String>,
 	"date": [yyyy<int>, MM<int>, dd<int>],  
-	"id": ID<String>  
+	"id": ID<String>  (,
+	"attachments": [
+	    <HWAttachment>
+    ])
 }  
 ```
 ### Fields:  
   
-```long``` - Content not specified: Consider looking at Sebastians Client repo for closer information  
-```short``` - Same as 'long'  
-```id``` - __Filled by server__ only needed when editing an existing HomeWork  
+```subject``` - what subject does this homework belong to  
+```date``` - on what date is it scheduled  
+```id``` - __Filled by server(On #AddHW)__ only needed when editing an existing HomeWork  
+```attachments``` - Attachment references, see the HWAttachment type definition

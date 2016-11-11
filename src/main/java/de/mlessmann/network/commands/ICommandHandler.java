@@ -13,10 +13,9 @@ public interface ICommandHandler {
 
     String getIdentifier();
 
-    boolean onMessage(HWClientCommandContext context);
+    CommandResult onMessage(HWClientCommandContext context);
 
     Optional<ICommandHandler> clone();
 
     boolean isCritical();
-
 }

@@ -29,7 +29,7 @@ public class nativeCommLogin extends nativeCommandParent {
         setCommand(COMMAND);
     }
 
-    public boolean onMessage(HWClientCommandContext context) {
+    public CommandResult onMessage(HWClientCommandContext context) {
         super.onMessage(context);
 
         JSONObject request = context.getRequest();
@@ -42,7 +42,7 @@ public class nativeCommLogin extends nativeCommandParent {
 
     }
 
-    public boolean byToken(HWClientCommandContext context) {
+    public CommandResult byToken(HWClientCommandContext context) {
 
         boolean valid = false;
         ClientSession cs = null;
@@ -70,15 +70,12 @@ public class nativeCommLogin extends nativeCommandParent {
 
         if (valid) {
             JSONObject response = Status.state_OK();
-
             JSONObject rS = cs.getToken().toJSON();
             rS.put("group", cs.getGroup().get().getName());
             rS.put("user", cs.getUser().get().getUserName());
-
             response.put("session", rS);
-            response.put("commID", context.getHandler().getCurrentCommID());
-
             sendJSON(response);
+            return CommandResult.success();
         } else {
             JSONObject response = Status.state_ERROR(Status.EXPIRED,
                     Status.state_genError(
@@ -86,16 +83,15 @@ public class nativeCommLogin extends nativeCommandParent {
                             "Token invalid. May be expired.",
                             "Sorry, the supplied token is invalid"
                     ));
-            response.put("commID", context.getHandler().getCurrentCommID());
 
             sendJSON(response);
+            return CommandResult.clientFail();
         }
-        return true;
     }
 
-    public boolean byAuth(HWClientCommandContext context) {
+    public CommandResult byAuth(HWClientCommandContext context) {
         if (!require(context.getRequest(), "parameters", context.getHandler())) {
-            return true;
+            return CommandResult.clientFail();
         }
 
         JSONArray arr = context.getRequest().getJSONArray("parameters");
@@ -118,26 +114,19 @@ public class nativeCommLogin extends nativeCommandParent {
             response.put("commID", context.getHandler().getCurrentCommID());
 
             sendJSON(response);
-            return true;
+            return CommandResult.clientFail();
         }
 
         if (arr.length() > 2) {
-
             user = arr.getString(1);
             auth = arr.getString(2);
-
         } else {
 
             user = "default";
-
             if (arr.length() == 2) {
-
                 auth = arr.getString(1);
-
             } else {
-
                 auth = "default";
-
             }
         }
 
@@ -157,7 +146,7 @@ public class nativeCommLogin extends nativeCommandParent {
             response.put("commID", context.getHandler().getCurrentCommID());
 
             sendJSON(response);
-            return true;
+            return CommandResult.clientFail();
         }
 
         Optional<HWUser> hwUser = hwGroup.get().getUser(user);
@@ -176,7 +165,7 @@ public class nativeCommLogin extends nativeCommandParent {
             response.put("commID", context.getHandler().getCurrentCommID());
 
             sendJSON(response);
-            return true;
+            return CommandResult.clientFail();
         }
 
         boolean authorized = hwUser.get().authorize(auth);
@@ -195,7 +184,7 @@ public class nativeCommLogin extends nativeCommandParent {
             response.put("commID", context.getHandler().getCurrentCommID());
 
             sendJSON(response);
-            return true;
+            return CommandResult.clientFail();
         }
 
         SessionMgrSvc svc = context.getHandler().getSessionMgr();
@@ -219,7 +208,7 @@ public class nativeCommLogin extends nativeCommandParent {
 
         sendJSON(response);
 
-        return true;
+        return CommandResult.success();
 
     }
 }

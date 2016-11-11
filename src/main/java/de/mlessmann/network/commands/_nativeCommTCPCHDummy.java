@@ -17,8 +17,8 @@ public class _nativeCommTCPCHDummy implements ICommandHandler {
 
     public String getCommand() { return COMMAND; }
 
-    public boolean onMessage(HWClientCommandContext c) {
-        return true;
+    public CommandResult onMessage(HWClientCommandContext c) {
+        return CommandResult.unhandled();
     }
 
     public boolean isCritical() { return false; }

@@ -30,9 +30,10 @@ public abstract class nativeCommandParent implements ICommandHandler {
 
     public boolean isCritical() { return critical; }
 
-    public boolean onMessage(HWClientCommandContext context) {
+    @Override
+    public CommandResult onMessage(HWClientCommandContext context) {
         this.currentRef = context.getHandler();
-        return true;
+        return CommandResult.unhandled();
     }
 
     @Override

@@ -22,16 +22,12 @@ public class nativeCommGetProtocolVersion extends nativeCommandParent {
     }
 
     @Override
-    public boolean onMessage(HWClientCommandContext context) {
+    public CommandResult onMessage(HWClientCommandContext context) {
         super.onMessage(context);
 
         JSONObject response = new JSONObject();
         response.put("protoVersion", Status.SCURRENTPROTOVERSION);
-
         sendJSON(response);
-
-        return true;
-
+        return CommandResult.success();
     }
-
 }

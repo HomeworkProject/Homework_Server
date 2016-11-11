@@ -33,7 +33,7 @@ public class nativeCommList extends nativeCommandParent {
     }
 
     @Override
-    public boolean onMessage(HWClientCommandContext ctx) {
+    public CommandResult onMessage(HWClientCommandContext ctx) {
         super.onMessage(ctx);
 
         JSONObject req = ctx.getRequest();
@@ -48,7 +48,7 @@ public class nativeCommList extends nativeCommandParent {
         return forAll(ctx);
     }
 
-    private boolean forAll(HWClientCommandContext ctx) {
+    private CommandResult forAll(HWClientCommandContext ctx) {
         GroupMgrSvc svc = server.getGroupManager();
         List<GroupSvc> grps = svc.getGroups();
 
@@ -64,10 +64,10 @@ public class nativeCommList extends nativeCommandParent {
         resp.put("commID", ctx.getHandler().getCurrentCommID());
 
         sendJSON(resp);
-        return true;
+        return CommandResult.success();
     }
 
-    private boolean forGroup(String grp, HWClientCommandContext ctx) {
+    private CommandResult forGroup(String grp, HWClientCommandContext ctx) {
         GroupMgrSvc svc = server.getGroupManager();
         Optional<GroupSvc> oGrp = svc.getGroup(grp);
 
@@ -82,7 +82,7 @@ public class nativeCommList extends nativeCommandParent {
 
             response.put("commID", ctx.getHandler().getCurrentCommID());
             sendJSON(response);
-            return false;
+            return CommandResult.serverFail();
         }
         GroupSvc g = oGrp.get();
         JSONObject jGrps = new JSONObject();
@@ -94,6 +94,6 @@ public class nativeCommList extends nativeCommandParent {
         resp.put("commID", ctx.getHandler().getCurrentCommID());
 
         sendJSON(resp);
-        return true;
+        return CommandResult.success();
     }
 }

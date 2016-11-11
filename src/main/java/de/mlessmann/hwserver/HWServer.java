@@ -555,6 +555,8 @@ public class HWServer implements ILogReceiver, IFutureListener {
 
     public TaskManager getTaskMgr() { return taskMgr; }
 
+    public HWTCPServer getTCPServer() { return hwtcpServer; }
+
     // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     // --- --- --- --- --- --- --- --- --- --- ---  Interfaces --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---

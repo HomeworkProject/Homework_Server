@@ -7,14 +7,12 @@ import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.network.Error;
 import de.mlessmann.network.HWClientCommandContext;
 import de.mlessmann.network.Status;
+import de.mlessmann.network.Types;
 import de.mlessmann.perms.Permission;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Optional;
 
 /**
@@ -34,11 +32,25 @@ public class nativeCommStoreAsset extends nativeCommandParent {
     }
 
     @Override
-    public boolean onMessage(HWClientCommandContext context) {
+    public CommandResult onMessage(HWClientCommandContext context) {
         super.onMessage(context);
 
+        //Check if file upload is enabled
+        if (!server.getTCPServer().getFTManager().isEnabled()) {
+            JSONObject resp = Status.state_ERROR(
+                    Status.UNAVAILABLE,
+                    Status.state_genError(
+                            Error.Unavailable,
+                            "File transfer is disabled",
+                            "The server neither accepts nor sends files!"
+                    )
+            );
+            sendJSON(resp);
+            return CommandResult.clientFail();
+        }
+
         if (!requireUser(context.getHandler())) {
-            return true;
+            return CommandResult.clientFail();
         }
 
         //Checked by previous condition
@@ -57,7 +69,7 @@ public class nativeCommStoreAsset extends nativeCommandParent {
                     )
             );
             sendJSON(resp);
-            return true;
+            return CommandResult.clientFail();
 
         } else {
             //20kb default file size limit
@@ -67,8 +79,8 @@ public class nativeCommStoreAsset extends nativeCommandParent {
             String hwID = context.getRequest().optString("id");
             String name = context.getRequest().optString("name");
 
-            if (approxSize == -1 || date==null || date.length() < 3 || hwID == null || name == null || name.length() < 3) {
-                JSONObject resp  = Status.state_ERROR(
+            if (approxSize == -1 || date == null || date.length() < 3 || hwID == null || name == null || name.length() < 3) {
+                JSONObject resp = Status.state_ERROR(
                         Status.BADREQUEST,
                         Status.state_genError(
                                 Error.BadRequest,
@@ -77,14 +89,14 @@ public class nativeCommStoreAsset extends nativeCommandParent {
                         )
                 );
                 sendJSON(resp);
-                return true;
+                return CommandResult.clientFail();
             }
             if (approxSize > byteLimit) {
                 sendExceeded();
-                return true;
+                return CommandResult.clientFail();
             }
 
-            Optional<HomeWork> optHW= user.getHW(date.getInt(0), date.getInt(1), date.getInt(2), hwID);
+            Optional<HomeWork> optHW = user.getHW(date.getInt(0), date.getInt(1), date.getInt(2), hwID);
             if (!optHW.isPresent()) {
                 JSONObject resp = Status.state_ERROR(
                         Status.NOTFOUND,
@@ -95,55 +107,37 @@ public class nativeCommStoreAsset extends nativeCommandParent {
                         )
                 );
                 sendJSON(resp);
-                return true;
+                return CommandResult.clientFail();
             }
 
             HomeWork hw = optHW.get();
             String id = hw.getNewAttachmentID();
             File file = new File(hw.getFile().getAbsoluteFile().getParent(), hw.getFile().getName() + File.pathSeparator + id);
 
-            boolean exceeded = false;
-            try (
-                    FileOutputStream writer = new FileOutputStream(file)
-            ) {
-                InputStream s = context.getHandler().getRawSocket().getInputStream();
-                JSONObject resp = Status.state_CONTINUE();
-                sendJSON(resp);
-
-                //WRAP SOCKET
-                int readBytes = 0;
-                int b = 0;
-                byte[] buffer = new byte[2048];
-                while ((b = s.read(buffer, 0, buffer.length)) > -1) {
-                    if (readBytes > byteLimit) {
-                        exceeded = true;
-                        break;
-                    }
-                    writer.write(buffer);
-                }
-                writer.flush();
-
-
-            } catch (IOException e) {
+            Optional<String> optToken = server.getTCPServer().getFTManager().requestTransferApproval(file);
+            if (!optToken.isPresent()) {
                 JSONObject resp = Status.state_ERROR(
-                        Status.INTERNALERROR,
+                        Status.LOCKED,
                         Status.state_genError(
-                                Error.InternalError,
-                                "An internal error prevented writing the attachments file",
-                                "An internal error occurred"
+                                Error.Unauthorized,
+                                "The file manager didn't authorize the transfer",
+                                "Unable to upload file"
                         )
                 );
                 sendJSON(resp);
+                return CommandResult.clientFail();
             }
-            if (exceeded) {
-                file.delete();
-                sendExceeded();
-                return true;
-            }
-            hw.registerAttachment(id, file);
-            hw.flush();
+
+            JSONObject resp = new JSONObject();
+            resp.put("status", Status.OK);
+            resp.put("payload_type", Types.ConnInfo);
+            JSONObject connInfo = new JSONObject();
+            connInfo.put("address", "~");
+            connInfo.put("port", server.getTCPServer().getFtPort());
+            resp.put("payload", connInfo);
+            sendJSON(resp);
+            return CommandResult.success();
         }
-        return true;
     }
 
     private void sendExceeded() {

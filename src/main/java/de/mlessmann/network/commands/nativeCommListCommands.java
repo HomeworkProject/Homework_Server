@@ -28,44 +28,32 @@ public class nativeCommListCommands extends nativeCommandParent {
 
     }
 
-    public boolean onMessage(HWClientCommandContext context) {
+    public CommandResult onMessage(HWClientCommandContext context) {
         super.onMessage(context);
 
         ArrayList<ICommandHandler> handler;
 
         if (context.getRequest().has("search")) {
-
             handler = hwInstance.getCommandHandlerProvider().getByCommand(context.getRequest().getString("search"));
-
         } else {
-
             handler = hwInstance.getCommandHandlerProvider().getHandler();
-
         }
 
         JSONArray arr = new JSONArray();
         for (ICommandHandler h : handler) {
-
             JSONObject hO = new JSONObject();
-
             hO.put("id", h.getIdentifier());
             hO.put("command", h.getCommand());
             hO.put("isCritical", h.isCritical());
-
             arr.put(hO);
-
         }
-
         JSONObject r = Status.state_OK();
         r.put("payload_type", "JSONArray");
         r.put("array_type", "CommHandlerReference");
         r.put("payload", arr);
         r.put("commID", context.getHandler().getCurrentCommID());
-
         sendJSON(r);
 
-        return true;
-
+        return CommandResult.success();
     }
-
 }

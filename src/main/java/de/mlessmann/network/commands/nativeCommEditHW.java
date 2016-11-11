@@ -31,15 +31,15 @@ public class nativeCommEditHW extends nativeCommandParent{
     }
 
     @Override
-    public boolean onMessage(HWClientCommandContext context) {
+    public CommandResult onMessage(HWClientCommandContext context) {
         super.onMessage(context);
 
         if (!require(context.getRequest(), "homework", context.getHandler())) {
-            return true;
+            return CommandResult.clientFail();
         }
 
         if (!requireUser(context.getHandler())) {
-            return true;
+            return CommandResult.clientFail();
         }
 
         JSONObject hwObj = context.getRequest().getJSONObject("homework");
@@ -61,7 +61,7 @@ public class nativeCommEditHW extends nativeCommandParent{
 
             response.put("commID", context.getHandler().getCurrentCommID());
             sendJSON(response);
-            return true;
+            return CommandResult.clientFail();
         }
 
         LocalDate oldDate;
@@ -79,7 +79,7 @@ public class nativeCommEditHW extends nativeCommandParent{
             );
             resp.put("commID", context.getHandler().getCurrentCommID());
             sendJSON(resp);
-            return true;
+            return CommandResult.clientFail();
         }
 
         String oldID;
@@ -96,10 +96,8 @@ public class nativeCommEditHW extends nativeCommandParent{
             );
             resp.put("commID", context.getHandler().getCurrentCommID());
             sendJSON(resp);
-            return true;
+            return CommandResult.clientFail();
         }
-
-
 
         Optional<HWUser> u = context.getHandler().getUser();
         //IsPresent checked in #requireUser(HWTCPClientReference) above
@@ -118,24 +116,18 @@ public class nativeCommEditHW extends nativeCommandParent{
                             "HomeWork wasn't added due to a server error"
                     )
             );
-
             response.put("commID", context.getHandler().getCurrentCommID());
-
             sendJSON(response);
-
-            return true;
+            return CommandResult.clientFail();
 
         } else if (success == 0) {
 
             JSONObject response = new JSONObject();
-
             response.put("status", Status.CREATED);
             response.put("payload_type", "null");
             response.put("commID", context.getHandler().getCurrentCommID());
-
             sendJSON(response);
-
-            return true;
+            return CommandResult.success();
 
         } else if (success == 1) {
 
@@ -147,14 +139,10 @@ public class nativeCommEditHW extends nativeCommandParent{
                             "You don't have enough permission to edit a homework"
                     )
             );
-
             response.getJSONObject("payload").put("perm", "has:" + Permission.HW_ADD_EDIT);
-
             response.put("commID", context.getHandler().getCurrentCommID());
-
             sendJSON(response);
-
-            return true;
+            return CommandResult.clientFail();
 
         } else if (success == 2) {
 
@@ -166,14 +154,10 @@ public class nativeCommEditHW extends nativeCommandParent{
                             "You don't have enough permission to edit this homework"
                     )
             );
-
             response.getJSONObject("payload").put("perm", "has:" + Permission.HW_ADD_EDIT);
-
             response.put("commID", context.getHandler().getCurrentCommID());
-
             sendJSON(response);
-
-            return true;
+            return CommandResult.clientFail();
 
         } else if (success == 3) {
 
@@ -185,19 +169,12 @@ public class nativeCommEditHW extends nativeCommandParent{
                             "Server failed to edit this homework"
                     )
             );
-
             response.getJSONObject("payload").put("perm", "has:" + Permission.HW_ADD_EDIT);
-
             response.put("commID", context.getHandler().getCurrentCommID());
-
             sendJSON(response);
-
-            return true;
-
+            return CommandResult.serverFail();
         }
-
-        return false;
-
+        return CommandResult.serverFail();
     }
 
 }

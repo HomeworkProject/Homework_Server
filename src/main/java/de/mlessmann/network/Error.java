@@ -27,4 +27,7 @@ public class Error {
 
     public static String LimitExceeded = "LimitExceededError";
 
+    public static String Unavailable = "ServiceUnavailable";
+
+    public static String Unauthorized = InsuffPerm;
 }

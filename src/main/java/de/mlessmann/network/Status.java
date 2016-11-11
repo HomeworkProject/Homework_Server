@@ -158,14 +158,19 @@ public class Status {
 
 
     public static JSONObject state_OK() {
-
         JSONObject o = new JSONObject();
 
         o.put("status", OK);
         o.put("payload_type", "null");
 
         return o;
+    }
 
+    public static JSONObject state_CREATED() {
+        JSONObject o = new JSONObject();
+        o.put("status", CREATED);
+        o.put("payload_type", "null");
+        return o;
     }
 
     public static JSONObject state_CONTINUE() {

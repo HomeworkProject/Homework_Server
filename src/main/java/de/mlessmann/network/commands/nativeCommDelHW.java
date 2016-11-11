@@ -31,14 +31,14 @@ public class nativeCommDelHW  extends nativeCommandParent {
     }
 
     @Override
-    public boolean onMessage(HWClientCommandContext context) {
+    public CommandResult onMessage(HWClientCommandContext context) {
         super.onMessage(context);
 
         JSONObject request = context.getRequest();
 
         if (!require(request, "date", context.getHandler()) || !require(request, "id", context.getHandler())
                 || !requireUser(context.getHandler())) {
-            return true;
+            return CommandResult.clientFail();
         }
 
         //IsPresent checked in #requireUser(HWTCPClientReference) above
@@ -58,54 +58,41 @@ public class nativeCommDelHW  extends nativeCommandParent {
             if (success == 1) {
 
                 JSONObject response = new JSONObject();
-
                 response.put("status", Status.INTERNALERROR);
                 response.put("payload_type", "error");
-
                 JSONObject e = new JSONObject();
                 e.put("error", Error.DelHWError);
                 e.put("error_message", "HomeWork could not be deleted");
                 e.put("friendly_message", "HomeWork wasn't deleted due to a server error");
                 response.put("payload", e);
-
                 response.put("commID", context.getHandler().getCurrentCommID());
-
                 sendJSON(response);
-
-                return false;
+                return CommandResult.serverFail();
 
             } else if (success == 0) {
 
                 JSONObject response = new JSONObject();
-
                 response.put("status", Status.OK);
                 response.put("payload_type", "null");
                 response.put("commID", context.getHandler().getCurrentCommID());
-
                 sendJSON(response);
-
-                return true;
+                return CommandResult.success();
 
             } else if (success == 3) {
 
                 JSONObject response = new JSONObject();
-
                 response.put("status", Status.FORBIDDEN);
                 response.put("payload_type", "error");
-
                 JSONObject e = new JSONObject();
                 e.put("error", Error.InsuffPerm);
                 e.put("error_message", "Insufficient permission to delete the homework");
                 e.put("friendly_message", "You're not allowed to delete this homework");
                 e.put("perm", "has:" + Permission.HW_DEL);
                 response.put("payload", e);
-
                 response.put("commID", context.getHandler().getCurrentCommID());
-
                 sendJSON(response);
 
-                return true;
-
+                return CommandResult.clientFail();
             }
 
         } catch (JSONException ex) {
@@ -122,10 +109,9 @@ public class nativeCommDelHW  extends nativeCommandParent {
             response.put("payload", e);
 
             response.put("commID", context.getHandler().getCurrentCommID());
-
             sendJSON(response);
 
-            return true;
+            return CommandResult.clientFail();
 
         } catch (DateTimeException ex) {
 
@@ -144,12 +130,9 @@ public class nativeCommDelHW  extends nativeCommandParent {
 
             sendJSON(response);
 
-            return true;
-
+            return CommandResult.clientFail();
         }
-
-        return false;
-
+        return CommandResult.unhandled();
     }
 
 }

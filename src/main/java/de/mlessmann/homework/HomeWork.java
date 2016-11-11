@@ -7,6 +7,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -198,48 +199,9 @@ public class HomeWork {
         return contentAsJSON;
     }
 
-    public JSONObject getLong() {
-        if (!isLoaded) read();
-        JSONObject res = null;
-
-        try {
-
-            res = contentAsJSON.getJSONObject("long");
-
-        } catch (JSONException ex) {
-
-        }
-
-        if (res == null) {
-
-            res = new JSONObject();
-
-        }
-
-        return res;
-
-    }
-
-    public JSONObject getShort() {
-        if (!isLoaded) read();
-        JSONObject res = null;
-
-        try {
-
-            res = contentAsJSON.getJSONObject("short");
-
-        } catch (JSONException ex) {
-
-        }
-
-        if (res == null) {
-
-            res = new JSONObject();
-
-        }
-
-        return res;
-
+    public String getID() {
+        String name = getFile().getName();
+        return name.substring(0, name.indexOf(".json"));
     }
 
     public boolean isValid() {
@@ -264,9 +226,36 @@ public class HomeWork {
         }
     }
 
-    public boolean registerAttachment(HWAttachment attachment) {
+    /**
+     * Registers a new attachment to the HomeWork
+     * Remember that assetID and hwID will not be overwritten!
+     * Thus you need to provide them!
+     * @param attachment AttachmentLocation
+     * @return Whether or not the registration was successful
+     */
+    public boolean registerAttachment(HWAttachmentLocation attachment) {
+        JSONObject attachJSON = null;
+        if (attachment.getType() == HWAttachmentLocation.LocationType.WEB) {
+            attachJSON = new JSONObject();
+            attachJSON.put("url", attachment.getURL());
+        } else if (attachment.getType() == HWAttachmentLocation.LocationType.SERVER) {
+            String hwID = attachment.getHWID();
+            LocalDate date = attachment.getDate();
+            String id = getNewAttachmentID();
+
+            attachJSON = new JSONObject();
+            JSONArray jArr = new JSONArray();
+            jArr.put(date.getYear());
+            jArr.put(date.getMonthValue());
+            jArr.put(date.getDayOfMonth());
+            attachJSON.put("date", jArr);
+            attachJSON.put("ownerid", hwID);
+            attachJSON.put("id", id);
+        }
+
+        if (attachJSON == null) return false;
         if (getJSON().optJSONArray("attachments") == null) getJSON().put("attachments", new JSONArray());
-        getJSON().getJSONArray("attachments").put(attachment.getJSON());
+        getJSON().getJSONArray("attachments").put(attachJSON);
         return true;
     }
 

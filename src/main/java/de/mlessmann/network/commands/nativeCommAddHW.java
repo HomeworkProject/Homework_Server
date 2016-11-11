@@ -28,15 +28,15 @@ public class nativeCommAddHW extends nativeCommandParent {
     }
 
     @Override
-    public boolean onMessage(HWClientCommandContext context) {
+    public CommandResult onMessage(HWClientCommandContext context) {
         super.onMessage(context);
 
         if (!require(context.getRequest(), "homework", context.getHandler())) {
-            return true;
+            return CommandResult.clientFail();
         }
 
         if (!requireUser(context.getHandler())) {
-            return true;
+            return CommandResult.clientFail();
         }
 
         JSONObject hwObj = context.getRequest().getJSONObject("homework");
@@ -46,7 +46,6 @@ public class nativeCommAddHW extends nativeCommandParent {
         sendJSON(p);
 
         if (!HomeWork.checkValidity(hwObj)) {
-
             JSONObject response = Status.state_ERROR(
                     Status.BADREQUEST,
                     Status.state_genError(
@@ -55,13 +54,10 @@ public class nativeCommAddHW extends nativeCommandParent {
                             "Client submitted an invalid object"
                     )
             );
-
             response.put("commID", context.getHandler().getCurrentCommID());
-
             sendJSON(response);
 
-            return true;
-
+            return CommandResult.clientFail();
         }
 
         Optional<HWUser> u = context.getHandler().getUser();
@@ -74,7 +70,6 @@ public class nativeCommAddHW extends nativeCommandParent {
         int success = myUser.addHW(hwObj);
 
         if (success == -1) {
-
             JSONObject response = Status.state_ERROR(
                     Status.INTERNALERROR,
                     Status.state_genError(
@@ -83,24 +78,17 @@ public class nativeCommAddHW extends nativeCommandParent {
                             "HomeWork wasn't added due to a server error"
                     )
             );
-
             response.put("commID", context.getHandler().getCurrentCommID());
-
             sendJSON(response);
 
-            return true;
+            return CommandResult.clientFail();
 
         } else if (success == 0) {
 
-            JSONObject response = new JSONObject();
-
-            response.put("status", Status.CREATED);
-            response.put("payload_type", "null");
-            response.put("commID", context.getHandler().getCurrentCommID());
-
+            JSONObject response = Status.state_CREATED();
             sendJSON(response);
 
-            return true;
+            return CommandResult.success();
 
         } else if (success == 1) {
 
@@ -112,14 +100,11 @@ public class nativeCommAddHW extends nativeCommandParent {
                             "You don't have enough permission to add a homework"
                     )
             );
-
             response.getJSONObject("payload").put("perm", "has:" + Permission.HW_ADD_NEW);
-
             response.put("commID", context.getHandler().getCurrentCommID());
-
             sendJSON(response);
 
-            return true;
+            return CommandResult.clientFail();
 
         } else if (success == 2) {
 
@@ -131,19 +116,14 @@ public class nativeCommAddHW extends nativeCommandParent {
                             "You don't have enough permission to edit this homework"
                     )
             );
-
             response.getJSONObject("payload").put("perm", "has:" + Permission.HW_ADD_EDIT);
-
             response.put("commID", context.getHandler().getCurrentCommID());
-
             sendJSON(response);
 
-            return true;
+            return CommandResult.clientFail();
 
         }
-
-        return false;
-
+        return CommandResult.unhandled();
     }
 
 }

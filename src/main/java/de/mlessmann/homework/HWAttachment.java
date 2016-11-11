@@ -26,9 +26,7 @@ public class HWAttachment {
         return obj.optString("desc");
     }
 
-    public String getURL() {
-        return obj.optString("url", "null");
-    }
+    public HWAttachmentLocation getLocation() { return new HWAttachmentLocation(obj.optJSONObject("location")); }
 
     public String getID() {
         return obj.optString("id", "null");
@@ -37,4 +35,5 @@ public class HWAttachment {
     public JSONObject getJSON() {
         return obj;
     }
+
 }

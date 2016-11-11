@@ -5,6 +5,7 @@ import de.mlessmann.homework.HomeWork;
 import de.mlessmann.network.Error;
 import de.mlessmann.network.HWClientCommandContext;
 import de.mlessmann.network.Status;
+import de.mlessmann.network.Types;
 import de.mlessmann.reflections.HWCommandHandler;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,7 +33,7 @@ public class nativeCommGetHW extends nativeCommandParent {
     }
 
     @Override
-    public boolean onMessage(HWClientCommandContext context) {
+    public CommandResult onMessage(HWClientCommandContext context) {
         super.onMessage(context);
         JSONArray subjects = null;
         if (context.getRequest().has("subjects")) {
@@ -40,7 +41,7 @@ public class nativeCommGetHW extends nativeCommandParent {
         }
 
         if (!requireUser(context.getHandler())) {
-            return true;
+            return CommandResult.clientFail();
         }
 
 
@@ -52,10 +53,10 @@ public class nativeCommGetHW extends nativeCommandParent {
         if (!context.getRequest().has("date")) {
 
             if (!require(context.getRequest(), "dateFrom", context.getHandler())) {
-                return true;
+                return CommandResult.clientFail();
             }
             if (!require(context.getRequest(), "dateTo", context.getHandler())) {
-                return true;
+                return CommandResult.clientFail();
             }
 
             try {
@@ -95,12 +96,9 @@ public class nativeCommGetHW extends nativeCommandParent {
                 ArrayList<HomeWork> hws = myUser.getHWBetween(dateFrom, dateTo, subjectFilter, false);
 
                 JSONObject response = new JSONObject();
-
                 response.put("status", Status.OK);
                 response.put("status_message", Status.SOK);
-
                 JSONArray arr = new JSONArray();
-
                 hws.forEach(hw ->
                         {
                             if (hw.read() && hw.isValid()) {
@@ -108,15 +106,12 @@ public class nativeCommGetHW extends nativeCommandParent {
                             }
                         }
                 );
-
-                response.put("payload_type", "JSONArray");
-                response.put("array_type", "HWObject");
+                response.put("payload_type", Types.JSONArray);
+                response.put("array_type", Types.HWObject);
                 response.put("payload", arr);
                 response.put("commID", context.getHandler().getCurrentCommID());
-
                 sendJSON(response);
-
-                return true;
+                return CommandResult.success();
 
             } catch (JSONException ex) {
 
@@ -135,7 +130,7 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                 sendJSON(response);
 
-                return true;
+                return CommandResult.clientFail();
 
             } catch (DateTimeException ex) {
 
@@ -154,7 +149,7 @@ public class nativeCommGetHW extends nativeCommandParent {
 
                 sendJSON(response);
 
-                return true;
+                return CommandResult.clientFail();
 
             }
 
@@ -185,64 +180,44 @@ public class nativeCommGetHW extends nativeCommandParent {
                 ArrayList<HomeWork> hws = myUser.getHWOn(date, subjectFilter);
 
                 JSONObject response = new JSONObject();
-
                 response.put("status", Status.OK);
-
                 JSONArray arr = new JSONArray();
-
                 hws.forEach(hw -> arr.put(hw.getJSON()));
-
                 response.put("payload_type", "JSONArray");
                 response.put("array_type", "HWObject");
                 response.put("payload", arr);
                 response.put("commID", context.getHandler().getCurrentCommID());
-
                 sendJSON(response);
-
-                return true;
+                return CommandResult.success();
 
             } catch (JSONException ex) {
 
                 JSONObject response = new JSONObject();
-
                 response.put("status", Status.BADREQUEST);
                 response.put("payload_type", "error");
-
                 JSONObject e = new JSONObject();
                 e.put("error", Error.BadRequest);
                 e.put("error_message", ex.toString());
                 e.put("friendly_message", "Client sent an invalid request");
                 response.put("payload", e);
-
                 response.put("commID", context.getHandler().getCurrentCommID());
-
                 sendJSON(response);
-
-                return true;
+                return CommandResult.clientFail();
 
             } catch (DateTimeException ex) {
 
                 JSONObject response = new JSONObject();
-
                 response.put("status", Status.BADREQUEST);
                 response.put("payload_type", "error");
-
                 JSONObject e = new JSONObject();
                 e.put("error", Error.DateTimeError);
                 e.put("error_message", ex.toString());
                 e.put("friendly_message", "Client sent an invalid request");
                 response.put("payload", e);
-
                 response.put("commID", context.getHandler().getCurrentCommID());
-
                 sendJSON(response);
-
-                return true;
-
+                return CommandResult.clientFail();
             }
-
         }
-
     }
-
 }

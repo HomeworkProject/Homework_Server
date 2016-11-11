@@ -2,6 +2,7 @@ package de.mlessmann.network;
 
 import de.mlessmann.config.ConfigNode;
 import de.mlessmann.hwserver.HWServer;
+import de.mlessmann.network.filetransfer.FileTransferServerRunnable;
 
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
@@ -37,6 +38,15 @@ public class HWTCPServer {
     private TCPServerRunnable secureRunnable;
     //--------End secure server---------------
 
+    //-------Begin file transfer server-------------
+    private ServerSocket ftSock;
+    private boolean enableFT;
+    private int ftPort;
+    //--
+    private Thread ftThread;
+    private FileTransferServerRunnable ftRunnable;
+    //--------End file transfer server---------------
+
     private HWServer master;
 
     private ArrayList<HWTCPClientWorker> ccList;
@@ -66,6 +76,16 @@ public class HWTCPServer {
             securePort = node.optInt(securePort);
         }
 
+        ftPort = plainPort + 2;
+        node = master.getConfig().getNode("tcp", "ft", "port");
+        if (node.isVirtual()) {
+            node.setInt(ftPort);
+        } else {
+            ftPort = node.optInt(ftPort);
+        }
+
+        //// --- --- --- --- ////
+
         node = master.getConfig().getNode("tcp", "plain", "enable");
         if (node.isVirtual()) {
             node.setBoolean(true);
@@ -77,6 +97,12 @@ public class HWTCPServer {
             node.setBoolean(false);
         }
         enableSecureTCP = node.optBoolean(false);
+
+        node = master.getConfig().getNode("tcp", "ft", "enable");
+        if (node.isVirtual()) {
+            node.setBoolean(false);
+        }
+        enableFT = node.optBoolean(false);
     }
 
     public boolean setUp() {
@@ -101,6 +127,12 @@ public class HWTCPServer {
                 }
             }
 
+            if (enableFT) {
+                ftSock = new ServerSocket(ftPort);
+            }
+            ftRunnable = new FileTransferServerRunnable(ftSock, 16, master);
+            ftThread = new Thread(ftRunnable);
+
             ccList = new ArrayList<HWTCPClientWorker>();
 
             return true;
@@ -122,6 +154,9 @@ public class HWTCPServer {
             secureThread.start();
         }
 
+        if (enableFT) {
+            ftThread.start();
+        }
     }
 
     public synchronized void sendLog(Object sender, Level level, String message) {
@@ -137,21 +172,16 @@ public class HWTCPServer {
     }
 
     public void interruptChildren() {
-
         ccList.forEach(Thread::interrupt);
-
     }
 
     public void stopChildren() {
-
         ccList.forEach(HWTCPClientWorker::closeConnection);
-
     }
 
     public void stop() {
 
         try {
-
             stopped = true;
 
             if (enablePlainTCP) {
@@ -193,6 +223,10 @@ public class HWTCPServer {
     }
 
     public int getSecPort() { return securePort; }
+
+    public int getFtPort() { return ftPort; }
+
+    public FileTransferServerRunnable getFTManager() { return ftRunnable; }
 
     public HWServer getMaster() {
         return master;
