@@ -88,11 +88,12 @@ public class nativeCommList extends nativeCommandParent {
         JSONObject jGrps = new JSONObject();
         JSONArray users = new JSONArray();
         g.getUsers().forEach(u -> users.put(u.getUserName()));
+        jGrps.put(g.getName(), users);
+
         JSONObject resp = Status.state_OK();
         resp.put("payload_type", "HWGroupUserListing");
         resp.put("payload", jGrps);
         resp.put("commID", ctx.getHandler().getCurrentCommID());
-
         sendJSON(resp);
         return CommandResult.success();
     }

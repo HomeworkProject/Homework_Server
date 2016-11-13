@@ -24,5 +24,4 @@ public class _nativeCommTCPCHDummy implements ICommandHandler {
     public boolean isCritical() { return false; }
 
     public Optional<ICommandHandler> clone() { return Optional.of(new _nativeCommTCPCHDummy()); }
-
 }
