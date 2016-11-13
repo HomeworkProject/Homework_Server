@@ -114,7 +114,7 @@ public class nativeCommStoreAsset extends nativeCommandParent {
             String id = hw.getNewAttachmentID();
             File file = new File(hw.getFile().getAbsoluteFile().getParent(), hw.getFile().getName() + File.pathSeparator + id);
 
-            Optional<String> optToken = server.getTCPServer().getFTManager().requestTransferApproval(file);
+            Optional<String> optToken = server.getTCPServer().getFTManager().requestTransferApproval(file, true);
             if (!optToken.isPresent()) {
                 JSONObject resp = Status.state_ERROR(
                         Status.LOCKED,

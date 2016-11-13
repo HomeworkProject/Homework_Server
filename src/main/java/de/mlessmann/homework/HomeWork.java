@@ -10,6 +10,7 @@ import java.io.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by Life4YourGames on 04.05.16.
@@ -268,5 +269,15 @@ public class HomeWork {
             }
         });
         return l;
+    }
+
+    public Optional<HWAttachment> getAttachment(String id) {
+        List<HWAttachment> l = getAttachments();
+        HWAttachment[] a = new HWAttachment[]{null};
+        l.forEach(b -> {
+            if (b.getID().equals(id))
+                a[0] = b;
+        });
+        return Optional.ofNullable(a[0]);
     }
 }

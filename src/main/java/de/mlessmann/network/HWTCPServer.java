@@ -2,7 +2,7 @@ package de.mlessmann.network;
 
 import de.mlessmann.config.ConfigNode;
 import de.mlessmann.hwserver.HWServer;
-import de.mlessmann.network.filetransfer.FileTransferServerRunnable;
+import de.mlessmann.network.filetransfer.FileTransferServer;
 
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
@@ -44,7 +44,7 @@ public class HWTCPServer {
     private int ftPort;
     //--
     private Thread ftThread;
-    private FileTransferServerRunnable ftRunnable;
+    private FileTransferServer ftRunnable;
     //--------End file transfer server---------------
 
     private HWServer master;
@@ -130,7 +130,7 @@ public class HWTCPServer {
             if (enableFT) {
                 ftSock = new ServerSocket(ftPort);
             }
-            ftRunnable = new FileTransferServerRunnable(ftSock, 16, master);
+            ftRunnable = new FileTransferServer(ftSock, 16, master);
             ftThread = new Thread(ftRunnable);
 
             ccList = new ArrayList<HWTCPClientWorker>();
@@ -194,6 +194,8 @@ public class HWTCPServer {
                 secureSock.close();
             }
 
+            ftRunnable.close();
+
             //interruptChildren();
             stopChildren();
 
@@ -226,7 +228,7 @@ public class HWTCPServer {
 
     public int getFtPort() { return ftPort; }
 
-    public FileTransferServerRunnable getFTManager() { return ftRunnable; }
+    public FileTransferServer getFTManager() { return ftRunnable; }
 
     public HWServer getMaster() {
         return master;

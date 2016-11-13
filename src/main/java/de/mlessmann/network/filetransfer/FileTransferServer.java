@@ -15,13 +15,12 @@ import java.util.logging.Level;
 /**
  * Created by Life4YourGames on 09.11.16.
  */
-public class FileTransferServerRunnable implements Runnable {
+public class FileTransferServer implements Runnable {
 
     public final int defaultTTL = 32;
 
     private HWServer server;
-    private Map<String, File> tokenDatabase;
-    private Map<String, Integer> tokenTTL;
+    private Map<String, FileTransferInfo> tokenDatabase;
     private List<FileTransferWorker> transfers;
     private ServerSocket socket;
     private int tokenSize;
@@ -31,9 +30,8 @@ public class FileTransferServerRunnable implements Runnable {
     private boolean stopped;
     private boolean enabled;
 
-    public FileTransferServerRunnable(ServerSocket socket, int tokenSize, HWServer server) {
-        tokenDatabase = new HashMap<String, File>();
-        tokenTTL = new HashMap<String, Integer>();
+    public FileTransferServer(ServerSocket socket, int tokenSize, HWServer server) {
+        tokenDatabase = new HashMap<String, FileTransferInfo>();
         transfers = new ArrayList<FileTransferWorker>();
         this.socket = socket;
         this.tokenSize = tokenSize;
@@ -51,6 +49,7 @@ public class FileTransferServerRunnable implements Runnable {
             return;
         }
         stopped = false;
+        tokenDatabase.clear();
 
         server.onMessage(this, Level.INFO, "Opening file transfer server on: " + socket.getLocalSocketAddress());
 
@@ -64,15 +63,15 @@ public class FileTransferServerRunnable implements Runnable {
                 server.onMessage(this, Level.FINE, "New ft-connection: " + clientSock.getRemoteSocketAddress());
             } catch (SSLException sslEx) {
 
-                server.onMessage(this, Level.FINER, "Denying incoming connection: " + sslEx);
+                server.onMessage(this, Level.FINER, "Denying incoming ft-connection: " + sslEx);
 
             } catch (IOException ex) {
 
                 if (!stopped) {
-                    server.onMessage(this, Level.SEVERE, "Unable to accept connections: " + ex.toString());
+                    server.onMessage(this, Level.SEVERE, "Unable to accept ft-connections: " + ex.toString());
                 }
                 stopped = true;
-                server.onMessage(this, Level.INFO, "Runnable ended: " + this.toString());
+                server.onMessage(this, Level.INFO, "FT-Runnable ended: " + this.toString());
             }
 
         }
@@ -80,21 +79,26 @@ public class FileTransferServerRunnable implements Runnable {
 
     /**
      * Request a new token to approve a file transfer
-     * @param destination the file that should be written to
+     * @param target the file that should be written to/read from
+     * @param incoming whether or not this is an incoming transfer
      * @return Optional of the token, empty means denied
      */
-    public synchronized Optional<String> requestTransferApproval(File destination) {
+    public synchronized Optional<String> requestTransferApproval(File target, boolean incoming) {
         //TODO: Safety mechanisms ?
         L4YGRandom.initRndIfNotAlready();
 
         String token;
         do {
             token = L4YGRandom.genRandomAlphaNumString(tokenSize);
-        } while (tokenTTL.containsKey(token));
+        } while (tokenDatabase.containsKey(token));
+        if (token!=null) {
+            FileTransferInfo i = FileTransferInfo.of(incoming, target, token, defaultTTL);
+            tokenDatabase.put(i.getToken(), i);
+        }
         return Optional.ofNullable(token);
     }
 
-    public synchronized Optional<File> authorize(byte[] bytes) {
+    public synchronized Optional<FileTransferInfo> authorize(byte[] bytes) {
         return Optional.ofNullable(tokenDatabase.get(new String(bytes)));
     }
 
@@ -108,5 +112,15 @@ public class FileTransferServerRunnable implements Runnable {
 
     public boolean isEnabled() {
         return enabled;
+    }
+
+    public synchronized void close() {
+        stopped = true;
+        transfers.forEach(FileTransferWorker::kill);
+        try {
+            socket.close();
+        } catch (IOException e) {
+            //Ignore
+        }
     }
 }

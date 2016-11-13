@@ -3,6 +3,7 @@ package de.mlessmann.network;
 import de.mlessmann.allocation.HWUser;
 import de.mlessmann.common.L4YGRandom;
 import de.mlessmann.hwserver.services.sessionsvc.SessionMgrSvc;
+import de.mlessmann.network.commands.CommandResult;
 import de.mlessmann.network.commands.ICommandHandler;
 import de.mlessmann.network.commands._nativeCommTCPCHDummy;
 import org.json.JSONException;
@@ -312,8 +313,9 @@ public class HWTCPClientHandler {
 
                 for (ICommandHandler h : handlers) {
                     currentCommHandler = h;
-                    if (!h.onMessage(c)) {
-                        master.sendLog(this, Level.FINE, "Handler: " + h.getIdentifier() + " reported processing failure");
+                    CommandResult r = h.onMessage(c);
+                    if (r.getQuickType() == CommandResult.QuickType.SERVERFAIL) {
+                        master.sendLog(this, Level.WARNING, "Handler: " + h.getIdentifier() + " reported processing failure on server side");
                     }
                 }
 

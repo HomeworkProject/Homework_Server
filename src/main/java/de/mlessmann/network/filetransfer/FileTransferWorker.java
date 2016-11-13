@@ -12,14 +12,20 @@ import java.util.logging.Level;
 public class FileTransferWorker extends Thread {
 
     private Socket socket;
-    private FileTransferServerRunnable server;
+    private FileTransferServer server;
     private int tokenSize;
     private boolean terminated;
+    private int maxSize = -1;
 
-    public FileTransferWorker(Socket socket, FileTransferServerRunnable server, int tokenSize) {
+    public FileTransferWorker(Socket socket, FileTransferServer server, int tokenSize) {
         this.socket = socket;
         this.server = server;
         this.tokenSize = tokenSize;
+    }
+
+    public FileTransferWorker setMaxSize(int maxSize) {
+        this.maxSize = maxSize;
+        return this;
     }
 
     @Override
@@ -48,13 +54,21 @@ public class FileTransferWorker extends Thread {
             kill();
             return;
         }
-        Optional<File> optFile = server.authorize(token);
+        Optional<FileTransferInfo> optFile = server.authorize(token);
         if (!optFile.isPresent()) {
             server.getHWServer().onMessage(this, Level.FINER, "Token not authorized - Closing connection");
             kill();
             return;
         }
-        File file = optFile.get();
+        if (optFile.get().isIncoming())
+            incoming(optFile.get(), in, out);
+        else
+            outgoing(optFile.get(), in, out);
+    }
+
+    private void incoming(FileTransferInfo i, InputStream in, OutputStream out) {
+
+        File file = i.getTarget();
 
         try {
             if (!file.exists()) {
@@ -80,17 +94,42 @@ public class FileTransferWorker extends Thread {
 
         byte[] buffer = new byte[2048];
         int read = 0;
+        int total = 0;
+        boolean failed = false;
 
         while (!terminated) {
             try (FileOutputStream f = new FileOutputStream(file);) {
                 while ((read = in.read(buffer))>=-1){
+                    total += read;
+                    if (maxSize!=-1 && total > maxSize)
+                        throw new IOException("Max file size reached!");
                     f.write(buffer, 0, read);
                 }
             } catch (IOException e) {
                 server.getHWServer().onMessage(this, Level.FINE, "Unable to retrieve file: IOE while r/w - Closing connection");
+                server.getHWServer().onException(this, Level.FINE, e);
+                if (!file.delete()) {
+                    server.getHWServer().onMessage(this, Level.WARNING, "Unable to delete discarded file remnants of: " + file.getPath());
+                }
                 kill();
                 return;
             }
+        }
+        kill();
+    }
+
+    public void outgoing(FileTransferInfo i, InputStream in, OutputStream out) {
+
+        File file = i.getTarget();
+        try (FileInputStream fIn = new FileInputStream(file)){
+            byte[] buffer = new byte[2048];
+            int count = 0;
+            while ((count = fIn.read(buffer)) >=-1) {
+                out.write(buffer, 0, count);
+            }
+        } catch (IOException e) {
+            server.getHWServer().onMessage(this, Level.FINE, "Unable to transmit file: IOE while r/w - Closing connection");
+            server.getHWServer().onException(this, Level.FINE, e);
         }
         kill();
     }
