@@ -49,7 +49,7 @@ public class HWServer implements ILogReceiver, IFutureListener {
 
     public static final URLClassLoader CLASSLOADER = (URLClassLoader) Thread.currentThread().getContextClassLoader();
 
-    public static String VERSION = "0.0.0.7";
+    public static String VERSION = "0.0.0.8";
 
     //Collect start arguments to pass them through to the updater
     private ArrayList<AppArgument> startArgs = new ArrayList<AppArgument>();
