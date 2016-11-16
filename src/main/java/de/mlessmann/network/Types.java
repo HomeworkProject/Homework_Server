@@ -9,7 +9,7 @@ public class Types {
 
     public static String HWObject = "HWObject";
 
-    public static String ConnInfo = "ConnInfo";
+    public static String FTInfo = "FTInfo";
 
     public static String HWGroupUserListing = "HWGroupUserListing";
 

@@ -22,10 +22,16 @@ import java.util.Optional;
  */
 public class nativeCommReceiveAsset extends nativeCommandParent {
 
+    private static final String ID = "de.mlessmann.commands.getasset";
+    private static final String COMM = "getasset";
+
     private HWServer hwServer;
 
     public nativeCommReceiveAsset(HWServer hwServer) {
+        super();
         this.hwServer = hwServer;
+        setID(ID);
+        setCommand(COMM);
     }
 
     @Override
@@ -133,8 +139,8 @@ public class nativeCommReceiveAsset extends nativeCommandParent {
             HWAttachment attachment = optAttachment.get();
 
             File attachFile = new File(hw.getFile().getAbsoluteFile().getParent(), hw.getID() + File.separatorChar + attachment.getID());
-            Optional<String> token = hwServer.getTCPServer().getFTManager().requestTransferApproval(attachFile, false);
-            if (!token.isPresent()) {
+            Optional<String> optToken = hwServer.getTCPServer().getFTManager().requestTransferApproval(attachFile, false);
+            if (!optToken.isPresent()) {
                 JSONObject resp = Status.state_ERROR(
                         Status.LOCKED,
                         Status.state_genError(
@@ -148,11 +154,12 @@ public class nativeCommReceiveAsset extends nativeCommandParent {
             } else {
                 JSONObject resp = new JSONObject();
                 resp.put("status", Status.OK);
-                resp.put("payload_type", Types.ConnInfo);
-                JSONObject connInfo = new JSONObject();
-                connInfo.put("address", "~");
-                connInfo.put("port", hwServer.getTCPServer().getFtPort());
-                resp.put("payload", connInfo);
+                resp.put("payload_type", Types.FTInfo);
+                JSONObject ftInfo = new JSONObject();
+                ftInfo.put("token", optToken.get());
+                ftInfo.put("direction", "GET");
+                ftInfo.put("port", hwServer.getTCPServer().getFtPort());
+                resp.put("payload", ftInfo);
                 sendJSON(resp);
                 return CommandResult.success();
             }

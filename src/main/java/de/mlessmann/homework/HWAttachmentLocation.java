@@ -15,10 +15,11 @@ public class HWAttachmentLocation {
     private String hwID;
     private String assetID;
     private String remoteURL;
+    private String name = null;
     private LocationType type = LocationType.INVALID;
 
     public HWAttachmentLocation(JSONObject location) {
-        if (location != null) {
+        if (location != null && (name = location.optString("name"))!=null) {
             String webLocation = location.optString("url");
             if (webLocation != null) {
                 remoteURL = webLocation;

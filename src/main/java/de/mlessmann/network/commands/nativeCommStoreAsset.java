@@ -21,7 +21,7 @@ import java.util.Optional;
 public class nativeCommStoreAsset extends nativeCommandParent {
 
     private static final String ID = "de.mlessmann.commands.storeasset";
-    private static final String COMM = "storeasset";
+    private static final String COMM = "postasset";
 
     private HWServer server;
 
@@ -130,11 +130,12 @@ public class nativeCommStoreAsset extends nativeCommandParent {
 
             JSONObject resp = new JSONObject();
             resp.put("status", Status.OK);
-            resp.put("payload_type", Types.ConnInfo);
-            JSONObject connInfo = new JSONObject();
-            connInfo.put("address", "~");
-            connInfo.put("port", server.getTCPServer().getFtPort());
-            resp.put("payload", connInfo);
+            resp.put("payload_type", Types.FTInfo);
+            JSONObject ftInfo = new JSONObject();
+            ftInfo.put("token", optToken.get());
+            ftInfo.put("direction", "POST");
+            ftInfo.put("port", server.getTCPServer().getFtPort());
+            resp.put("payload", ftInfo);
             sendJSON(resp);
             return CommandResult.success();
         }
