@@ -118,7 +118,7 @@ public class FileTransferServer implements Runnable {
         stopped = true;
         transfers.forEach(FileTransferWorker::kill);
         try {
-            socket.close();
+            if (socket!=null) socket.close();
         } catch (IOException e) {
             //Ignore
         }
