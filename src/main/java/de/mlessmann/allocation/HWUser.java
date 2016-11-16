@@ -49,7 +49,7 @@ public class HWUser {
             if (onLoad.hasNode("passwd")) {
                 String authID = onLoad.getNode("passwd", "method").optString("default");
                 String passwd = onLoad.getNode("passwd", "password").optString("null");
-                valid = valid & setAuthInfo(authID, passwd, node);
+                valid = valid & setAuthInfo(authID, passwd, node.getNode("auth"));
             }
             if (onLoad.hasNode("perm")) {
                 //Set permissions
