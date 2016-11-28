@@ -76,7 +76,7 @@ public class nativeCommStoreAsset extends nativeCommandParent {
             final int byteLimit = server.getConfig().getNode("limit", "maxAttachmentSize").optInt(20000);
             int approxSize = context.getRequest().optInt("size", -1);
             JSONArray date = context.getRequest().optJSONArray("date");
-            String hwID = context.getRequest().optString("id");
+            String hwID = context.getRequest().optString("ownerhw");
             String name = context.getRequest().optString("name");
 
             if (approxSize == -1 || date == null || date.length() < 3 || hwID == null || name == null || name.length() < 3) {
