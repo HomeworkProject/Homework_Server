@@ -9,7 +9,7 @@ import org.json.JSONObject;
 public class Status {
 
     //Non Status, but has to go somewhere
-    public static final String SCURRENTPROTOVERSION = "1.1.0.2";
+    public static final String SCURRENTPROTOVERSION = "1.1.0.4";
 
     //100
     public static final int CONTINUE = 100;

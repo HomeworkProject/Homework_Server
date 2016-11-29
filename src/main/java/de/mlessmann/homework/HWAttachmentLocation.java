@@ -28,7 +28,8 @@ public class HWAttachmentLocation {
                 String hwID = location.optString("ownerhw");
                 JSONArray hwDate = location.optJSONArray("date");
                 String id = location.optString("id");
-                if (hwID != null && id != null && hwDate != null && hwDate.length() >= 3) {
+                boolean virtual = location.has("virtual");
+                if (hwID != null && (id != null && !virtual) && hwDate != null && hwDate.length() >= 3) {
                     try {
                         date = LocalDate.of(hwDate.getInt(0), hwDate.getInt(1), hwDate.getInt(2));
                         this.hwID = hwID;

@@ -105,6 +105,7 @@ public class FileTransferWorker extends Thread {
                         throw new IOException("Max file size reached!");
                     f.write(buffer, 0, read);
                 }
+                out.write(1);
             } catch (IOException e) {
                 server.getHWServer().onMessage(this, Level.FINE, "Unable to retrieve file: IOE while r/w - Closing connection");
                 server.getHWServer().onException(this, Level.FINE, e);
@@ -118,7 +119,7 @@ public class FileTransferWorker extends Thread {
         kill();
     }
 
-    public void outgoing(FileTransferInfo i, InputStream in, OutputStream out) {
+    private void outgoing(FileTransferInfo i, InputStream in, OutputStream out) {
 
         File file = i.getTarget();
         try (FileInputStream fIn = new FileInputStream(file)){

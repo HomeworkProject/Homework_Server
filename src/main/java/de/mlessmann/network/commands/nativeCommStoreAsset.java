@@ -2,6 +2,7 @@ package de.mlessmann.network.commands;
 
 import de.mlessmann.allocation.HWPermission;
 import de.mlessmann.allocation.HWUser;
+import de.mlessmann.homework.HWAttachmentLocation;
 import de.mlessmann.homework.HomeWork;
 import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.network.Error;
@@ -72,72 +73,140 @@ public class nativeCommStoreAsset extends nativeCommandParent {
             return CommandResult.clientFail();
 
         } else {
-            //20kb default file size limit
-            final int byteLimit = server.getConfig().getNode("limit", "maxAttachmentSize").optInt(20000);
-            int approxSize = context.getRequest().optInt("size", -1);
-            JSONArray date = context.getRequest().optJSONArray("date");
-            String hwID = context.getRequest().optString("ownerhw");
-            String name = context.getRequest().optString("name");
+            JSONObject location = context.getRequest().optJSONObject("location");
 
-            if (approxSize == -1 || date == null || date.length() < 3 || hwID == null || name == null || name.length() < 3) {
+            if (location==null) {
                 JSONObject resp = Status.state_ERROR(
                         Status.BADREQUEST,
                         Status.state_genError(
                                 Error.BadRequest,
-                                "Either size, date or ID are invalid",
+                                "The request is missing a HWLocationObject",
                                 "The client sent an invalid request"
                         )
                 );
                 sendJSON(resp);
                 return CommandResult.clientFail();
             }
-            if (approxSize > byteLimit) {
-                sendExceeded();
-                return CommandResult.clientFail();
-            }
-
-            Optional<HomeWork> optHW = user.getHW(date.getInt(0), date.getInt(1), date.getInt(2), hwID);
-            if (!optHW.isPresent()) {
+            HWAttachmentLocation loc = new HWAttachmentLocation(location);
+            if (loc.getType() == HWAttachmentLocation.LocationType.SERVER) {
+                return onServer(context, location);
+            } else if (loc.getType() == HWAttachmentLocation.LocationType.WEB) {
+                return onWeb(context, loc);
+            } else {
                 JSONObject resp = Status.state_ERROR(
-                        Status.NOTFOUND,
+                        Status.BADREQUEST,
                         Status.state_genError(
-                                Error.NotFound,
-                                "Specified HomeWork does not exist!",
-                                "The client wanted to attach to a nonexistent HomeWork"
+                                Error.BadRequest,
+                                "The HWLocationObject is invalid",
+                                "The client sent an invalid request"
                         )
                 );
                 sendJSON(resp);
                 return CommandResult.clientFail();
             }
+        }
+    }
 
-            HomeWork hw = optHW.get();
-            String id = hw.getNewAttachmentID();
-            File file = new File(hw.getFile().getAbsoluteFile().getParent(), hw.getFile().getName() + File.pathSeparator + id);
+    private CommandResult onServer(HWClientCommandContext context, JSONObject location) {
+        HWUser user = context.getHandler().getUser().get();
+        //20kb default file size limit
+        final int byteLimit = server.getConfig().getNode("limit", "maxAttachmentSize").optInt(20000);
+        JSONArray date = location.optJSONArray("date");
+        String hwID = location.optString("ownerhw");
+        String name = location.optString("name");
+        int approxSize = location.optInt("size", -1);
 
-            Optional<String> optToken = server.getTCPServer().getFTManager().requestTransferApproval(file, true);
-            if (!optToken.isPresent()) {
-                JSONObject resp = Status.state_ERROR(
-                        Status.LOCKED,
-                        Status.state_genError(
-                                Error.Unauthorized,
-                                "The file manager didn't authorize the transfer",
-                                "Unable to upload file"
-                        )
-                );
-                sendJSON(resp);
-                return CommandResult.clientFail();
-            }
-
-            JSONObject resp = new JSONObject();
-            resp.put("status", Status.OK);
-            resp.put("payload_type", Types.FTInfo);
-            JSONObject ftInfo = new JSONObject();
-            ftInfo.put("token", optToken.get());
-            ftInfo.put("direction", "POST");
-            ftInfo.put("port", server.getTCPServer().getFtPort());
-            resp.put("payload", ftInfo);
+        if (date == null || date.length() < 3 || hwID == null || name == null || name.length() < 3) {
+            JSONObject resp = Status.state_ERROR(
+                    Status.BADREQUEST,
+                    Status.state_genError(
+                            Error.BadRequest,
+                            "Either size, date or ID are invalid",
+                            "The client sent an invalid request"
+                    )
+            );
             sendJSON(resp);
+            return CommandResult.clientFail();
+        }
+        if (approxSize > byteLimit) {
+            sendExceeded();
+            return CommandResult.clientFail();
+        }
+
+        Optional<HomeWork> optHW = user.getHW(date.getInt(0), date.getInt(1), date.getInt(2), hwID);
+        if (!optHW.isPresent()) {
+            JSONObject resp = Status.state_ERROR(
+                    Status.NOTFOUND,
+                    Status.state_genError(
+                            Error.NotFound,
+                            "Specified HomeWork does not exist!",
+                            "The client wanted to attach to a nonexistent HomeWork"
+                    )
+            );
+            sendJSON(resp);
+            return CommandResult.clientFail();
+        }
+
+        HomeWork hw = optHW.get();
+        String id = hw.getNewAttachmentID();
+        File file = new File(hw.getFile().getAbsoluteFile().getParent(), hw.getFile().getName() + File.pathSeparator + id);
+
+        Optional<String> optToken = server.getTCPServer().getFTManager().requestTransferApproval(file, true);
+        if (!optToken.isPresent()) {
+            JSONObject resp = Status.state_ERROR(
+                    Status.LOCKED,
+                    Status.state_genError(
+                            Error.Unauthorized,
+                            "The file manager didn't authorize the transfer",
+                            "Unable to upload file"
+                    )
+            );
+            sendJSON(resp);
+            return CommandResult.clientFail();
+        }
+
+        JSONObject resp = new JSONObject();
+        resp.put("status", Status.OK);
+        resp.put("payload_type", Types.FTInfo);
+        JSONObject ftInfo = new JSONObject();
+        ftInfo.put("token", optToken.get());
+        ftInfo.put("direction", "POST");
+        ftInfo.put("port", server.getTCPServer().getFtPort());
+        resp.put("payload", ftInfo);
+        sendJSON(resp);
+        return CommandResult.success();
+    }
+
+    private CommandResult onWeb(HWClientCommandContext context, HWAttachmentLocation loc) {
+        HWUser user = context.getHandler().getUser().get();
+
+        Optional<HomeWork> optHW = user.getHW(loc.getDate().getYear(), loc.getDate().getMonthValue(), loc.getDate().getDayOfMonth(), loc.getHWID());
+        if (!optHW.isPresent()) {
+            JSONObject resp = Status.state_ERROR(
+                    Status.NOTFOUND,
+                    Status.state_genError(
+                            Error.NotFound,
+                            "Specified HomeWork does not exist!",
+                            "The client wanted to attach to a nonexistent HomeWork"
+                    )
+            );
+            sendJSON(resp);
+            return CommandResult.clientFail();
+        }
+        if (optHW.get().registerAttachment(loc)) {
+            sendJSON(Status.state_OK());
             return CommandResult.success();
+        } else {
+            JSONObject o = Status.state_ERROR(
+                    Status.INTERNALERROR,
+                    Status.state_genError(
+                            Error.AddHWError,
+                            "Cannot attach attachment",
+                            "An internal error occurred"
+                    )
+            );
+            sendJSON(o);
+            return CommandResult.serverFail();
         }
     }
 
