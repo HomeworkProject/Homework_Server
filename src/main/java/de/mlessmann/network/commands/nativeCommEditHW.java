@@ -22,7 +22,7 @@ import java.util.Optional;
 public class nativeCommEditHW extends nativeCommandParent{
 
     public static final String IDENTIFIER = "de.mlessmann.commands.edithw";
-    public static final String COMMAND = "addhw";
+    public static final String COMMAND = "edithw";
 
     public nativeCommEditHW() {
         super();

@@ -11,6 +11,7 @@ import de.mlessmann.network.HWClientCommandContext;
 import de.mlessmann.network.Status;
 import de.mlessmann.network.Types;
 import de.mlessmann.perms.Permission;
+import de.mlessmann.reflections.HWCommandHandler;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -20,6 +21,7 @@ import java.util.Optional;
 /**
  * Created by Life4YourGames on 10.11.16.
  */
+@HWCommandHandler
 public class nativeCommReceiveAsset extends nativeCommandParent {
 
     private static final String ID = "de.mlessmann.commands.getasset";

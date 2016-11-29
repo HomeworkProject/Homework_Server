@@ -125,7 +125,7 @@ public class FileTransferWorker extends Thread {
         try (FileInputStream fIn = new FileInputStream(file)){
             byte[] buffer = new byte[2048];
             int count = 0;
-            while ((count = fIn.read(buffer)) >=-1) {
+            while ((count = fIn.read(buffer)) > -1) {
                 out.write(buffer, 0, count);
             }
         } catch (IOException e) {

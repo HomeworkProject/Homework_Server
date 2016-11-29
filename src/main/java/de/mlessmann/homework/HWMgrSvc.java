@@ -274,7 +274,7 @@ public class HWMgrSvc {
                 parentDir.getChild(Integer.valueOf(yyyy).toString() + File.separatorChar + MM + File.separatorChar + dd);
         if (tree.isPresent()) {
             HomeWorkTree t = tree.get();
-            File f = new File(t.getFile(), hwID + ".json");
+            File f = new File(t.getFile(), "hw_" + hwID + ".json");
             if (f.isFile()) {
                 hw = new HomeWork(f.getAbsolutePath(), server);
             }

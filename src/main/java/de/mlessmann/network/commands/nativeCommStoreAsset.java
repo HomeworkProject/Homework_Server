@@ -10,6 +10,7 @@ import de.mlessmann.network.HWClientCommandContext;
 import de.mlessmann.network.Status;
 import de.mlessmann.network.Types;
 import de.mlessmann.perms.Permission;
+import de.mlessmann.reflections.HWCommandHandler;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -19,6 +20,7 @@ import java.util.Optional;
 /**
  * Created by Life4YourGames on 06.11.16.
  */
+@HWCommandHandler
 public class nativeCommStoreAsset extends nativeCommandParent {
 
     private static final String ID = "de.mlessmann.commands.storeasset";
@@ -28,6 +30,7 @@ public class nativeCommStoreAsset extends nativeCommandParent {
 
     public nativeCommStoreAsset(HWServer server) {
         super();
+        this.server = server;
         setID(ID);
         setCommand(COMM);
     }

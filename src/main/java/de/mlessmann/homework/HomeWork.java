@@ -22,7 +22,7 @@ public class HomeWork {
     private File file;
     private String filePath;
     private boolean isLoaded = false;
-    public boolean flushInstant = false;
+    private boolean flushInstant = true;
     private HWServer master;
 
     public HomeWork(HWServer server) {
@@ -240,23 +240,25 @@ public class HomeWork {
             attachJSON = new JSONObject();
             attachJSON.put("url", attachment.getURL());
         } else if (attachment.getType() == HWAttachmentLocation.LocationType.SERVER) {
-            String hwID = attachment.getHWID();
-            LocalDate date = attachment.getDate();
-            String id = getNewAttachmentID();
-
             attachJSON = new JSONObject();
-            JSONArray jArr = new JSONArray();
-            jArr.put(date.getYear());
-            jArr.put(date.getMonthValue());
-            jArr.put(date.getDayOfMonth());
-            attachJSON.put("date", jArr);
-            attachJSON.put("ownerid", hwID);
+            String id = attachment.getAssetID();
             attachJSON.put("id", id);
         }
-
         if (attachJSON == null) return false;
+
+        LocalDate date = attachment.getDate();
+        String hwID = attachment.getHWID();
+
+        JSONArray jArr = new JSONArray();
+        jArr.put(date.getYear());
+        jArr.put(date.getMonthValue());
+        jArr.put(date.getDayOfMonth());
+        attachJSON.put("date", jArr);
+        attachJSON.put("ownerid", hwID);
+
         if (getJSON().optJSONArray("attachments") == null) getJSON().put("attachments", new JSONArray());
         getJSON().getJSONArray("attachments").put(attachJSON);
+        notifyOfChange();
         return true;
     }
 

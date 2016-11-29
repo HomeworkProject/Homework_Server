@@ -50,8 +50,8 @@ public class HWTCPClientHandler {
         this.master = tcpServer;
         this.limiter = new HWTCPClientOverflowLimiter(this, tcpServer.getMaster());
         this.myReference = new HWTCPClientReference(this);
-        aprilFirst = (LocalDate.now().getMonthValue() == 1 && LocalDate.now().getDayOfMonth() == 1);
-        soTimeout = master.getMaster().getConfig().getNode("socketTimeout").optInt(10000);
+        aprilFirst = (LocalDate.now().getMonthValue() == 4 && LocalDate.now().getDayOfMonth() == 1);
+        soTimeout = master.getMaster().getConfig().getNode("tcp", "timeout").optInt(10000);
     }
 
     public boolean setUp() {

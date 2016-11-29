@@ -26,14 +26,14 @@ public class HWPermission {
     public static void setDefaults(ConfigNode userNode) {
         ConfigNode pNode = userNode.getNode("permissions");
         Permission.defPerms().forEach(s -> {
-            pNode.getNode(s).setList(INITVALUES());
+            pNode.getNode(s, "values").setList(INITVALUES());
         });
     }
 
     public static void setAdminDefaults(ConfigNode userNode) {
         ConfigNode pNode = userNode.getNode("permissions");
         Permission.defPerms().forEach(s -> {
-            pNode.getNode(s).setList(INITADMINVALUES());
+            pNode.getNode(s, "values").setList(INITADMINVALUES());
         });
     }
 

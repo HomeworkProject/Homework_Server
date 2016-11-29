@@ -20,6 +20,16 @@ sourceSets {
 			srcDirs = ["src/main/java", "src/test/java"]
 		}
 	}
+	commInterface {
+		java {
+			srcDirs = ["src/interface/java"]
+		}
+	}
+	ftInterface {
+		java {
+			srcDirs = ["src/ft_interface/java"]
+		}
+	}
 }
 
 //Dependencies and repos
