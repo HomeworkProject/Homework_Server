@@ -264,7 +264,7 @@ public class HomeWork {
         jArr.put(date.getMonthValue());
         jArr.put(date.getDayOfMonth());
         attachJSON.put("date", jArr);
-        attachJSON.put("ownerid", hwID);
+        attachJSON.put("ownerhw", hwID);
         attachJSON.put("name", attachment.getName());
 
         if (contentAsJSON.optJSONArray("attachments") == null) getJSON().put("attachments", new JSONArray());

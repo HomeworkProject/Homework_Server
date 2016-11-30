@@ -1,7 +1,5 @@
 package main;
 
-import network.MessageRunnable;
-
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -31,9 +29,9 @@ public class Main {
             Socket sock = new Socket();
             sock.connect(addr, 4000);
             sock.setSoTimeout(10000);
-            MessageRunnable runnable = new MessageRunnable(sock);
-            Thread msgThread = new Thread(runnable);
-            msgThread.start();
+            //MessageRunnable runnable = new MessageRunnable(sock);
+            //Thread msgThread = new Thread(runnable);
+            //msgThread.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
             while (true) {
@@ -49,6 +47,7 @@ public class Main {
                     }
                     System.out.println("Sending token " + line);
                     OutputStream sockOut = sock.getOutputStream();
+                    InputStream sockIn = sock.getInputStream();
                     sockOut.write(line.getBytes(Charset.forName("utf-8")));
                     sockOut.flush();
                     Thread.sleep(5000);
@@ -62,6 +61,22 @@ public class Main {
                             sockOut.write(buffer, 0, len);
                             System.out.println("Writing:" + new String(buffer));
                             sockOut.flush();
+                        }
+                    } else {
+                        System.out.println("Receiving to \"ft.out\"");
+                        try (FileOutputStream fOut = new FileOutputStream(new File("ft.out"))) {
+                            byte[] buffer = new byte[1024];
+                            int len = 0;
+                            int total = 0;
+                            while ((len = sockIn.read(buffer)) > -1) {
+                                fOut.write(buffer, 0, len);
+                                total += len;
+                                System.out.println("Writing... [" + total + "]");
+                                fOut.flush();
+                            }
+                            break;
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
                     }
                 }

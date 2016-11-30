@@ -138,6 +138,7 @@ public class FileTransferWorker extends Thread {
             int count = 0;
             while ((count = fIn.read(buffer)) > -1) {
                 out.write(buffer, 0, count);
+                out.flush();
             }
         } catch (IOException e) {
             server.getHWServer().onMessage(this, Level.FINE, "Unable to transmit file: IOE while r/w - Closing connection");

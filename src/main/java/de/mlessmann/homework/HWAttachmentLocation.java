@@ -31,7 +31,7 @@ public class HWAttachmentLocation {
             return;
         }
 
-        if (hwID != null && hwDate.length() >= 3 && name!=null) {
+        if (hwID != null && name!=null) {
             String webLocation = location.optString("url", null);
             if (webLocation != null) {
                 remoteURL = webLocation;

@@ -125,7 +125,7 @@ public class nativeCommReceiveAsset extends nativeCommandParent {
 
             Optional<HWAttachment> optAttachment = hw.getAttachment(a.getAssetID());
 
-            if (optAttachment.isPresent()) {
+            if (!optAttachment.isPresent()) {
                 JSONObject resp = Status.state_ERROR(
                         Status.NOTFOUND,
                         Status.state_genError(
