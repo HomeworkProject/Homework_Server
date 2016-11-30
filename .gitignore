@@ -3,12 +3,13 @@
 #############
 .gradle/
 .idea/
+*.iml
 build/
 *.log*
 *.lck*
 run/*/hwserver-latest.log
 run/*/conf/
-run/_cleanRun/
+run/*
 
 # .class files
 
