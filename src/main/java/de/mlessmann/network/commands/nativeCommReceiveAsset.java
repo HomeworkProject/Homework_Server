@@ -2,9 +2,9 @@ package de.mlessmann.network.commands;
 
 import de.mlessmann.allocation.HWPermission;
 import de.mlessmann.allocation.HWUser;
-import de.mlessmann.homework.HWAttachment;
 import de.mlessmann.homework.HWAttachmentLocation;
 import de.mlessmann.homework.HomeWork;
+import de.mlessmann.homework.IHWAttachment;
 import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.network.Error;
 import de.mlessmann.network.HWClientCommandContext;
@@ -123,7 +123,7 @@ public class nativeCommReceiveAsset extends nativeCommandParent {
             }
             HomeWork hw = optHW.get();
 
-            Optional<HWAttachment> optAttachment = hw.getAttachment(a.getAssetID());
+            Optional<HWAttachmentLocation> optAttachment = hw.getAttachment(a.getAssetID());
 
             if (!optAttachment.isPresent()) {
                 JSONObject resp = Status.state_ERROR(
@@ -138,9 +138,9 @@ public class nativeCommReceiveAsset extends nativeCommandParent {
                 return CommandResult.clientFail();
             }
 
-            HWAttachment attachment = optAttachment.get();
+            IHWAttachment attachment = optAttachment.get();
 
-            File attachFile = new File(hw.getFile().getAbsoluteFile().getParent(), hw.getID() + File.separatorChar + attachment.getID());
+            File attachFile = new File(hw.getFile().getAbsoluteFile().getParent(), hw.getID() + File.separatorChar + attachment.getAssetID());
             Optional<String> optToken = hwServer.getTCPServer().getFTManager().requestTransferApproval(attachFile, false);
             if (!optToken.isPresent()) {
                 JSONObject resp = Status.state_ERROR(

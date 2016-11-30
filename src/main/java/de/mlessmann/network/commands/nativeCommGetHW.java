@@ -14,6 +14,7 @@ import org.json.JSONObject;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -93,7 +94,7 @@ public class nativeCommGetHW extends nativeCommandParent {
                     );
                 }
 
-                ArrayList<HomeWork> hws = myUser.getHWBetween(dateFrom, dateTo, subjectFilter, false);
+                List<HomeWork> hws = myUser.getHWBetween(dateFrom, dateTo, subjectFilter, false);
 
                 JSONObject response = new JSONObject();
                 response.put("status", Status.OK);

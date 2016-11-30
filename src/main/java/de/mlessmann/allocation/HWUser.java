@@ -178,7 +178,7 @@ public class HWUser {
         }
     }
 
-    public ArrayList<HomeWork> getHWBetween(LocalDate from, LocalDate to, ArrayList<String> subjectFilter, boolean overrideLimit) {
+    public List<HomeWork> getHWBetween(LocalDate from, LocalDate to, ArrayList<String> subjectFilter, boolean overrideLimit) {
         Optional<HWMgrSvc> svc = group.getHWMgr();
         if (svc.isPresent()) {
             return svc.get().getHWBetween(from, to, subjectFilter, overrideLimit);

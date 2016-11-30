@@ -9,7 +9,7 @@ import java.time.LocalDate;
 /**
  * Created by Life4YourGames on 09.11.16.
  */
-public class HWAttachmentLocation {
+public class HWAttachmentLocation implements IHWAttachment {
 
     private LocalDate date;
     private String hwID;
@@ -18,9 +18,14 @@ public class HWAttachmentLocation {
     private String name = null;
     private boolean virtual = false;
     private LocationType type = LocationType.INVALID;
+    private String title;
+    private String desc;
 
     public HWAttachmentLocation(JSONObject location) {
         if (location == null)return;
+        title = location.optString("title", null);
+        desc = location.optString("desc", null);
+
         hwID = location.optString("ownerhw", null);
         name = location.optString("name", null);
         JSONArray hwDate = location.optJSONArray("date");
@@ -62,6 +67,7 @@ public class HWAttachmentLocation {
         return hwID;
     }
 
+    @Override
     @Nullable
     public String getAssetID() {
         return assetID;
@@ -80,5 +86,17 @@ public class HWAttachmentLocation {
         WEB,
         SERVER,
         INVALID
+    }
+
+    @Override
+    @Nullable
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
+    @Nullable
+    public String getDesc() {
+        return desc;
     }
 }

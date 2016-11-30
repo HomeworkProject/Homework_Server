@@ -1,6 +1,7 @@
 package de.mlessmann.homework;
 
 import de.mlessmann.common.L4YGRandom;
+import de.mlessmann.common.annotations.NotNull;
 import de.mlessmann.hwserver.HWServer;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -266,6 +267,8 @@ public class HomeWork {
         attachJSON.put("date", jArr);
         attachJSON.put("ownerhw", hwID);
         attachJSON.put("name", attachment.getName());
+        attachJSON.put("title", attachment.getTitle());
+        attachJSON.put("desc", attachment.getDesc());
 
         if (contentAsJSON.optJSONArray("attachments") == null) getJSON().put("attachments", new JSONArray());
         contentAsJSON.getJSONArray("attachments").put(attachJSON);
@@ -273,22 +276,22 @@ public class HomeWork {
         return true;
     }
 
-    public List<HWAttachment> getAttachments() {
-        List<HWAttachment> l = new ArrayList<HWAttachment>();
+    public List<HWAttachmentLocation> getAttachments() {
+        List<HWAttachmentLocation> l = new ArrayList<HWAttachmentLocation>();
         JSONArray attachments = getJSON().optJSONArray("attachments");
         attachments.forEach(o -> {
             if (o instanceof JSONObject) {
-                l.add(new HWAttachment(((JSONObject) o), this));
+                l.add(new HWAttachmentLocation(((JSONObject) o)));
             }
         });
         return l;
     }
 
-    public Optional<HWAttachment> getAttachment(String id) {
-        List<HWAttachment> l = getAttachments();
-        HWAttachment[] a = new HWAttachment[]{null};
+    public Optional<HWAttachmentLocation> getAttachment(@NotNull String id) {
+        List<HWAttachmentLocation> l = getAttachments();
+        HWAttachmentLocation[] a = new HWAttachmentLocation[]{null};
         l.forEach(b -> {
-            if (b.getID().equals(id))
+            if (id.equals(b.getAssetID()))
                 a[0] = b;
         });
         return Optional.ofNullable(a[0]);

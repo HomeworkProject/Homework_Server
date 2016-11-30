@@ -69,7 +69,7 @@ public class HWMgrSvc {
         Optional<HomeWorkTree> tree = parentDir.getChild(subPath);
         if (tree.isPresent()) {
 
-            ArrayList<String> list = tree.get().getFileNames();
+            List<String> list = tree.get().getFileNames();
 
             ArrayList<HomeWork> tempRes = res;
 
@@ -96,7 +96,7 @@ public class HWMgrSvc {
         return res;
     }
 
-    public synchronized ArrayList<HomeWork> getHWBetween(LocalDate from, LocalDate to, ArrayList<String> subjectFilter, boolean overrideLimit) {
+    public synchronized List<HomeWork> getHWBetween(LocalDate from, LocalDate to, ArrayList<String> subjectFilter, boolean overrideLimit) {
 
         int daysSearched = 0;
         boolean kill = false;
@@ -151,7 +151,7 @@ public class HWMgrSvc {
 
                     if (tree.isPresent()) {
 
-                        ArrayList<String> list = tree.get().getFileNames();
+                        List<String> list = tree.get().getFileNames();
 
                         String pathWithoutName = storeFolder + File.separator + childPath + File.separator;
 
