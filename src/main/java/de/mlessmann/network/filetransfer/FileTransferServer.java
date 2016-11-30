@@ -116,7 +116,8 @@ public class FileTransferServer implements Runnable {
 
     public synchronized void close() {
         stopped = true;
-        transfers.forEach(FileTransferWorker::kill);
+        for (int i = transfers.size() - 1; i>=0 ; i--)
+            transfers.get(i).kill();
         try {
             if (socket!=null) socket.close();
         } catch (IOException e) {

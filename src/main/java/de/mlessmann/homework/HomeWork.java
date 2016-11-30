@@ -115,6 +115,26 @@ public class HomeWork {
                     if (!contentAsJSON.has("subject")) {
                         contentAsJSON.put("subject", "none");
                     }
+                    //checkAttachments
+                    JSONArray attachments = contentAsJSON.optJSONArray("attachments");
+                    if (attachments!=null) {
+                        File assetDir = new File(getFile().getAbsoluteFile().getParent(), getID());
+                        for (int i = attachments.length()-1; i>=0; i--) {
+                            Object o = attachments.get(i);
+                            if (o instanceof JSONObject) {
+                                JSONObject j = ((JSONObject) o);
+                                if (j.has("id") && j.optString("id", null)!= null) {
+                                    File assetFile = new File(assetDir, j.getString("id"));
+                                    if (assetFile.isFile()) {
+                                        j.remove("virtual");
+                                    } else {
+                                        j.put("virtual", true);
+                                    }
+                                }
+                            }
+                        }
+                        notifyOfChange();
+                    }
 
                     isLoaded = true;
                     return true;
@@ -154,34 +174,22 @@ public class HomeWork {
     }
 
     public static boolean checkValidity(JSONObject any) {
-
         if (any == null) return false;
-
         boolean validity = false;
-
         try {
-            validity = any.optString("type", "null").equalsIgnoreCase("HomeWork")
-                    && (any.optString("title", null) != null)
+            validity = (any.optString("title", null) != null)
                     && (any.optString("desc", null) != null);
 
             if (validity) {
-
                 JSONArray date = any.getJSONArray("date");
-
                 validity = date.getInt(0) > 0
                                     && date.getInt(1) > 0 && date.getInt(1) <= 12
                                     && date.getInt(2) > 0 && date.getInt(2) <= 31;
-
             }
-
         } catch (JSONException ex) {
-
             return false;
-
         }
-
         return validity;
-
     }
 
     @Override
@@ -202,7 +210,7 @@ public class HomeWork {
 
     public String getID() {
         String name = getFile().getName();
-        return name.substring(0, name.indexOf(".json"));
+        return name.substring(4, name.indexOf(".json"));
     }
 
     public boolean isValid() {
@@ -243,6 +251,8 @@ public class HomeWork {
             attachJSON = new JSONObject();
             String id = attachment.getAssetID();
             attachJSON.put("id", id);
+            if (attachment.isVirtual())
+                attachJSON.put("virtual", true);
         }
         if (attachJSON == null) return false;
 
@@ -255,9 +265,10 @@ public class HomeWork {
         jArr.put(date.getDayOfMonth());
         attachJSON.put("date", jArr);
         attachJSON.put("ownerid", hwID);
+        attachJSON.put("name", attachment.getName());
 
-        if (getJSON().optJSONArray("attachments") == null) getJSON().put("attachments", new JSONArray());
-        getJSON().getJSONArray("attachments").put(attachJSON);
+        if (contentAsJSON.optJSONArray("attachments") == null) getJSON().put("attachments", new JSONArray());
+        contentAsJSON.getJSONArray("attachments").put(attachJSON);
         notifyOfChange();
         return true;
     }

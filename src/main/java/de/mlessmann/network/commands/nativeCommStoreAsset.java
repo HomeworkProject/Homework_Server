@@ -152,7 +152,7 @@ public class nativeCommStoreAsset extends nativeCommandParent {
 
         HomeWork hw = optHW.get();
         String id = hw.getNewAttachmentID();
-        File file = new File(hw.getFile().getAbsoluteFile().getParent(), hw.getFile().getName() + File.pathSeparator + id);
+        File file = new File(hw.getFile().getAbsoluteFile().getParent(), hw.getID() + File.separator + id);
 
         Optional<String> optToken = server.getTCPServer().getFTManager().requestTransferApproval(file, true);
         if (!optToken.isPresent()) {
@@ -167,6 +167,8 @@ public class nativeCommStoreAsset extends nativeCommandParent {
             sendJSON(resp);
             return CommandResult.clientFail();
         }
+        location.put("id", id);
+        hw.registerAttachment(new HWAttachmentLocation(location));
 
         JSONObject resp = new JSONObject();
         resp.put("status", Status.OK);

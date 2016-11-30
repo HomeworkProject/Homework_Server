@@ -2,6 +2,7 @@ package de.mlessmann.network.filetransfer;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.nio.charset.Charset;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -34,6 +35,7 @@ public class FileTransferWorker extends Thread {
         InputStream in;
         OutputStream out;
         try {
+            socket.setSoTimeout(10000);
             in = socket.getInputStream();
             out = socket.getOutputStream();
         } catch (IOException e) {
@@ -43,20 +45,24 @@ public class FileTransferWorker extends Thread {
         }
 
         byte[] token = new byte[tokenSize];
+
         try {
-            if (!(in.read(token, 0, tokenSize) == tokenSize)) {
-                server.getHWServer().onMessage(this, Level.FINER, "Token size didn't match - Closing connection");
-                kill();
-                return;
+            server.getHWServer().onMessage(this, Level.FINER, "Reading token - Expected size: " + tokenSize);
+            int count = 0;
+            int currIndex = 0;
+            while ((count = in.read(token, currIndex, tokenSize - currIndex)) > -1 && currIndex<tokenSize) {
+                currIndex += count;
+                server.getHWServer().onMessage(this, Level.FINEST, "Reading token - Expected size left: " + (tokenSize - currIndex));
             }
         } catch (IOException e) {
             server.getHWServer().onMessage(this, Level.FINER, "Token not retrievable - Closing connection");
             kill();
             return;
         }
+        server.getHWServer().onMessage(this, Level.FINER, "Authorizing transfer");
         Optional<FileTransferInfo> optFile = server.authorize(token);
         if (!optFile.isPresent()) {
-            server.getHWServer().onMessage(this, Level.FINER, "Token not authorized - Closing connection");
+            server.getHWServer().onMessage(this, Level.FINE, "Token not authorized - Closing connection");
             kill();
             return;
         }
@@ -70,20 +76,22 @@ public class FileTransferWorker extends Thread {
 
         File file = i.getTarget();
 
-        try {
+        //try {
             if (!file.exists()) {
-                boolean s = file.getAbsoluteFile().getParentFile().mkdirs() && file.getAbsoluteFile().createNewFile();
+                File dir = file.getAbsoluteFile().getParentFile();
+                boolean s = (dir.isDirectory() || dir.mkdirs()) /*&& file.getAbsoluteFile().createNewFile()*/;
                 if (!s) {
                     server.getHWServer().onMessage(this, Level.FINE, "Unable to create file: " + file.getPath());
                     kill();
                     return;
                 }
             }
-        } catch (IOException e) {
+        /*} catch (IOException e) {
             server.getHWServer().onMessage(this, Level.FINE, "Unable to store file: " + file.getPath() + ":" + e.getMessage());
+            server.getHWServer().onException(this, Level.WARNING, e);
             kill();
             return;
-        }
+        }*/
         try {
             out.write("ACCEPT".getBytes(Charset.forName("UTF-8")));
         } catch (IOException e) {
@@ -97,24 +105,27 @@ public class FileTransferWorker extends Thread {
         int total = 0;
         boolean failed = false;
 
-        while (!terminated) {
-            try (FileOutputStream f = new FileOutputStream(file);) {
-                while ((read = in.read(buffer))>=-1){
-                    total += read;
-                    if (maxSize!=-1 && total > maxSize)
-                        throw new IOException("Max file size reached!");
-                    f.write(buffer, 0, read);
-                }
-                out.write(1);
-            } catch (IOException e) {
-                server.getHWServer().onMessage(this, Level.FINE, "Unable to retrieve file: IOE while r/w - Closing connection");
-                server.getHWServer().onException(this, Level.FINE, e);
-                if (!file.delete()) {
-                    server.getHWServer().onMessage(this, Level.WARNING, "Unable to delete discarded file remnants of: " + file.getPath());
-                }
-                kill();
-                return;
+        try (FileOutputStream f = new FileOutputStream(file)) {
+            while ((read = in.read(buffer)) > -1) {
+                server.getHWServer().onMessage(this, Level.FINEST, "Writing... [" + total + "]");
+                total += read;
+                if (maxSize != -1 && total > maxSize)
+                    throw new IOException("Max file size reached!");
+                f.write(buffer, 0, read);
             }
+            f.flush();
+            if (total == 0) failed = true;
+            server.getHWServer().onMessage(this, Level.FINE, "Received file of size: " + total);
+        } catch (IOException e) {
+            server.getHWServer().onMessage(this, Level.FINE, "Unable to retrieve file: IOE while r/w - Closing connection");
+            if (!(e instanceof SocketTimeoutException))
+                server.getHWServer().onException(this, Level.FINE, e);
+            failed = true;
+            terminated = true;
+        }
+
+        if (failed && !file.delete()) {
+            server.getHWServer().onMessage(this, Level.WARNING, "Unable to delete discarded file remnants of: " + file.getPath());
         }
         kill();
     }

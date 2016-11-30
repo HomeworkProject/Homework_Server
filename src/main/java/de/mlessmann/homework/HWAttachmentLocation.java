@@ -21,7 +21,8 @@ public class HWAttachmentLocation {
 
     public HWAttachmentLocation(JSONObject location) {
         if (location == null)return;
-        hwID = location.optString("ownerhw");
+        hwID = location.optString("ownerhw", null);
+        name = location.optString("name", null);
         JSONArray hwDate = location.optJSONArray("date");
         try {
             date = LocalDate.of(hwDate.getInt(0), hwDate.getInt(1), hwDate.getInt(2));
@@ -30,13 +31,13 @@ public class HWAttachmentLocation {
             return;
         }
 
-        if (hwID != null && hwDate != null && hwDate.length() >= 3 && (name = location.optString("name"))!=null) {
-            String webLocation = location.optString("url");
+        if (hwID != null && hwDate.length() >= 3 && name!=null) {
+            String webLocation = location.optString("url", null);
             if (webLocation != null) {
                 remoteURL = webLocation;
                 type = LocationType.WEB;
             } else {
-                String id = location.optString("id");
+                String id = location.optString("id", null);
                 virtual = location.has("virtual");
                 if (id != null || virtual) {
                     this.assetID = id;
@@ -65,6 +66,9 @@ public class HWAttachmentLocation {
     public String getAssetID() {
         return assetID;
     }
+
+    @Nullable
+    public String getName() { return name; }
 
     public LocationType getType() {
         return type;

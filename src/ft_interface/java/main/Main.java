@@ -2,10 +2,7 @@ package main;
 
 import network.MessageRunnable;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.Charset;
@@ -33,31 +30,40 @@ public class Main {
             InetSocketAddress addr = new InetSocketAddress("localhost", 11902);
             Socket sock = new Socket();
             sock.connect(addr, 4000);
+            sock.setSoTimeout(10000);
             MessageRunnable runnable = new MessageRunnable(sock);
             Thread msgThread = new Thread(runnable);
             msgThread.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-            System.out.println("Enter token");
-            String line = reader.readLine();
-            String path = null;
-            if (line.startsWith("exit")) {
-                return;
-            } else {
-                if (line.contains("_")) {
-                    path = line.substring(line.indexOf('_') + 1);
-                    line = line.substring(0, line.indexOf('_'));
-                }
-                sock.getOutputStream().write(line.getBytes(Charset.forName("utf-8")));
-                if (path!=null) {
-                    File f = new File(path);
-                    FileInputStream fIn = new FileInputStream(f);
-                    byte[] buffer = new byte[2048];
-                    int len = 0;
-                    while ((len = fIn.read(buffer)) > -1) {
-                        sock.getOutputStream().write(buffer, 0, len);
+            while (true) {
+                System.out.println("Enter token");
+                String line = reader.readLine();
+                String path = null;
+                if (line.startsWith("exit")) {
+                    break;
+                } else {
+                    if (line.contains("_")) {
+                        path = line.substring(line.indexOf("_") + 1);
+                        line = line.substring(0, line.indexOf("_"));
                     }
-                    fIn.close();
+                    System.out.println("Sending token " + line);
+                    OutputStream sockOut = sock.getOutputStream();
+                    sockOut.write(line.getBytes(Charset.forName("utf-8")));
+                    sockOut.flush();
+                    Thread.sleep(5000);
+                    if (path != null) {
+                        File f = new File(path);
+                        System.out.println("Sending file: " + f.getAbsolutePath());
+                        FileInputStream fIn = new FileInputStream(f);
+                        byte[] buffer = new byte[1024];
+                        int len = 0;
+                        while ((len = fIn.read(buffer)) > -1) {
+                            sockOut.write(buffer, 0, len);
+                            System.out.println("Writing:" + new String(buffer));
+                            sockOut.flush();
+                        }
+                    }
                 }
             }
             sock.close();
