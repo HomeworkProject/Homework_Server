@@ -41,9 +41,10 @@ dependencies {
 	compile 'org.json:json:20160810'
 	compile 'org.reflections:reflections:0.9.10'
 
+	commInterfaceCompile project(':javacommon')
 	compile project(':javacommon')
 	compile project(':configurate')
-	compile project(':hwserver_installer');
+	compile project(':hwserver_installer')
 
 	compile 'junit:junit:4.11'
 }

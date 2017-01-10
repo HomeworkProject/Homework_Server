@@ -20,19 +20,20 @@ public class Main {
 
     public static void main (String[] args) throws IOException {
 
+        if (args.length > 0 && "setupSSL".equals(args[0])) {
+            System.out.println("Run this command to set up SSL encryption:");
+            System.out.println("keytool -genkey -alias hwKey -keystore keystore.ks");
+            return;
+        }
+
         try {
             JavassistAdapter.includeInvisibleTag = false;
 
             ArrayList<AppArgument> aa = AppArgument.fromArray(args);
-
             HWServer hwServer = new HWServer();
-
             hwServer.preInitialize();
-
             aa.forEach(hwServer::setArg);
-
             hwServer.initialize();
-
             hwServer.start();
 
         } catch (Exception e) {

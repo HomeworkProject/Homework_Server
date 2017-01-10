@@ -24,6 +24,7 @@ import de.mlessmann.updates.indices.IRelease;
 import de.mlessmann.updates.indices.IndexTypeProvider;
 import hwserver.Main;
 
+import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.File;
 import java.io.IOException;
@@ -541,14 +542,15 @@ public class HWServer implements ILogReceiver, IFutureListener {
         return groupMgrSvc;
     }
 
-    public Optional<SSLServerSocketFactory> getSecureSocketFactory() {
+    public Optional<ServerSocketFactory> getSecureSocketFactory() {
         //I know, Optional is currently optional itself, but this code may change in future updates
-        SSLServerSocketFactory ssf = null;
+        ServerSocketFactory ssf = null;
         if (!getConfig().getNode("tcp", "ssl", "key").isVirtual() && !getConfig().getNode("tcp", "ssl", "password").isVirtual()) {
             System.setProperty("javax.net.ssl.keyStore", getConfig().getNode("tcp", "ssl", "key").optString(null));
             System.setProperty("javax.net.ssl.keyStorePassword", getConfig().getNode("tcp", "ssl", "password").optString(null));
         }
-        ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+
+        ssf = SSLServerSocketFactory.getDefault();
         return Optional.ofNullable(ssf);
 
     }
@@ -564,8 +566,12 @@ public class HWServer implements ILogReceiver, IFutureListener {
     //ILogReceiver
     @Override
     public void onMessage(Object sender, Level level, String message) {
-        String name = sender.getClass().getSimpleName();
-        LOG.log(level, name + ' ' + message);
+        if (sender != null) {
+            String name = sender.getClass().getSimpleName();
+            LOG.log(level, name + ' ' + message);
+        } else {
+            LOG.log(level, message);
+        }
     }
 
     @Override

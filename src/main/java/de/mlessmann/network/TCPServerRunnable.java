@@ -23,13 +23,9 @@ public class TCPServerRunnable implements Runnable {
 
 
     public void run() {
-
         stopped = false;
-
         server.sendLog(this, Level.INFO, "Opening server on: " + socket.getLocalSocketAddress());
-
         while (!this.stopped) {
-
             try {
                 Socket clientSock = socket.accept();
                 HWTCPClientWorker newCC = new HWTCPClientWorker(clientSock, server);
@@ -37,22 +33,15 @@ public class TCPServerRunnable implements Runnable {
                 newCC.start();
                 server.sendLog(this, Level.FINE, "New connection: " + clientSock.getRemoteSocketAddress());
             } catch (SSLException sslEx) {
-
                 server.sendLog(this, Level.FINER, "Denying incoming connection: " + sslEx);
-
             } catch (IOException ex) {
-
                 if (!server.isStopped()) {
-
                     server.sendLog(this, Level.SEVERE, "Unable to accept connections: " + ex.toString());
-
                 }
                 stopped = true;
                 server.reportRunTermination(this);
             }
-
         }
-
     }
 
     @Override
