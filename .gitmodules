@@ -1,9 +1,3 @@
-[submodule "submodle/configurate"]
-	path = submodules/configurate
-	url = https://github.com/MarkL4YG/configurate
-[submodule "submodules/javacommon"]
-	path = submodules/javacommon
-	url = https://github.com/MarkL4YG/javacommon
 [submodule "submodules/Homework_Server_Installer"]
 	path = submodules/Homework_Server_Installer
 	url = https://github.com/MarkL4YG/Homework_Server_Installer

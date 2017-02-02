@@ -2,7 +2,7 @@ package de.mlessmann.updates;
 
 import de.mlessmann.common.FileUtils;
 import de.mlessmann.common.HTTP;
-import de.mlessmann.hwserver.HWServer;
+import de.mlessmann.hwserver.main.HWServer;
 import de.mlessmann.updates.indices.IRelease;
 import org.json.JSONArray;
 import org.json.JSONObject;

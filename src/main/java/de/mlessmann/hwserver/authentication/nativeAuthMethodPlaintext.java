@@ -1,0 +1,28 @@
+package de.mlessmann.hwserver.authentication;
+
+import de.mlessmann.hwserver.main.HWServer;
+import de.mlessmann.hwserver.reflections.HWAuthMethod;
+
+/**
+ * Created by Life4YourGames on 26.06.16.
+ */
+@HWAuthMethod
+public class nativeAuthMethodPlaintext implements IAuthMethod {
+
+    public static String ident = "de.mlessmann.hwserver.de.mlessmann.hwserver.auth.plaintext";
+
+    public boolean authorize(String data, String input) {
+        return data.equals(input);
+    }
+
+    public String masqueradePass(String input) {
+        return input;
+    }
+
+    public String getIdentifier() {
+        return ident;
+    }
+
+    public void setHWInstance(HWServer server) {}
+
+}

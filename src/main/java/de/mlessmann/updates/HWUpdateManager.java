@@ -2,7 +2,7 @@ package de.mlessmann.updates;
 
 import de.mlessmann.common.annotations.Nullable;
 import de.mlessmann.common.parallel.IFuture;
-import de.mlessmann.hwserver.HWServer;
+import de.mlessmann.hwserver.main.HWServer;
 import de.mlessmann.updates.indices.IRelease;
 
 import java.util.logging.Level;

@@ -63,7 +63,7 @@ dependencies {
 jar {
 	name = 'Homework_Server.jar'
 	manifest {
-		attributes 'Main-Class': 'hwserver.Main'
+		attributes 'Main-Class': 'de.mlessmann.hwserver.Main'
 		//attributes 'Class-Path': configurations.runtime.collect { "libraries/" + it.getName() }.join(' ')
 	}
 }

@@ -1,7 +1,7 @@
 package de.mlessmann.updates;
 
 import de.mlessmann.common.annotations.Nullable;
-import de.mlessmann.hwserver.HWServer;
+import de.mlessmann.hwserver.main.HWServer;
 import de.mlessmann.updates.indices.IIndexType;
 import de.mlessmann.updates.indices.IRelease;
 
@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class HWUpdate {
 
-    public static final String DEFURL = "http://dev.m-lessmann.de/hwserver/updateConfig.json";
+    public static final String DEFURL = "http://dev.m-lessmann.de/de.mlessmann.hwserver/updateConfig.json";
     public static final String DEFREV = null;
 
     private HWServer server;

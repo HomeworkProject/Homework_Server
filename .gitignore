@@ -7,7 +7,7 @@
 build/
 *.log*
 *.lck*
-run/*/hwserver-latest.log
+run/*/de.mlessmann.hwserver-latest.log
 run/*/conf/
 run/*
 
