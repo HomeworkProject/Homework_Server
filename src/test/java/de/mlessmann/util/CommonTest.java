@@ -10,13 +10,13 @@ import org.junit.Test;
 public class CommonTest {
 
     @Test
-    public void negateInt() throws Exception {
-        Assert.assertEquals(-2000, Common.negateInt(2000));
+    public void getFirstVersion() throws Exception {
+        Assert.assertEquals("4.5.0.102.2", Common.stripVersion("iaehfubezgwhwieivwi v4.5.0.102.2 fjeiwj"));
     }
 
     @Test
-    public void getFirstVersion() throws Exception {
-        Assert.assertEquals("4.5.0.102.2", Common.stripVersion("iaehfubezgwhwieivwi v4.5.0.102.2 fjeiwj"));
+    public void getFirstVersion_unchangedResult() throws Exception {
+        Assert.assertEquals("4.5.0.102.2", Common.stripVersion("4.5.0.102.2"));
     }
 
     @Test

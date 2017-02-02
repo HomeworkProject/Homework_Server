@@ -17,7 +17,12 @@ task wrapper(type: Wrapper) {
 sourceSets {
 	main {
 		java {
-			srcDirs = ["src/main/java", "src/test/java"]
+			srcDirs = ["src/main/java"]
+		}
+	}
+	test {
+		java {
+			srcDirs = ["src/test/java"]
 		}
 	}
 	commInterface {
@@ -34,19 +39,24 @@ sourceSets {
 
 //Dependencies and repos
 repositories {
+	mavenLocal()
+	maven {
+		url uri('https://maven.fearnixx.de/maven2')
+	}
 	mavenCentral()
 }
 
 dependencies {
 	compile 'org.json:json:20160810'
 	compile 'org.reflections:reflections:0.9.10'
-
-	commInterfaceCompile project(':javacommon')
-	compile project(':javacommon')
-	compile project(':configurate')
+	compile 'de.mlessmann:javacommon:2.1.0'
+	compile 'de.mlessmann:configurate:0.0.4'
 	compile project(':hwserver_installer')
 
-	compile 'junit:junit:4.11'
+	testCompile 'junit:junit:4.11'
+	testCompile sourceSets.main.output
+
+	commInterfaceCompile 'de.mlessmann:javacommon:2.1.0'
 }
 
 //noinspection GroovyAssignabilityCheck
@@ -61,24 +71,19 @@ jar {
 //noinspection GroovyAssignabilityCheck
 test {
 	useJUnit()
-
 	testLogging.showStandardStreams = true
 	beforeTest { descriptor ->
 		logger.lifecycle("Running test: " + (String) descriptor)
 	}
-
 	onOutput { descriptor, event ->
 		logger.lifecycle("Test: " + (String) descriptor + " produced standard out/err: " + event.message )
 	}
 }
 
-
 task copyRuntimeLibs(type: Copy) {
 	into "build/libs/libraries"
 	from configurations.runtime
 }
-
-
 
 //noinspection GroovyAssignabilityCheck
 build.finalizedBy(copyRuntimeLibs)
