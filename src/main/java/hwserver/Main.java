@@ -1,9 +1,9 @@
 package hwserver;
 
+import de.homeworkproject.server.hwserver.HWServer;
 import de.mlessmann.common.apparguments.AppArgument;
 import de.mlessmann.config.ConfigNode;
 import de.mlessmann.config.except.RootMustStayHubException;
-import de.mlessmann.hwserver.HWServer;
 import org.reflections.adapters.JavassistAdapter;
 
 import java.io.*;
