@@ -32,8 +32,8 @@ public class Main {
         for (Handler h : Logger.getGlobal().getHandlers()) {
             h.setLevel(Level.FINEST);
         }
-        System.setProperty("javax.net.ssl.trustStore", "trustStore.ks");
-        System.setProperty("javax.net.ssl.trustStorePassword", "HWSERVER");
+        System.setProperty("javax.net.ssl.trustStore", "keystore.ks");
+        System.setProperty("javax.net.ssl.trustStorePassword", "hwserver");
 
 
         try {
@@ -42,7 +42,8 @@ public class Main {
             InetSocketAddress addr = new InetSocketAddress(hName, port);
 
             Socket sock = null;
-            if (argMap.containsKey("ssl")) {
+            if (argMap.containsKey("--ssl")) {
+                System.out.println("Using SSL to connect");
                 SSLSocketFactory sf = ((SSLSocketFactory) SSLSocketFactory.getDefault());
                 sock = sf.createSocket();
             } else {

@@ -5,6 +5,7 @@ import de.mlessmann.hwserver.HWServer;
 import de.mlessmann.network.filetransfer.FileTransferServer;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -120,7 +121,7 @@ public class HWTCPServer {
         try {
             if (enablePlainTCP) {
                 plainSock = new ServerSocket(plainPort);
-                plainRunnable = new TCPServerRunnable(this, plainSock);
+                plainRunnable = new TCPServerRunnable(this, plainSock, "Plain");
                 plainThread = new Thread(plainRunnable);
             }
             if (enableSecureTCP) {
@@ -145,10 +146,14 @@ public class HWTCPServer {
             if (System.getProperty("javax.net.ssl.keyStore", null) == null) {
                 System.setProperty("javax.net.ssl.keyStore",
                         master.getConfig().getNode("tcp", "ssl", "keystore").optString("keystore.ks"));
+                if (master.getConfig().getNode("tcp", "ssl", "keystore").isVirtual())
+                    master.getConfig().getNode("tcp", "ssl", "keystore").setString("keystore.ks");
             }
             if (System.getProperty("javax.net.ssl.keyStorePassword", null) == null) {
                 System.setProperty("javax.net.ssl.keyStorePassword",
                         master.getConfig().getNode("tcp", "ssl", "password").optString("password"));
+                if (master.getConfig().getNode("tcp", "ssl", "password").isVirtual())
+                    master.getConfig().getNode("tcp", "ssl", "password").setString("MyKeystorePass");
             }
 
             SSLContext sslCtx = SSLContext.getInstance(cipherProtocol);
@@ -156,11 +161,14 @@ public class HWTCPServer {
                 sendLog(this, Level.WARNING, "SSLCtx for " + cipherProtocol + " does NOT support any ciphers!");
             }
             Arrays.stream(sslCtx.getDefaultSSLParameters().getCipherSuites()).forEach(
-                    c -> sendLog(null, Level.FINER, "Cipher: " + c)
+                    c -> sendLog(null, Level.FINEST, "Cipher: " + c)
             );
             SSLServerSocketFactory ssf = sslCtx.getServerSocketFactory();
             secureSock = ssf.createServerSocket(securePort);
-            secureRunnable = new TCPServerRunnable(this, secureSock);
+            Arrays.stream(((SSLServerSocket) secureSock).getEnabledCipherSuites()).forEach(
+                    c -> sendLog(null, Level.FINEST, "Enabled Cipher: " + c)
+            );
+            secureRunnable = new TCPServerRunnable(this, secureSock, "SSL");
             secureThread = new Thread(secureRunnable);
         } catch (NoSuchAlgorithmException e) {
             sendLog(this, Level.SEVERE, "Unable to initialize SecureTCP: NSAException:");

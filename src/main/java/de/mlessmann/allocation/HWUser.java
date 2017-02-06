@@ -68,11 +68,13 @@ public class HWUser {
                 && node.getNode("auth").isHub()
                 && node.getNode("auth").hasNode("method")
                 && node.getNode("auth", "method").isType(String.class)
+                && node.getNode("auth").hasNode("pass")
+                && node.getNode("auth", "pass").isType(String.class)
                 && node.hasNode("permissions")
                 && node.getNode("permissions").isHub();
 
         if (!valid) {
-            server.onMessage(this, Level.FINEST, "Invalid User: cannot load!");
+            server.onMessage(this, Level.FINER, "Invalid User: cannot load!");
             return false;
         }
         Optional<IAuthMethod> m = server.getAuthProvider().getMethod(node.getNode("auth", "method").getString());
@@ -92,7 +94,7 @@ public class HWUser {
     }
 
     public String getAuthData() {
-        return node.getNode("auth", "pass").getString();
+        return node.getNode("auth", "pass").optString("");
     }
 
     public boolean setAuthInfo(String method, String plaintextPW, @Nullable ConfigNode onNode) {

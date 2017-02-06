@@ -41,7 +41,7 @@ sourceSets {
 repositories {
 	mavenLocal()
 	maven {
-		url uri('https://maven.fearnixx.de/maven2')
+		url uri('http://maven.fearnixx.de/maven2')
 	}
 	mavenCentral()
 }
@@ -56,7 +56,7 @@ dependencies {
 	testCompile 'junit:junit:4.11'
 	testCompile sourceSets.main.output
 
-	commInterfaceCompile 'de.mlessmann:javacommon:2.1.0'
+	commInterfaceCompile 'de.mlessmann:javacommon:2.1.0:src'
 }
 
 //noinspection GroovyAssignabilityCheck

@@ -53,8 +53,8 @@ public class GroupMgrSvc {
 
         ConfigNode newUser = newGroup.getNode("users", "default");
         newUser.getNode("name").setString("default");
+        newUser.getNode("auth", "pass").setString("default");
         newUser.getNode("auth", "method").setString("default");
-        newUser.getNode("auth", "default").setString("default");
         HWPermission.setDefaults(newUser);
     }
 

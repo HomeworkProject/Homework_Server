@@ -29,6 +29,7 @@ public class FileTransferServer implements Runnable {
 
     private boolean stopped;
     private boolean enabled;
+    private String logClass = "FT";
 
     public FileTransferServer(ServerSocket socket, int tokenSize, HWServer server) {
         tokenDatabase = new HashMap<String, FileTransferInfo>();
@@ -51,7 +52,7 @@ public class FileTransferServer implements Runnable {
         stopped = false;
         tokenDatabase.clear();
 
-        server.onMessage(this, Level.INFO, "Opening file transfer server on: " + socket.getLocalSocketAddress());
+        server.onMessage(this, Level.INFO, logClass+ " Opening file transfer server on: " + socket.getLocalSocketAddress());
 
         while (!this.stopped) {
 
@@ -60,7 +61,7 @@ public class FileTransferServer implements Runnable {
                 FileTransferWorker newCC = new FileTransferWorker(clientSock, this, tokenByteSize);
                 transfers.add(newCC);
                 newCC.start();
-                server.onMessage(this, Level.FINE, "New ft-connection: " + clientSock.getRemoteSocketAddress());
+                server.onMessage(this, Level.FINE, logClass+ " New connection: " + clientSock.getRemoteSocketAddress());
             } catch (SSLException sslEx) {
 
                 server.onMessage(this, Level.FINER, "Denying incoming ft-connection: " + sslEx);
@@ -68,10 +69,10 @@ public class FileTransferServer implements Runnable {
             } catch (IOException ex) {
 
                 if (!stopped) {
-                    server.onMessage(this, Level.SEVERE, "Unable to accept ft-connections: " + ex.toString());
+                    server.onMessage(this, Level.SEVERE, logClass+ " Unable to accept connections: " + ex.toString());
                 }
                 stopped = true;
-                server.onMessage(this, Level.INFO, "FT-Runnable ended: " + this.toString());
+                server.onMessage(this, Level.INFO, logClass+ " Runnable ended: " + this.toString());
             }
 
         }

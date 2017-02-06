@@ -169,14 +169,15 @@ public class HWTCPClientHandler {
      * @param message the message to be send
      */
     public synchronized void sendMessage(String message) {
+        if (mySock.isClosed()) return;
         try {
             writer.write(message);
             writer.flush();
         } catch (IOException ex) {
-
+            if (isClosed) return;
             if (!(ex instanceof SSLException)) {
                 master.sendLog(this, Level.WARNING, "Unable to send Message: " + ex.toString());
-                killConnection();
+                closeConnection();
             }
         }
     }
