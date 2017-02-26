@@ -63,7 +63,7 @@ public class HWUser {
             node.delNode("onLoad");
         }
         valid = valid &&
-                !node.getKey().isEmpty()
+                node.getKey().isPresent()
                 && node.hasNode("auth")
                 && node.getNode("auth").isHub()
                 && node.getNode("auth").hasNode("method")
@@ -90,7 +90,7 @@ public class HWUser {
     }
 
     public String getUserName() {
-        return node.getKey();
+        return node.getKey().orElse("");
     }
 
     public String getAuthData() {
@@ -131,12 +131,12 @@ public class HWUser {
     }
 
     public void addPermission(HWPermission perm) {
-        node.getNode("permissions").addNode(perm.getNode());
+        node.getNode("permissions").addNode(perm.getName(), perm.getNode());
         notifyOnChange();
     }
 
     public void removePermission(HWPermission perm) {
-        node.getNode("permissions").delNode(perm.getNode().getKey());
+        node.getNode("permissions").delNode(perm.getNode().getKey().orElse(""));
         notifyOnChange();
     }
 

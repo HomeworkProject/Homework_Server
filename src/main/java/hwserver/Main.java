@@ -3,11 +3,14 @@ package hwserver;
 import de.homeworkproject.server.hwserver.HWServer;
 import de.mlessmann.common.apparguments.AppArgument;
 import de.mlessmann.config.ConfigNode;
-import de.mlessmann.config.except.RootMustStayHubException;
 import org.reflections.adapters.JavassistAdapter;
 
+import java.awt.*;
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -20,10 +23,27 @@ public class Main {
 
     public static void main (String[] args) throws IOException {
 
+        List<AppArgument> addedArgs = new ArrayList<AppArgument>();
+
         if (args.length > 0 && "setupSSL".equals(args[0])) {
             System.out.println("Run this command to set up SSL encryption:");
             System.out.println("keytool -genkey -alias hwKey -keystore keystore.ks");
             return;
+        }
+        if (args.length > 0 && "setupConfig".equals(args[0])) {
+            if (GraphicsEnvironment.isHeadless()) {
+                System.out.println("Your system doesn't support GUIs - Running minimal configuration at startup...");
+                addedArgs.add(new AppArgument("--force-configurator", null));
+            } else {
+                System.out.println("You may download the configurator from:");
+                System.out.println("https://github.com/HomeworkProject/ConfigurationAssistant/releases");
+                try {
+                    Desktop.getDesktop().browse(new URI("https://github.com/HomeworkProject/ConfigurationAssistant/releases"));
+                } catch (URISyntaxException e) {
+
+                }
+                return;
+            }
         }
 
         try {
@@ -33,6 +53,7 @@ public class Main {
             HWServer hwServer = new HWServer();
             hwServer.preInitialize();
             aa.forEach(hwServer::setArg);
+            addedArgs.forEach(hwServer::setArg);
             hwServer.initialize();
             hwServer.start();
 
@@ -227,7 +248,9 @@ public class Main {
                             out.println("Enter new name:");
                             l = reader.readLine();
                             if (!l.isEmpty() && !l.equals("\n") && config.getNode("groups", groupName, "users", l).isVirtual()) {
-                                node.setKey(l);
+                                ConfigNode p = node.getParent();
+                                p.delNode(node.getKey().get());
+                                p.addNode(l, node);
                                 name = l;
                             } else {
                                 out.println("Username invalid or user exists.");
@@ -275,8 +298,6 @@ public class Main {
                 } catch (NumberFormatException e) {
                     out.println("Invalid number, try again");
                     Thread.sleep(1000);
-                } catch (RootMustStayHubException e) {
-                    //Shouldn't happen for users
                 }
             } catch (InterruptedException e) {
                 out.println("Interrupted!");

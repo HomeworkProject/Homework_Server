@@ -119,17 +119,20 @@ public class HWServer implements ILogReceiver, IFutureListener {
      * @see #setArg(AppArgument)
      */
     private String confFile = "conf/config.json";
+    private String groupConfig = null;
 
     /**
      * Configuration object (using JSON)
      * @see #getConfig
      */
     private ConfigLoader confLoader;
+    private ConfigLoader gConfigLoader = null;
 
     /**
      * Root node of configuration
      */
     private ConfigNode config;
+    private ConfigNode gConfig = null;
 
     /**
      * Service to manage groups
@@ -345,11 +348,25 @@ public class HWServer implements ILogReceiver, IFutureListener {
         }
 
         groupMgrSvc = new GroupMgrSvc(this);
-        if (!groupMgrSvc.init(config.getNode("groups"))) {
+        if (config.getNode("groups").isHub()) {
+            gConfig = config.getNode("groups");
+        } else if (config.getNode("groups").isType(String.class)) {
+            groupConfig = config.getNode("groups").optString("groups.json");
+            onMessage(this, FINE, "Loading groups from " + gConfig);
+            gConfigLoader = new JSONConfigLoader();
+            gConfig = gConfigLoader.loadFromFile(groupConfig).getNode("groups");
+            if (gConfigLoader.hasError()) {
+                onMessage(this, SEVERE, "Unable to load groups: " + gConfigLoader.getError().getClass().getSimpleName());
+                onException(this, SEVERE, gConfigLoader.getError());
+                throw new IOException("Unable to load groups from external file", gConfigLoader.getError());
+            }
+        }
+        if (!groupMgrSvc.init(gConfig)) {
             String msg = "Unable to initialize GroupMgrSvc!";
             onMessage(this, SEVERE, msg);
             throw new IOException(msg);
         }
+
         onMessage(this, INFO, groupMgrSvc.getGroups().size() + " groups loaded");
 
         // -------------------------------- POST INIT --------------------------------
@@ -384,7 +401,7 @@ public class HWServer implements ILogReceiver, IFutureListener {
     public HWServer start() {
         if (hwtcpServer != null && !hwtcpServer.isStopped())
             return this;
-        hwtcpServer= new HWTCPServer(this);
+        hwtcpServer = new HWTCPServer(this);
         if (!hwtcpServer.setUp()) {
             onMessage(this, SEVERE, "An error occurred while setting up the tcp connections, this instance is going silent now!");
             return this;
@@ -673,7 +690,7 @@ public class HWServer implements ILogReceiver, IFutureListener {
                     (r!=null ? r.version() + " is available!" : "No update available."));
 
             if (r!=null && updateWasScheduled) {
-                boolean autoUpdate = config.getNode("autoUpdate").optBoolean(true);
+                boolean autoUpdate = config.getNode("update", "autoUpgrade").optBoolean(true);
                 if (!autoUpdate) return;
                 onMessage(this, INFO, "An update has been found! Starting upgrade!");
                 startUpgrade(r);

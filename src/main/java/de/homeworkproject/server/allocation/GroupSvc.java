@@ -73,7 +73,7 @@ public class GroupSvc {
     }
 
     public String getName() {
-        return node.getKey();
+        return node.getKey().orElse("");
     }
 
     public Optional<HWMgrSvc> getHWMgr() {

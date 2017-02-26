@@ -58,7 +58,7 @@ public class HWTCPClientHandler {
         try {
             reader = new BufferedReader(new InputStreamReader(mySock.getInputStream()));
             writer = new BufferedWriter(new OutputStreamWriter(mySock.getOutputStream()));
-            mySock.setSoTimeout(soTimeout);
+            //mySock.setSoTimeout(soTimeout);
         } catch (IOException ex) {
             master.sendLog(this, Level.WARNING, "Unable to get inputStream of Socket: " + ex.getMessage());
             master.sendExc(this, Level.WARNING, ex);

@@ -82,7 +82,7 @@ public class HWPermission {
     }
 
     public String getName() {
-        return node.getKey();
+        return node.getKey().orElse("");
     }
 
     public ConfigNode getNode() { return node; }
